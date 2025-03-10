@@ -14,7 +14,7 @@ func NewApp(config *Config) App {
 	return App{config}
 }
 
-func (app *App) Mux() *http.ServeMux {
+func (app *App) Handler() http.Handler {
 	mux := http.NewServeMux()
 	static.Register(mux)
 	return mux

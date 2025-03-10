@@ -21,8 +21,7 @@ func main() {
 	}
 
 	app := yellhole.NewApp(config)
-	mux := app.Mux()
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", app.Handler()); err != nil {
 		log.Fatalln("error serving HTTP", err)
 	}
 }
