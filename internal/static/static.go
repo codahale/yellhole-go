@@ -18,9 +18,9 @@ func Register(mux *http.ServeMux) {
 
 	for _, f := range dir {
 		if f.IsDir() {
-			mux.Handle(fmt.Sprintf("/%s/", f.Name()), fs)
+			mux.Handle(fmt.Sprintf("GET /%s/", f.Name()), fs)
 		} else {
-			mux.Handle(fmt.Sprintf("/%s", f.Name()), fs)
+			mux.Handle(fmt.Sprintf("GET /%s", f.Name()), fs)
 		}
 	}
 }
