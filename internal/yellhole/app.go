@@ -3,18 +3,19 @@ package yellhole
 import (
 	"net/http"
 
-	"github.com/codahale/yellhole-go/internal/assets"
+	"github.com/codahale/yellhole-go/internal/static"
 )
 
 type App struct {
+	config *Config
 }
 
 func NewApp(config *Config) App {
-	return App{}
+	return App{config}
 }
 
 func (app *App) Mux() *http.ServeMux {
 	mux := http.NewServeMux()
-	assets.Register(mux)
+	static.Register(mux)
 	return mux
 }
