@@ -10,7 +10,7 @@ import (
 type Config struct {
 	Addr        string
 	BaseURL     *url.URL
-	DataDir     string
+	DataDir     *os.Root
 	Title       string
 	Description string
 	Author      string
@@ -19,11 +19,11 @@ type Config struct {
 func ParseConfig() (*Config, error) {
 	var config Config
 
-	var baseURL string
+	var baseURL, dataDir string
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
 	cmd.StringVar(&config.Addr, "addr", "127.0.0.1:3000", "the address on which to listen")
 	cmd.StringVar(&baseURL, "base_url", "http://127.0.0.1:3000/", "the base URL of the server")
-	cmd.StringVar(&config.DataDir, "data_dir", "./data", "the directory in which all persistent data is stored")
+	cmd.StringVar(&dataDir, "data_dir", "./data", "the directory in which all persistent data is stored")
 	cmd.StringVar(&config.Title, "title", "Yellhole", "the title of the yellhole instance")
 	cmd.StringVar(&config.Description, "description", "Obscurantist filth.", "the description of the yellhole instance")
 	cmd.StringVar(&config.Author, "author", "Luther Blissett", "the author of the yellhole instance")
@@ -37,7 +37,7 @@ func ParseConfig() (*Config, error) {
 	}
 
 	if s, ok := os.LookupEnv("DATA_DIR"); ok {
-		config.DataDir = s
+		dataDir = s
 	}
 
 	if s, ok := os.LookupEnv("TITLE"); ok {
@@ -54,9 +54,15 @@ func ParseConfig() (*Config, error) {
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("invalid base URL: %e", err)
+		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 	config.BaseURL = u
+
+	r, err := os.OpenRoot(dataDir)
+	if err != nil {
+		return nil, fmt.Errorf("invalid data dir: %w", err)
+	}
+	config.DataDir = r
 
 	if err := cmd.Parse(os.Args[1:]); err != nil {
 		return nil, err
