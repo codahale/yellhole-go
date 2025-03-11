@@ -3,7 +3,7 @@ package yellhole
 import (
 	"net/http"
 
-	"github.com/codahale/yellhole-go/internal/static"
+	"github.com/codahale/yellhole-go/internal/yellhole/static"
 )
 
 type App struct {
