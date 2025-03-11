@@ -2,12 +2,14 @@ package yellhole
 
 import (
 	"flag"
+	"fmt"
+	"net/url"
 	"os"
 )
 
 type Config struct {
 	Addr        string
-	BaseURL     string
+	BaseURL     *url.URL
 	DataDir     string
 	Title       string
 	Description string
@@ -17,37 +19,44 @@ type Config struct {
 func ParseConfig() (*Config, error) {
 	var config Config
 
+	var baseURL string
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
 	cmd.StringVar(&config.Addr, "addr", "127.0.0.1:3000", "the address on which to listen")
-	cmd.StringVar(&config.BaseURL, "base_url", "http://127.0.0.1:3000/", "the base URL of the server")
+	cmd.StringVar(&baseURL, "base_url", "http://127.0.0.1:3000/", "the base URL of the server")
 	cmd.StringVar(&config.DataDir, "data_dir", "./data", "the directory in which all persistent data is stored")
 	cmd.StringVar(&config.Title, "title", "Yellhole", "the title of the yellhole instance")
 	cmd.StringVar(&config.Description, "description", "Obscurantist filth.", "the description of the yellhole instance")
 	cmd.StringVar(&config.Author, "author", "Luther Blissett", "the author of the yellhole instance")
 
-	if addr, ok := os.LookupEnv("ADDR"); ok {
-		config.Addr = addr
+	if s, ok := os.LookupEnv("ADDR"); ok {
+		config.Addr = s
 	}
 
-	if baseURL, ok := os.LookupEnv("BASE_URL"); ok {
-		config.BaseURL = baseURL
+	if s, ok := os.LookupEnv("BASE_URL"); ok {
+		baseURL = s
 	}
 
-	if dataDir, ok := os.LookupEnv("DATA_DIR"); ok {
-		config.DataDir = dataDir
+	if s, ok := os.LookupEnv("DATA_DIR"); ok {
+		config.DataDir = s
 	}
 
-	if title, ok := os.LookupEnv("TITLE"); ok {
-		config.Title = title
+	if s, ok := os.LookupEnv("TITLE"); ok {
+		config.Title = s
 	}
 
-	if description, ok := os.LookupEnv("DESCRIPTION"); ok {
-		config.Description = description
+	if s, ok := os.LookupEnv("DESCRIPTION"); ok {
+		config.Description = s
 	}
 
-	if author, ok := os.LookupEnv("AUTHOR"); ok {
-		config.Author = author
+	if s, ok := os.LookupEnv("AUTHOR"); ok {
+		config.Author = s
 	}
+
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %e", err)
+	}
+	config.BaseURL = u
 
 	if err := cmd.Parse(os.Args[1:]); err != nil {
 		return nil, err
