@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codahale/yellhole-go/internal/yellhole/model/id"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -17,14 +16,6 @@ type Note struct {
 	ID        string
 	Body      string
 	CreatedAt time.Time
-}
-
-func NewNote(body string) Note {
-	return Note{
-		ID:        id.New(),
-		Body:      body,
-		CreatedAt: time.Now(),
-	}
 }
 
 func (n *Note) HTML() template.HTML {
