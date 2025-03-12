@@ -2,14 +2,12 @@ package storage
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	"image/png"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -21,62 +19,30 @@ import (
 )
 
 type ImageStore struct {
-	root *os.Root
+	images *jsonStore[model.Image]
 }
 
 func NewImageStore(root *os.Root) (*ImageStore, error) {
-	// Ensure that root/images/{feed,original,thumb} exists.
-	_ = root.Mkdir("images", 0755)
-	_ = root.Mkdir("images/feed", 0755)
-	_ = root.Mkdir("images/original", 0755)
-	_ = root.Mkdir("images/thumb", 0755)
-
-	// Open root/dir and limit the actions to that.
-	dir, err := root.OpenRoot("images")
+	// Create a new JSON store.
+	images, err := newJSONStore[model.Image](root, "images", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ImageStore{dir}, nil
+	//  Ensure that images/{feed,original,thumb} exists.
+	for _, dir := range []string{"feed", "original", "thumb"} {
+		_ = images.root.Mkdir(dir, 0755)
+	}
+
+	return &ImageStore{images}, nil
 }
 
 func (s *ImageStore) Fetch(id string) (*model.Image, error) {
-	return s.load(fmt.Sprintf("%s.json", id))
+	return s.images.fetch(id)
 }
 
 func (s *ImageStore) Recent(n int) ([]*model.Image, error) {
-	images := make([]*model.Image, 0, n)
-	if err := fs.WalkDir(s.root.FS(), ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() && path != "." {
-			return fs.SkipDir
-		}
-
-		if filepath.Ext(path) == ".json" {
-			f, err := s.root.Open(path)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			var img model.Image
-			if err := json.NewDecoder(f).Decode(&img); err != nil {
-				return err
-			}
-
-			images = append(images, &img)
-			if len(images) == n {
-				return fs.SkipAll
-			}
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-	return images, nil
+	return s.images.list(".", n)
 }
 
 func (s *ImageStore) Create(r io.Reader, filename string, createdAt time.Time) (*model.Image, error) {
@@ -95,7 +61,7 @@ func (s *ImageStore) Create(r io.Reader, filename string, createdAt time.Time) (
 
 	// Copy the original image data to disk.
 	origPath := filepath.Join("original", fmt.Sprintf("%s.%s", id, format))
-	orig, err := s.root.Create(origPath)
+	orig, err := s.images.root.Create(origPath)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +76,7 @@ func (s *ImageStore) Create(r io.Reader, filename string, createdAt time.Time) (
 
 	// Generate a feed PNG image.
 	feedPath := filepath.Join("feed", fmt.Sprintf("%s.png", id))
-	feed, err := s.root.Create(feedPath)
+	feed, err := s.images.root.Create(feedPath)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +89,7 @@ func (s *ImageStore) Create(r io.Reader, filename string, createdAt time.Time) (
 
 	// Generate a thumbnail PNG image.
 	thumbPath := filepath.Join("thumb", fmt.Sprintf("%s.png", id))
-	thumb, err := s.root.Create(thumbPath)
+	thumb, err := s.images.root.Create(thumbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -143,28 +109,7 @@ func (s *ImageStore) Create(r io.Reader, filename string, createdAt time.Time) (
 		OriginalFilename: filename,
 		CreatedAt:        createdAt,
 	}
-	f, err := s.root.Create(fmt.Sprintf("%s.json", id))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if err := json.NewEncoder(f).Encode(&img); err != nil {
-		return nil, err
-	}
-
-	return &img, nil
-}
-
-func (s *ImageStore) load(filename string) (*model.Image, error) {
-	f, err := s.root.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var img model.Image
-	if err := json.NewDecoder(f).Decode(&img); err != nil {
+	if err := s.images.create(id, &img); err != nil {
 		return nil, err
 	}
 

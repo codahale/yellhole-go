@@ -10,18 +10,10 @@ import (
 )
 
 func TestImageStoreCreate(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "yellhole-image-store-upload")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tc := newTestContext(t)
+	defer tc.teardown()
 
-	root, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	store, err := NewImageStore(root)
+	store, err := NewImageStore(tc.root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,15 +29,15 @@ func TestImageStoreCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := root.Stat(filepath.Join("images", img.OriginalPath)); err != nil {
+	if _, err := tc.root.Stat(filepath.Join("images", img.OriginalPath)); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := root.Stat(filepath.Join("images", img.FeedPath)); err != nil {
+	if _, err := tc.root.Stat(filepath.Join("images", img.FeedPath)); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := root.Stat(filepath.Join("images", img.ThumbnailPath)); err != nil {
+	if _, err := tc.root.Stat(filepath.Join("images", img.ThumbnailPath)); err != nil {
 		t.Error(err)
 	}
 
@@ -55,18 +47,10 @@ func TestImageStoreCreate(t *testing.T) {
 }
 
 func TestImageStoreFetch(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "yellhole-image-store-upload")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tc := newTestContext(t)
+	defer tc.teardown()
 
-	root, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	store, err := NewImageStore(root)
+	store, err := NewImageStore(tc.root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,18 +79,10 @@ func TestImageStoreFetch(t *testing.T) {
 }
 
 func TestImageStoreRecent(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "yellhole-image-store-upload")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tc := newTestContext(t)
+	defer tc.teardown()
 
-	root, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	store, err := NewImageStore(root)
+	store, err := NewImageStore(tc.root)
 	if err != nil {
 		t.Fatal(err)
 	}
