@@ -25,7 +25,7 @@ func NewNoteStore(root *os.Root) (*NoteStore, error) {
 			},
 			"week": func(note *model.Note) string {
 				y, w := note.CreatedAt.ISOWeek()
-				return fmt.Sprintf("%04d-%02d", y, w)
+				return fmt.Sprintf("%04d-%02dW", y, w)
 			},
 			"day": func(note *model.Note) string {
 				return note.CreatedAt.Format("2006-01-02")
@@ -61,21 +61,20 @@ func (s *NoteStore) Days(n int) ([]string, error) {
 	return s.notes.listKeys("day", n)
 }
 
-func (s *NoteStore) Year(t time.Time, n int) ([]*model.Note, error) {
-	return s.notes.list(filepath.Join("year", t.Format("2006")), n)
+func (s *NoteStore) Year(year string, n int) ([]*model.Note, error) {
+	return s.notes.list(filepath.Join("year", year), n)
 }
 
-func (s *NoteStore) Month(t time.Time, n int) ([]*model.Note, error) {
-	return s.notes.list(filepath.Join("month", t.Format("2006-01")), n)
+func (s *NoteStore) Month(month string, n int) ([]*model.Note, error) {
+	return s.notes.list(filepath.Join("month", month), n)
 }
 
-func (s *NoteStore) Week(t time.Time, n int) ([]*model.Note, error) {
-	y, w := t.ISOWeek()
-	return s.notes.list(filepath.Join("week", fmt.Sprintf("%04d-%02d", y, w)), n)
+func (s *NoteStore) Week(week string, n int) ([]*model.Note, error) {
+	return s.notes.list(filepath.Join("week", week), n)
 }
 
-func (s *NoteStore) Day(t time.Time, n int) ([]*model.Note, error) {
-	return s.notes.list(filepath.Join("day", t.Format("2006-01-02")), n)
+func (s *NoteStore) Day(day string, n int) ([]*model.Note, error) {
+	return s.notes.list(filepath.Join("day", day), n)
 }
 
 func (s *NoteStore) Create(body string, createdAt time.Time) (*model.Note, error) {

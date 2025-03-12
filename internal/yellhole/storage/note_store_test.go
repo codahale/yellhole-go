@@ -73,7 +73,7 @@ func TestNoteStoreYear(t *testing.T) {
 		}
 	}
 
-	year, err := store.Year(time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), 5)
+	year, err := store.Year("2025", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestNoteStoreMonth(t *testing.T) {
 		}
 	}
 
-	month, err := store.Month(time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC), 5)
+	month, err := store.Month("2025-03", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +173,7 @@ func TestNoteStoreWeek(t *testing.T) {
 		}
 	}
 
-	week, err := store.Week(time.Date(2025, 3, 12, 0, 0, 0, 0, time.UTC), 5)
+	week, err := store.Week("2025-11W", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestNoteStoreWeeks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if expected, actual := []string{"2025-11"}, weeks; !slices.Equal(expected, actual) {
+	if expected, actual := []string{"2025-11W"}, weeks; !slices.Equal(expected, actual) {
 		t.Fatalf("expected %#v items but was %#v", expected, actual)
 	}
 }
@@ -223,7 +223,7 @@ func TestNoteStoreDay(t *testing.T) {
 		}
 	}
 
-	day, err := store.Day(time.Date(2025, 3, 10, 0, 0, 0, 0, time.UTC), 5)
+	day, err := store.Day("2025-03-10", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
