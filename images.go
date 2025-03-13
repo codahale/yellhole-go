@@ -37,8 +37,8 @@ func newImageController(dataRoot *os.Root, queries *db.Queries) (*imageControlle
 		return nil, err
 	}
 
-	_ = root.Mkdir("orig", 0755)
-	origRoot, err := root.OpenRoot("orig")
+	_ = root.Mkdir("original", 0755)
+	origRoot, err := root.OpenRoot("original")
 	if err != nil {
 		return nil, err
 	}
