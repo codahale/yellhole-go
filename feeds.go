@@ -18,6 +18,33 @@ func newFeedController(config *config, queries *db.Queries) *feedController {
 	return &feedController{config, queries}
 }
 
+func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
+	// TODO get build timestamp
+	// TODO get config (title, description, base URL, etc.)
+	// TODO get weeks for nav
+	// TODO get current year
+	// TODO get recent notes
+	http.NotFound(w, r)
+}
+
+func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
+	// TODO get build timestamp
+	// TODO get config (title, description, base URL, etc.)
+	// TODO get weeks for nav
+	// TODO get current year
+	// TODO get notes for week
+	http.NotFound(w, r)
+}
+
+func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
+	// TODO get build timestamp
+	// TODO get config (title, description, base URL, etc.)
+	// TODO get weeks for nav
+	// TODO get current year
+	// TODO get note
+	http.NotFound(w, r)
+}
+
 func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 	notes, err := fc.queries.RecentNotes(r.Context(), 20)
 	if err != nil {
