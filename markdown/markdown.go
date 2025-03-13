@@ -1,10 +1,9 @@
-package model
+package markdown
 
 import (
 	"html/template"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -12,23 +11,24 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-type Note struct {
-	ID        string    `json:"id"`
-	Body      string    `json:"body"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-func (n *Note) HTML() template.HTML {
-	buf := new(strings.Builder)
-	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer()))
-	if err := md.Convert([]byte(n.Body), buf); err != nil {
-		panic(err)
+func Images(s string) ([]*url.URL, error) {
+	var images []*url.URL
+	node := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer())).Parser().Parse(text.NewReader([]byte(s)))
+	if err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if n, ok := n.(*ast.Image); ok && entering {
+			u, err := url.Parse(string(n.Destination))
+			if err == nil {
+				images = append(images, u)
+			}
+		}
+		return ast.WalkContinue, nil
+	}); err != nil {
+		return nil, err
 	}
-	return template.HTML(buf.String())
+	return images, nil
 }
 
-func (n *Note) Description() string {
-	source := []byte(n.Body)
+func Text(s string) (string, error) {
 	md := goldmark.New(goldmark.WithExtensions(
 		extension.GFM,
 		extension.NewTypographer(
@@ -45,13 +45,13 @@ func (n *Note) Description() string {
 					extension.RightAngleQuote:  []byte(`»`),
 					extension.Apostrophe:       []byte(`’`),
 				}))))
-	node := md.Parser().Parse(text.NewReader(source))
+	node := md.Parser().Parse(text.NewReader([]byte(s)))
 	buf := new(strings.Builder)
 	if err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch n := n.(type) {
 		case *ast.Text:
 			if entering {
-				buf.Write(n.Segment.Value(source))
+				buf.Write(n.Segment.Value([]byte(s)))
 			}
 		case *ast.String:
 			if entering {
@@ -65,25 +65,16 @@ func (n *Note) Description() string {
 		}
 		return ast.WalkContinue, nil
 	}); err != nil {
-		panic(err)
+		return "", err
 	}
-	return strings.TrimSpace(buf.String())
+	return strings.TrimSpace(buf.String()), nil
 }
 
-func (n *Note) Images() []*url.URL {
-	source := []byte(n.Body)
-	node := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer())).Parser().Parse(text.NewReader(source))
-	var images []*url.URL
-	if err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if n, ok := n.(*ast.Image); ok && entering {
-			u, err := url.Parse(string(n.Destination))
-			if err == nil {
-				images = append(images, u)
-			}
-		}
-		return ast.WalkContinue, nil
-	}); err != nil {
-		panic(err)
+func HTML(s string) (template.HTML, error) {
+	buf := new(strings.Builder)
+	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer()))
+	if err := md.Convert([]byte(s), buf); err != nil {
+		return "", err
 	}
-	return images
+	return template.HTML(buf.String()), nil
 }
