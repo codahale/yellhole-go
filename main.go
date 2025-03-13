@@ -22,11 +22,14 @@ import (
 var public embed.FS
 
 func main() {
-	confAddr := ":8080"
-	confDataDir := "./data"
+	// Parse the configuration flags and environment variables.
+	config, err := parseConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	// Connect to the database.
-	conn, err := sql.Open("sqlite", filepath.Join(confDataDir, "yellhole.db"))
+	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,8 +37,8 @@ func main() {
 	queries := db.New(conn)
 
 	// Open the data directory as a file system root.
-	log.Printf("storing data in %s", confDataDir)
-	dataRoot, err := os.OpenRoot(confDataDir)
+	log.Printf("storing data in %s", config.DataDir)
+	dataRoot, err := os.OpenRoot(config.DataDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,8 +85,8 @@ func main() {
 	}
 
 	// Listen for HTTP requests.
-	log.Printf("listening on %s", confAddr)
-	if err := http.ListenAndServe(confAddr, mux); err != nil {
+	log.Printf("listening on %s", config.Addr)
+	if err := http.ListenAndServe(config.Addr, mux); err != nil {
 		log.Fatalln("error serving HTTP", err)
 	}
 }
