@@ -54,8 +54,10 @@ func main() {
 	}
 	defer images.Close()
 
-	// Create a need feed controller.
+	// Create a new feed controller.
 	feeds := newFeedController(config, queries)
+
+	admin := newAdminController(config, queries)
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
@@ -65,9 +67,8 @@ func main() {
 	mux.Handle("GET /notes/{start}", http.HandlerFunc(feeds.WeekPage))
 	mux.Handle("GET /note/{id}", http.HandlerFunc(feeds.NotePage))
 
-	// TODO implement admin controller
-	// mux.Handle("GET /admin", http.HandlerFunc(admin.AdminPage))
-	// mux.Handle("POST /admin/new", http.HandlerFunc(admin.NewNote))
+	mux.Handle("GET /admin", http.HandlerFunc(admin.AdminPage))
+	mux.Handle("POST /admin/new", http.HandlerFunc(admin.NewNote))
 	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.DownloadImage))
 	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.UploadImage))
 
