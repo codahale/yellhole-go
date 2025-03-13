@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"embed"
 	"fmt"
 	_ "image/gif"
@@ -8,8 +9,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
+	"github.com/codahale/yellhole-go/db"
 	_ "golang.org/x/image/webp"
+	_ "modernc.org/sqlite"
 )
 
 //go:generate go tool sqlc generate -f db/sqlc.yaml
@@ -20,6 +24,14 @@ var public embed.FS
 func main() {
 	confAddr := ":8080"
 	confDataDir := "./data"
+
+	// Connect to the database.
+	conn, err := sql.Open("sqlite", filepath.Join(confDataDir, "yellhole.db"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	queries := db.New(conn)
 
 	// Open the data directory as a file system root.
 	log.Printf("storing data in %s", confDataDir)
@@ -33,7 +45,7 @@ func main() {
 	assets := newAssetController(public, "public")
 
 	// Create a new image controller.
-	images, err := newImageController(dataRoot)
+	images, err := newImageController(dataRoot, queries)
 	if err != nil {
 		log.Fatal(err)
 	}

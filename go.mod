@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/image v0.25.0
+	modernc.org/sqlite v1.36.0
 )
 
 require (
@@ -59,7 +60,6 @@ require (
 	modernc.org/libc v1.61.13 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.8.2 // indirect
-	modernc.org/sqlite v1.36.0 // indirect
 )
 
 tool github.com/sqlc-dev/sqlc/cmd/sqlc

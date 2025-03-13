@@ -9,11 +9,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/codahale/yellhole-go/db"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 )
 
 type imageController struct {
+	queries           *db.Queries
 	root              *os.Root
 	feedRoot          *os.Root
 	origRoot          *os.Root
@@ -22,7 +24,7 @@ type imageController struct {
 	thumbImageHandler http.Handler
 }
 
-func newImageController(dataRoot *os.Root) (*imageController, error) {
+func newImageController(dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
@@ -51,6 +53,7 @@ func newImageController(dataRoot *os.Root) (*imageController, error) {
 	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
 
 	return &imageController{
+		queries,
 		root,
 		feedRoot,
 		origRoot,
@@ -70,15 +73,25 @@ func (ic *imageController) ServeThumbImage(w http.ResponseWriter, r *http.Reques
 
 func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request) {
 	// TODO check session auth
-	resp, err := http.Get(r.FormValue("url"))
+	url := r.FormValue("url")
+	resp, err := http.Get(url)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 
 	id := uuid.New()
+
 	format, err := ic.processImage(id, resp.Body)
 	if err != nil {
+		panic(err)
+	}
+
+	if err := ic.queries.CreateImage(r.Context(), db.CreateImageParams{
+		ImageID:  id.String(),
+		Filename: url,
+		Format:   format,
+	}); err != nil {
 		panic(err)
 	}
 
@@ -87,15 +100,25 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 
 func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	// TODO check session auth
-	f, _, err := r.FormFile("image")
+
+	f, h, err := r.FormFile("image")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
 	id := uuid.New()
+
 	format, err := ic.processImage(id, f)
 	if err != nil {
+		panic(err)
+	}
+
+	if err := ic.queries.CreateImage(r.Context(), db.CreateImageParams{
+		ImageID:  id.String(),
+		Filename: h.Filename,
+		Format:   format,
+	}); err != nil {
 		panic(err)
 	}
 
