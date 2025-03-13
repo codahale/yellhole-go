@@ -26,13 +26,13 @@ where created_at >= ? and created_at < ?
 order by created_at desc;
 
 -- name: RecentImages :many
-select image_id, original_filename, created_at
+select image_id, filename, created_at
 from image
 order by created_at desc
 limit ?;
 
 -- name: CreateImage :exec
-insert into image (image_id, original_filename, content_type)
+insert into image (image_id, filename, format)
 values (?, ?, ?);
 
 -- name: CreateSession :exec

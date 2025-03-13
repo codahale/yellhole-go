@@ -25,18 +25,18 @@ func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams
 }
 
 const createImage = `-- name: CreateImage :exec
-insert into image (image_id, original_filename, content_type)
+insert into image (image_id, filename, format)
 values (?, ?, ?)
 `
 
 type CreateImageParams struct {
-	ImageID          string
-	OriginalFilename string
-	ContentType      string
+	ImageID  string
+	Filename string
+	Format   string
 }
 
 func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) error {
-	_, err := q.db.ExecContext(ctx, createImage, arg.ImageID, arg.OriginalFilename, arg.ContentType)
+	_, err := q.db.ExecContext(ctx, createImage, arg.ImageID, arg.Filename, arg.Format)
 	return err
 }
 
@@ -198,16 +198,16 @@ func (q *Queries) PurgeSessions(ctx context.Context) error {
 }
 
 const recentImages = `-- name: RecentImages :many
-select image_id, original_filename, created_at
+select image_id, filename, created_at
 from image
 order by created_at desc
 limit ?
 `
 
 type RecentImagesRow struct {
-	ImageID          string
-	OriginalFilename string
-	CreatedAt        time.Time
+	ImageID   string
+	Filename  string
+	CreatedAt time.Time
 }
 
 func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]RecentImagesRow, error) {
@@ -219,7 +219,7 @@ func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]RecentImages
 	var items []RecentImagesRow
 	for rows.Next() {
 		var i RecentImagesRow
-		if err := rows.Scan(&i.ImageID, &i.OriginalFilename, &i.CreatedAt); err != nil {
+		if err := rows.Scan(&i.ImageID, &i.Filename, &i.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
