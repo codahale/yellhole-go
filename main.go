@@ -54,12 +54,15 @@ func main() {
 	}
 	defer images.Close()
 
+	// Create a need feed controller.
+	feeds := newFeedController(config, queries)
+
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
 
 	// TODO implement feed controller
 	// mux.Handle("GET /{$}", http.HandlerFunc(feeds.HomePage))
-	// mux.Handle("GET /atom.xml", http.HandlerFunc(feeds.AtomFeed))
+	mux.Handle("GET /atom.xml", http.HandlerFunc(feeds.AtomFeed))
 	// mux.Handle("GET /notes/{start}", http.HandlerFunc(feeds.WeekPage))
 	// mux.Handle("GET /note/{id}", http.HandlerFunc(feeds.NotePage))
 
