@@ -63,8 +63,8 @@ func main() {
 	// TODO implement admin controller
 	// mux.Handle("GET /admin", http.HandlerFunc(admin.AdminPage))
 	// mux.Handle("POST /admin/new", http.HandlerFunc(admin.NewNote))
-	// mux.Handle("POST /admin/upload", http.HandlerFunc(admin.UploadImage))
-	// mux.Handle("POST /admin/download", http.HandlerFunc(admin.DownloadImage))
+	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.DownloadImage))
+	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.UploadImage))
 
 	// TODO implement auth controller
 	// mux.Handle("GET /register", http.HandlerFunc(auth.RegisterPage))
@@ -76,8 +76,6 @@ func main() {
 
 	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.ServeFeedImage)))
 	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.ServeThumbImage)))
-	mux.Handle("POST /images/download", http.HandlerFunc(images.DownloadImage))
-	mux.Handle("POST /images/upload", http.HandlerFunc(images.UploadImage))
 
 	for _, path := range assets.AssetPaths() {
 		mux.Handle(fmt.Sprintf("GET /%s", path), assets)
