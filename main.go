@@ -47,17 +47,16 @@ func main() {
 	// Load the embedded public assets and create an asset controller.
 	assets := newAssetController(public, "public")
 
-	// Create a new image controller.
+	// Create the controllers.
 	images, err := newImageController(dataRoot, queries)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer images.Close()
 
-	// Create a new feed controller.
 	feeds := newFeedController(config, queries)
-
 	admin := newAdminController(config, queries)
+	auth := newAuthController(config, queries)
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
@@ -72,13 +71,12 @@ func main() {
 	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.DownloadImage))
 	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.UploadImage))
 
-	// TODO implement auth controller
-	// mux.Handle("GET /register", http.HandlerFunc(auth.RegisterPage))
-	// mux.Handle("POST /register/start", http.HandlerFunc(auth.RegisterStart))
-	// mux.Handle("POST /register/finish", http.HandlerFunc(auth.RegisterFinish))
-	// mux.Handle("GET /login", http.HandlerFunc(auth.LoginPage))
-	// mux.Handle("GET /login/start", http.HandlerFunc(auth.LoginStart))
-	// mux.Handle("GET /login/finish", http.HandlerFunc(auth.LoginFinish))
+	mux.Handle("GET /register", http.HandlerFunc(auth.RegisterPage))
+	mux.Handle("POST /register/start", http.HandlerFunc(auth.RegisterStart))
+	mux.Handle("POST /register/finish", http.HandlerFunc(auth.RegisterFinish))
+	mux.Handle("GET /login", http.HandlerFunc(auth.LoginPage))
+	mux.Handle("GET /login/start", http.HandlerFunc(auth.LoginStart))
+	mux.Handle("GET /login/finish", http.HandlerFunc(auth.LoginFinish))
 
 	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.ServeFeedImage)))
 	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.ServeThumbImage)))
