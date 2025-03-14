@@ -95,7 +95,7 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
-	_, _ = fmt.Fprintf(w, "That was a %s image.", format)
+	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
 func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	_, _ = fmt.Fprintf(w, "That was a %s image.", format)
+	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
 func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, error) {
