@@ -22,7 +22,7 @@ group by 1 order by 1 desc;
 -- name: NotesByDate :many
 select note_id, body, created_at
 from note
-where created_at >= ? and created_at < ?
+where created_at >= sqlc.arg(start) and created_at < sqlc.arg(end) 
 order by created_at desc;
 
 -- name: RecentImages :many

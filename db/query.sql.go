@@ -129,17 +129,17 @@ func (q *Queries) NoteByID(ctx context.Context, noteID string) (Note, error) {
 const notesByDate = `-- name: NotesByDate :many
 select note_id, body, created_at
 from note
-where created_at >= ? and created_at < ?
+where created_at >= ?1 and created_at < ?2 
 order by created_at desc
 `
 
 type NotesByDateParams struct {
-	CreatedAt   time.Time
-	CreatedAt_2 time.Time
+	Start time.Time
+	End   time.Time
 }
 
 func (q *Queries) NotesByDate(ctx context.Context, arg NotesByDateParams) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, notesByDate, arg.CreatedAt, arg.CreatedAt_2)
+	rows, err := q.db.QueryContext(ctx, notesByDate, arg.Start, arg.End)
 	if err != nil {
 		return nil, err
 	}
