@@ -33,10 +33,10 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", struct {
-		Title string
-		Notes []db.Note
+		Config *config
+		Notes  []db.Note
 	}{
-		fc.config.Title,
+		fc.config,
 		notes,
 	}); err != nil {
 		panic(err)

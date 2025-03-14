@@ -1,7 +1,13 @@
 {{define "content"}}
 {{range .Notes}}
-<div>{{ .Body | markdownHTML }}</div>
+<div>{{.Body | markdownHTML}}</div>
 {{else}}
 <div><strong>no rows</strong></div>
 {{end}}
+{{end}}
+
+{{define "footer"}}
+<p>
+    <small>Copyright &copy; {{currentYear}} {{.Config.Author}}</small>
+</p>
 {{end}}

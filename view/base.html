@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{{block "title" .}}Yellhole{{end}}</title>
+    <title>{{block "title" .}}{{.Config.Title}}{{end}}</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta charset='utf-8'>
     <link rel="stylesheet" href="/css/pico-1.5.6.min.css?{{buildTimestamp}}">
@@ -49,9 +49,9 @@
                 <li>
                     <hgroup>
                         <h1>
-                            <a href="/">{{template "title"}}</a>
+                            <a href="/">{{template "title" .}}</a>
                         </h1>
-                        <h2>{{block "description" .}}Obscurantist filth.{{end}}</h2>
+                        <h2>{{block "description" .}}{{.Config.Description}}{{end}}</h2>
                     </hgroup>
                 </li>
             </ul>

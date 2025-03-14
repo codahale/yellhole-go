@@ -25,6 +25,9 @@ var (
 		"buildTimestamp": func() int64 {
 			return time.Now().Unix()
 		},
+		"currentYear": func() int {
+			return time.Now().Local().Year()
+		},
 	}
 	tmpls = make(map[string]*template.Template)
 )
