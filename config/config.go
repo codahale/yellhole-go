@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -52,7 +53,7 @@ func Parse() (*Config, error) {
 		config.Author = s
 	}
 
-	u, err := url.Parse(baseURL)
+	u, err := url.Parse(strings.TrimRight(baseURL, "/"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
