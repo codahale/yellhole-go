@@ -41,13 +41,11 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		panic(err)
 	}
-	// TODO get config (title, description, base URL, etc.)
 	// TODO get weeks for nav
 	// TODO get current year
 }
 
 func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
-	// TODO get config (title, description, base URL, etc.)
 	// TODO get weeks for nav
 	// TODO get current year
 	// TODO get notes for week
@@ -55,7 +53,6 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
-	// TODO get config (title, description, base URL, etc.)
 	// TODO get weeks for nav
 	// TODO get current year
 	// TODO get note
