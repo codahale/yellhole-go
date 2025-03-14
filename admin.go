@@ -43,8 +43,16 @@ func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	// TODO authenticate session
 
 	if r.FormValue("preview") == fmt.Sprint(true) {
-		// TODO implement note previews
-		http.NotFound(w, r)
+		w.Header().Set("content-type", "text/html")
+		if err := view.Render(w, "preview.html", struct {
+			Config *config.Config
+			Body   string
+		}{
+			ac.config,
+			r.FormValue("body"),
+		}); err != nil {
+			panic(err)
+		}
 		return
 	}
 
