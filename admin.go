@@ -5,6 +5,7 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
+	"github.com/codahale/yellhole-go/view"
 )
 
 type adminController struct {
@@ -18,8 +19,22 @@ func newAdminController(config *config.Config, queries *db.Queries) *adminContro
 
 func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 	// TODO authenticate session
-	// TODO get recent images
-	http.NotFound(w, r)
+
+	images, err := ac.queries.RecentImages(r.Context(), 10)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "text/html")
+	if err := view.Render(w, "new.html", struct {
+		Config *config.Config
+		Images []db.Image
+	}{
+		ac.config,
+		images,
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {

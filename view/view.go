@@ -39,6 +39,12 @@ var (
 		"atomURL":     AtomURL,
 		"weekPageURL": WeekPageURL,
 		"notePageURL": NotePageURL,
+		"feedImageURL": func(c *config.Config, imageID string) *url.URL {
+			return c.BaseURL.JoinPath("images", "feed", fmt.Sprintf("%s.png", imageID))
+		},
+		"thumbImageURL": func(c *config.Config, imageID string) *url.URL {
+			return c.BaseURL.JoinPath("images", "thumb", fmt.Sprintf("%s.png", imageID))
+		},
 	}
 	tmpls = make(map[string]*template.Template)
 )
