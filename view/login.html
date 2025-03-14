@@ -1,0 +1,10 @@
+{{define "title"}}Yellhole Admin{{end}}
+{{define "description"}}Speak frenemy and enter.{{end}}
+
+{{define "head"}}
+<script src="{{ .Config.BaseURL }}/js/auth.js?{{buildTimestamp}}"></script>
+{{end}}
+
+{{define "content"}}
+<button id="login" data-passkey-only="true" disabled onclick="login()">Log In With Passkey</button>
+{{end}}

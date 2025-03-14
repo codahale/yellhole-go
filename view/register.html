@@ -1,0 +1,12 @@
+{{define "title"}}Yellhole Admin{{end}}
+{{define "description"}}Welcome to the hole.{{end}}
+
+{{define "head"}}
+<script src="{{ .Config.BaseURL }}/js/auth.js?{{buildTimestamp}}"></script>
+{{end}}
+
+{{define "content"}}
+<section>
+    <button id="register" data-passkey-only="true" disabled onclick="register()">Register Passkey</button>
+</section>
+{{end}}
