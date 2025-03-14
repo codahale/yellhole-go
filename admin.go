@@ -3,15 +3,16 @@ package main
 import (
 	"net/http"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 )
 
 type adminController struct {
-	config  *config
+	config  *config.Config
 	queries *db.Queries
 }
 
-func newAdminController(config *config, queries *db.Queries) *adminController {
+func newAdminController(config *config.Config, queries *db.Queries) *adminController {
 	return &adminController{config, queries}
 }
 

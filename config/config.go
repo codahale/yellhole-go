@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"flag"
@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type config struct {
+type Config struct {
 	Addr        string
 	BaseURL     *url.URL
 	DataDir     string
@@ -16,8 +16,8 @@ type config struct {
 	Author      string
 }
 
-func parseConfig() (*config, error) {
-	var config config
+func Parse() (*Config, error) {
+	var config Config
 
 	var baseURL string
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
@@ -62,4 +62,8 @@ func parseConfig() (*config, error) {
 		return nil, err
 	}
 	return &config, nil
+}
+
+func (c *Config) AtomURL() url.URL {
+	return *c.BaseURL.JoinPath("atom.xml")
 }

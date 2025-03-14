@@ -3,15 +3,16 @@ package main
 import (
 	"net/http"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 )
 
 type authController struct {
-	config  *config
+	config  *config.Config
 	queries *db.Queries
 }
 
-func newAuthController(config *config, queries *db.Queries) *authController {
+func newAuthController(config *config.Config, queries *db.Queries) *authController {
 	return &authController{config, queries}
 }
 

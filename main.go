@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	_ "golang.org/x/image/webp"
 	_ "modernc.org/sqlite"
@@ -23,7 +24,7 @@ var public embed.FS
 
 func main() {
 	// Parse the configuration flags and environment variables.
-	config, err := parseConfig()
+	config, err := config.Parse()
 	if err != nil {
 		panic(err)
 	}

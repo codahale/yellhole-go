@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	"github.com/codahale/yellhole-go/markdown"
 	"github.com/codahale/yellhole-go/view"
@@ -12,11 +13,11 @@ import (
 )
 
 type feedController struct {
-	config  *config
+	config  *config.Config
 	queries *db.Queries
 }
 
-func newFeedController(config *config, queries *db.Queries) *feedController {
+func newFeedController(config *config.Config, queries *db.Queries) *feedController {
 	return &feedController{config, queries}
 }
 
@@ -33,7 +34,7 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", struct {
-		Config *config
+		Config *config.Config
 		Notes  []db.Note
 	}{
 		fc.config,
