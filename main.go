@@ -77,8 +77,8 @@ func main() {
 	mux.Handle("POST /register/start", http.HandlerFunc(auth.RegisterStart))
 	mux.Handle("POST /register/finish", http.HandlerFunc(auth.RegisterFinish))
 	mux.Handle("GET /login", http.HandlerFunc(auth.LoginPage))
-	mux.Handle("GET /login/start", http.HandlerFunc(auth.LoginStart))
-	mux.Handle("GET /login/finish", http.HandlerFunc(auth.LoginFinish))
+	mux.Handle("POST /login/start", http.HandlerFunc(auth.LoginStart))
+	mux.Handle("POST /login/finish", http.HandlerFunc(auth.LoginFinish))
 
 	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.ServeFeedImage)))
 	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.ServeThumbImage)))
