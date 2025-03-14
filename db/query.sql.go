@@ -276,7 +276,7 @@ func (q *Queries) SessionExists(ctx context.Context, sessionID string) (bool, er
 	return column_1, err
 }
 
-const weeksWithNotes = `-- name: WeeksWithNotes :many
+const weeksWithNotesRaw = `-- name: WeeksWithNotesRaw :many
 select
     date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as start_date,
     date(datetime(created_at, 'localtime'), 'weekday 0') as end_date
@@ -284,20 +284,20 @@ from note
 group by 1 order by 1 desc
 `
 
-type WeeksWithNotesRow struct {
+type WeeksWithNotesRawRow struct {
 	StartDate interface{}
 	EndDate   interface{}
 }
 
-func (q *Queries) WeeksWithNotes(ctx context.Context) ([]WeeksWithNotesRow, error) {
-	rows, err := q.db.QueryContext(ctx, weeksWithNotes)
+func (q *Queries) WeeksWithNotesRaw(ctx context.Context) ([]WeeksWithNotesRawRow, error) {
+	rows, err := q.db.QueryContext(ctx, weeksWithNotesRaw)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []WeeksWithNotesRow
+	var items []WeeksWithNotesRawRow
 	for rows.Next() {
-		var i WeeksWithNotesRow
+		var i WeeksWithNotesRawRow
 		if err := rows.Scan(&i.StartDate, &i.EndDate); err != nil {
 			return nil, err
 		}

@@ -12,7 +12,7 @@ from note
 order by created_at desc
 limit ?;
 
--- name: WeeksWithNotes :many
+-- name: WeeksWithNotesRaw :many
 select
     date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as start_date,
     date(datetime(created_at, 'localtime'), 'weekday 0') as end_date
