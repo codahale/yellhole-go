@@ -1,8 +1,52 @@
+{{define "nav"}}
+<ul>
+    <li>
+        <details role="list">
+            <summary aria-haspopup="listbox" role="link">Archives</summary>
+            <ul role="listbox">
+                {{$config := .Config}}
+                {{range $week := .Weeks}}
+                <li>
+                    <a href="{{weekPageURL $config $week.StartDate}}">
+                        {{$week.StartDate}} to {{$week.EndDate}}
+                    </a>
+                </li>
+                {{end}}
+            </ul>
+        </details>
+    </li>
+    <li>
+        <a href="{{atomURL .Config}}">
+            <svg style="width: 30px; height: 30px" viewBox="0 0 800 800">
+                <path
+                    d="M493 652H392c0-134-111-244-244-244V307c189 0 345 156 345 345zm71 0c0-228-188-416-416-416V132c285 0 520 235 520 520z" />
+                <circle cx="219" cy="581" r="71" />
+            </svg>
+        </a>
+    </li>
+</ul>
+{{end}}
+
 {{define "content"}}
-{{range .Notes}}
-<div>{{.Body | markdownHTML}}</div>
+{{$config := .Config}}
+{{range $note := .Notes}}
+<article>
+    <div class="content">
+        {{.Body | markdownHTML}}
+    </div>
+    <footer>
+        <a href="{{notePageURL $config $note.NoteID}}">
+            <time datetime="{{$note.CreatedAt | rfc3339}}">
+                {{$note.CreatedAt.Local}}
+            </time>
+        </a>
+    </footer>
+</article>
+<div></div>
 {{else}}
-<div><strong>no rows</strong></div>
+<article>
+    <aside>Nothing here yet.</aside>
+</article>
 {{end}}
 {{end}}
 

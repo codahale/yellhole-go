@@ -32,30 +32,33 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	weeks, err := fc.queries.WeeksWithNotes(r.Context())
+	if err != nil {
+		panic(err)
+	}
+
 	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", struct {
 		Config *config.Config
 		Notes  []db.Note
+		Weeks  []db.Week
 	}{
 		fc.config,
 		notes,
+		weeks,
 	}); err != nil {
 		panic(err)
 	}
-	// TODO get weeks for nav
-	// TODO get current year
 }
 
 func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 	// TODO get weeks for nav
-	// TODO get current year
 	// TODO get notes for week
 	http.NotFound(w, r)
 }
 
 func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 	// TODO get weeks for nav
-	// TODO get current year
 	// TODO get note
 	http.NotFound(w, r)
 }
@@ -74,7 +77,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 			Name: fc.config.Author,
 		},
 		Link: []atom.Link{{
-			Href: fc.config.BaseURL.JoinPath("/atom.xml").String(),
+			Href: view.AtomURL(fc.config).String(),
 			Rel:  "alternate",
 		}},
 	}
@@ -90,15 +93,15 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 		}
 
 		entry := atom.Entry{
-			// TODO ID: noteURL.String(),
+			ID:    view.NotePageURL(fc.config, note.NoteID).String(),
 			Title: note.NoteID,
 			Content: &atom.Text{
 				Type: "html",
 				Body: string(html),
 			},
 			Link: []atom.Link{{
-				Rel: "alternate",
-				// TODO Href: note.noteURL.String(),
+				Href: view.NotePageURL(fc.config, note.NoteID).String(),
+				Rel:  "alternate",
 			}},
 			Published: atom.Time(note.CreatedAt),
 			Updated:   atom.Time(note.CreatedAt),

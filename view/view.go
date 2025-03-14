@@ -7,9 +7,11 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/markdown"
 )
 
@@ -31,9 +33,27 @@ var (
 		"currentYear": func() int {
 			return time.Now().Local().Year()
 		},
+		"rfc3339": func(t *time.Time) string {
+			return t.UTC().Format(time.RFC3339)
+		},
+		"atomURL":     AtomURL,
+		"weekPageURL": WeekPageURL,
+		"notePageURL": NotePageURL,
 	}
 	tmpls = make(map[string]*template.Template)
 )
+
+func AtomURL(c *config.Config) *url.URL {
+	return c.BaseURL.JoinPath("atom.xml")
+}
+
+func WeekPageURL(c *config.Config, startDate string) *url.URL {
+	return c.BaseURL.JoinPath("notes", startDate)
+}
+
+func NotePageURL(c *config.Config, noteID string) *url.URL {
+	return c.BaseURL.JoinPath("note", noteID)
+}
 
 func init() {
 	if buildTimestamp == "" {
