@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/xml"
 	"net/http"
+	"strconv"
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/codahale/yellhole-go/markdown"
+	"github.com/codahale/yellhole-go/view"
 	"github.com/codahale/yellhole-go/view/atom"
 )
 
@@ -19,12 +21,30 @@ func newFeedController(config *config, queries *db.Queries) *feedController {
 }
 
 func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
+	n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
+	if err != nil {
+		n = 10
+	}
+
+	notes, err := fc.queries.RecentNotes(r.Context(), n)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "text/html")
+	if err := view.Render(w, "feed.html", struct {
+		Title string
+		Notes []db.Note
+	}{
+		fc.config.Title,
+		notes,
+	}); err != nil {
+		panic(err)
+	}
 	// TODO get build timestamp
 	// TODO get config (title, description, base URL, etc.)
 	// TODO get weeks for nav
 	// TODO get current year
-	// TODO get recent notes
-	http.NotFound(w, r)
 }
 
 func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {

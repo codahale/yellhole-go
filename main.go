@@ -86,7 +86,7 @@ func main() {
 	}
 
 	// Listen for HTTP requests.
-	log.Printf("listening on %s", config.Addr)
+	log.Printf("listening on http://%s/", config.Addr)
 	if err := http.ListenAndServe(config.Addr, mux); err != nil {
 		log.Fatalln("error serving HTTP", err)
 	}
