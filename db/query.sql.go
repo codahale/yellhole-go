@@ -60,11 +60,11 @@ insert into passkey (passkey_id, public_key_spki) values (?, ?)
 
 type CreatePasskeyParams struct {
 	PasskeyID     []byte
-	PublicKeySpki []byte
+	PublicKeySPKI []byte
 }
 
 func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) error {
-	_, err := q.db.ExecContext(ctx, createPasskey, arg.PasskeyID, arg.PublicKeySpki)
+	_, err := q.db.ExecContext(ctx, createPasskey, arg.PasskeyID, arg.PublicKeySPKI)
 	return err
 }
 

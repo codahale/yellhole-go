@@ -29,7 +29,7 @@ type Note struct {
 
 type Passkey struct {
 	PasskeyID     []byte
-	PublicKeySpki []byte
+	PublicKeySPKI []byte
 	CreatedAt     time.Time
 }
 
