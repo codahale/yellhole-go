@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -38,11 +39,7 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("content-type", "text/html")
-	if err := view.Render(w, "feed.html", struct {
-		Config *config.Config
-		Notes  []db.Note
-		Weeks  []db.Week
-	}{
+	if err := view.Render(w, "feed.html", feedPage{
 		fc.config,
 		notes,
 		weeks,
@@ -52,9 +49,38 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
-	// TODO get weeks for nav
-	// TODO get notes for week
-	http.NotFound(w, r)
+	start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	notes, err := fc.queries.NotesByDate(r.Context(), db.NotesByDateParams{
+		Start: start,
+		End:   start.AddDate(0, 7, 0),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	if len(notes) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	weeks, err := fc.queries.WeeksWithNotes(r.Context())
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "text/html")
+	if err := view.Render(w, "feed.html", feedPage{
+		fc.config,
+		notes,
+		weeks,
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
@@ -113,4 +139,10 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 	if err := xml.NewEncoder(w).Encode(&feed); err != nil {
 		panic(err)
 	}
+}
+
+type feedPage struct {
+	Config *config.Config
+	Notes  []db.Note
+	Weeks  []db.Week
 }
