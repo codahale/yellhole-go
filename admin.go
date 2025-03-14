@@ -18,7 +18,6 @@ func newAdminController(config *config.Config, queries *db.Queries) *adminContro
 
 func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 	// TODO authenticate session
-	// TODO get current year
 	// TODO get recent images
 	http.NotFound(w, r)
 }

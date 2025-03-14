@@ -17,7 +17,6 @@ func newAuthController(config *config.Config, queries *db.Queries) *authControll
 }
 
 func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	// TODO get current year
 	// TODO check for existing passkey
 	// TODO ensure session isn't authenticated
 	http.NotFound(w, r)
@@ -35,7 +34,6 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 
 func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	// TODO ensure session isn't authenticated
-	// TODO get current year
 	http.NotFound(w, r)
 }
 
