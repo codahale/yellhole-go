@@ -198,28 +198,27 @@ func (q *Queries) PurgeSessions(ctx context.Context) error {
 }
 
 const recentImages = `-- name: RecentImages :many
-select image_id, filename, created_at
+select image_id, filename, format, created_at
 from image
 order by created_at desc
 limit ?
 `
 
-type RecentImagesRow struct {
-	ImageID   string
-	Filename  string
-	CreatedAt time.Time
-}
-
-func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]RecentImagesRow, error) {
+func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]Image, error) {
 	rows, err := q.db.QueryContext(ctx, recentImages, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RecentImagesRow
+	var items []Image
 	for rows.Next() {
-		var i RecentImagesRow
-		if err := rows.Scan(&i.ImageID, &i.Filename, &i.CreatedAt); err != nil {
+		var i Image
+		if err := rows.Scan(
+			&i.ImageID,
+			&i.Filename,
+			&i.Format,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

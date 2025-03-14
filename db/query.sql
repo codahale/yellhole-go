@@ -26,7 +26,7 @@ where created_at >= sqlc.arg(start) and created_at < sqlc.arg(end)
 order by created_at desc;
 
 -- name: RecentImages :many
-select image_id, filename, created_at
+select *
 from image
 order by created_at desc
 limit ?;
