@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# go install github.com/air-verse/air@latest
+
+air --build.cmd "go build -o bin/yellhole ." --build.bin "./bin/yellhole" --build.exclude_dir "data"
