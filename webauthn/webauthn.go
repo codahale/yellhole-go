@@ -53,8 +53,11 @@ func (r *RegistrationResponse) Validate(config *config.Config) ([]byte, []byte, 
 		return nil, nil, fmt.Errorf("invalid public key type")
 	}
 
-	// TODO Decode and validate the client data.
-	var ccd collectedClientData
+	var ccd struct {
+		Action      string `json:"type"`
+		Origin      string `json:"origin"`
+		CrossOrigin bool   `json:"crossOrigin"`
+	}
 	if err := json.Unmarshal(r.ClientDataJSON, &ccd); err != nil {
 		return nil, nil, fmt.Errorf("invalid client data: %w", err)
 	}
@@ -91,11 +94,4 @@ func (r *RegistrationResponse) Validate(config *config.Config) ([]byte, []byte, 
 	}
 
 	return r.AuthenticatorData[55 : 55+credIDLen], r.PublicKey, nil
-}
-
-type collectedClientData struct {
-	Action      string `json:"type"`
-	Challenge   string `json:"challenge"`
-	Origin      string `json:"origin"`
-	CrossOrigin bool   `json:"crossOrigin"`
 }
