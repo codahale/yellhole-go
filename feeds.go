@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/xml"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -84,9 +86,28 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
-	// TODO get weeks for nav
-	// TODO get note
-	http.NotFound(w, r)
+	note, err := fc.queries.NoteByID(r.Context(), r.PathValue("id"))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
+		panic(err)
+	}
+
+	weeks, err := fc.queries.WeeksWithNotes(r.Context())
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "text/html")
+	if err := view.Render(w, "feed.html", feedPage{
+		fc.config,
+		[]db.Note{note},
+		weeks,
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
