@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"log"
+	"strconv"
 	"time"
 
 	"github.com/codahale/yellhole-go/markdown"
@@ -13,8 +15,9 @@ import (
 
 var (
 	//go:embed *.html
-	files embed.FS
-	funcs = template.FuncMap{
+	files          embed.FS
+	buildTimestamp string // injected via ldflags, must be uninitialized
+	funcs          = template.FuncMap{
 		"markdownHTML": func(s string) template.HTML {
 			v, err := markdown.HTML(s)
 			if err != nil {
@@ -22,8 +25,8 @@ var (
 			}
 			return v
 		},
-		"buildTimestamp": func() int64 {
-			return time.Now().Unix()
+		"buildTimestamp": func() string {
+			return buildTimestamp
 		},
 		"currentYear": func() int {
 			return time.Now().Local().Year()
@@ -33,6 +36,11 @@ var (
 )
 
 func init() {
+	if buildTimestamp == "" {
+		buildTimestamp = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+	log.Printf("build timestamp: %q", buildTimestamp)
+
 	dir, err := fs.ReadDir(files, ".")
 	if err != nil {
 		panic(err)

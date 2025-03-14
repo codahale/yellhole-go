@@ -17,7 +17,6 @@ func newAdminController(config *config, queries *db.Queries) *adminController {
 
 func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 	// TODO authenticate session
-	// TODO get build timestamp
 	// TODO get config (title, description, base URL, etc.)
 	// TODO get current year
 	// TODO get recent images
