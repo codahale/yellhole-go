@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{block "title" .}}Yellhole{{end}}</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta charset='utf-8'>
+    <link rel="stylesheet" href="/css/pico-1.5.6.min.css?{{buildTimestamp}}">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    {{block "head" .}}{{end}}
+    <style type="text/css">
+        .content p img {
+            display: block;
+            margin: auto;
+        }
+
+        body>header {
+            padding-bottom: 0;
+        }
+
+        body>main {
+            max-width: 700px !important;
+            padding-top: 0;
+        }
+
+        hgroup h1 a {
+            color: var(--h1-color);
+        }
+
+        article footer {
+            padding: 1rem;
+            text-align: right;
+        }
+
+        article footer a {
+            color: var(--muted-color);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="container">
+        <nav>
+            <ul>
+                <li>
+                    <hgroup>
+                        <h1>
+                            <a href="/">{{template "title"}}</a>
+                        </h1>
+                        <h2>{{block "description" .}}Obscurantist filth.{{end}}</h2>
+                    </hgroup>
+                </li>
+            </ul>
+            {{block "nav" .}}{{end}}
+        </nav>
+    </header>
+    <main class="container">
+        {{block "content" .}}{{end}}
+    </main>
+    <footer class="container">
+        <small>
+            {{block "footer" .}}{{end}}
+        </small>
+    </footer>
+
+    {{block "tail" .}}{{end}}
+</body>
+
+</html>

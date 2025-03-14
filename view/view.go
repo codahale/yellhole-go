@@ -2,16 +2,19 @@ package view
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
+	"time"
 
 	"github.com/codahale/yellhole-go/markdown"
 )
 
 var (
 	//go:embed *.html
-	templateFiles embed.FS
-	templates     = template.New("yellhole").Funcs(template.FuncMap{
+	files embed.FS
+	funcs = template.FuncMap{
 		"markdownHTML": func(s string) template.HTML {
 			v, err := markdown.HTML(s)
 			if err != nil {
@@ -19,13 +22,38 @@ var (
 			}
 			return v
 		},
-	})
+		"buildTimestamp": func() int64 {
+			return time.Now().Unix()
+		},
+	}
+	tmpls = make(map[string]*template.Template)
 )
 
 func init() {
-	templates = template.Must(templates.ParseFS(templateFiles, "*.html"))
+	dir, err := fs.ReadDir(files, ".")
+	if err != nil {
+		panic(err)
+	}
+
+	// This is a lot of hassle to accomplish a single level of nested layouts.
+	for _, f := range dir {
+		if f.IsDir() || f.Name() == "base.html" {
+			continue
+		}
+
+		t, err := template.New(f.Name()).Funcs(funcs).ParseFS(files, f.Name(), "base.html")
+		if err != nil {
+			panic(err)
+		}
+
+		tmpls[f.Name()] = t
+	}
 }
 
 func Render(w io.Writer, name string, data any) error {
-	return templates.ExecuteTemplate(w, name, data)
+	t, ok := tmpls[name]
+	if !ok {
+		return fmt.Errorf("unknown template %q", name)
+	}
+	return t.ExecuteTemplate(w, "base.html", data)
 }
