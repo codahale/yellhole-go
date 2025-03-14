@@ -6,7 +6,7 @@ import (
 	"fmt"
 	_ "image/gif"
 	_ "image/jpeg"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,19 +29,20 @@ func main() {
 		panic(err)
 	}
 
+	slog.Default().Info("starting", "dataDir", config.DataDir)
+
 	// Connect to the database.
 	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db"))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer conn.Close()
 	queries := db.New(conn)
 
 	// Open the data directory as a file system root.
-	log.Printf("storing data in %s", config.DataDir)
 	dataRoot, err := os.OpenRoot(config.DataDir)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer dataRoot.Close()
 
@@ -51,7 +52,7 @@ func main() {
 	// Create the controllers.
 	images, err := newImageController(dataRoot, queries)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer images.Close()
 
@@ -87,8 +88,8 @@ func main() {
 	}
 
 	// Listen for HTTP requests.
-	log.Printf("listening on http://%s/", config.Addr)
+	slog.Info("listening for connections", "baseURL", config.BaseURL)
 	if err := http.ListenAndServe(config.Addr, mux); err != nil {
-		log.Fatalln("error serving HTTP", err)
+		panic(err)
 	}
 }

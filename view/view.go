@@ -6,9 +6,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
-	"log"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/codahale/yellhole-go/config"
@@ -62,11 +60,6 @@ func NotePageURL(c *config.Config, noteID string) *url.URL {
 }
 
 func init() {
-	if buildTimestamp == "" {
-		buildTimestamp = strconv.FormatInt(time.Now().Unix(), 10)
-	}
-	log.Printf("build timestamp: %q", buildTimestamp)
-
 	dir, err := fs.ReadDir(files, ".")
 	if err != nil {
 		panic(err)

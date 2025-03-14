@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/fs"
-	"log"
 	"net/http"
 )
 
@@ -14,7 +13,7 @@ type assetController struct {
 func newAssetController(root fs.FS, dir string) assetController {
 	assets, err := fs.Sub(root, dir)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	handler := http.FileServerFS(assets)
