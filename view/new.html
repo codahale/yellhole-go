@@ -17,12 +17,10 @@
                     Recent Images
                 </summary>
                 <ul role="listbox">
-                    {{$config := .Config}}
-                    {{range $image := .Images}}
+                    {{range .Images}}
                     <li>
-                        <a href="#" onclick="insertImage('{{feedImageURL $config $image.ImageID}}')">
-                            <img src="{{thumbImageURL $config $image.ImageID}}"
-                                title="{{$image.Filename}} / {{$image.Format}}">
+                        <a href="#" onclick="insertImage('{{feedImageURL $.Config .ImageID}}')">
+                            <img src="{{thumbImageURL $.Config .ImageID}}" title="{{.Filename}} / {{.Format}}">
                         </a>
                     </li>
                     {{end}}

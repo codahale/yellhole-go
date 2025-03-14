@@ -7,11 +7,10 @@
         <details role="list">
             <summary aria-haspopup="listbox" role="link">Archives</summary>
             <ul role="listbox">
-                {{$config := .Config}}
-                {{range $week := .Weeks}}
+                {{range .Weeks}}
                 <li>
-                    <a href="{{weekPageURL $config $week.StartDate}}">
-                        {{$week.StartDate}} to {{$week.EndDate}}
+                    <a href="{{weekPageURL $.Config .StartDate}}">
+                        {{.StartDate}} to {{.EndDate}}
                     </a>
                 </li>
                 {{end}}
@@ -31,16 +30,15 @@
 {{end}}
 
 {{define "content"}}
-{{$config := .Config}}
-{{range $note := .Notes}}
+{{range .Notes}}
 <article>
     <div class="content">
         {{.Body | markdownHTML}}
     </div>
     <footer>
-        <a href="{{notePageURL $config $note.NoteID}}">
-            <time datetime="{{$note.CreatedAt | rfc3339}}">
-                {{$note.CreatedAt.Local}}
+        <a href="{{notePageURL $.Config .NoteID}}">
+            <time datetime="{{.CreatedAt | rfc3339}}">
+                {{.CreatedAt.Local}}
             </time>
         </a>
     </footer>
