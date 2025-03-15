@@ -14,6 +14,7 @@ import (
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	_ "golang.org/x/image/webp"
+	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"
 )
 
