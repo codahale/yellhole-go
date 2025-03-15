@@ -1,3 +1,4 @@
+-- migrate:up
 create table note (
     note_id text primary key not null,
     body text not null,
@@ -31,3 +32,5 @@ create table challenge (
     bytes blob not null,
     created_at timestamp not null default current_timestamp
 );
+
+-- migrate:down

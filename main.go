@@ -38,6 +38,12 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
+
+	// Run migrations, if any,.
+	if err := db.RunMigrations(conn); err != nil {
+		panic(err)
+	}
+
 	queries := db.New(conn)
 
 	// Open the data directory as a file system root.
