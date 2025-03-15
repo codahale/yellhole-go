@@ -20,7 +20,15 @@ func newAdminController(config *config.Config, queries *db.Queries) *adminContro
 }
 
 func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
-	// TODO authenticate session
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if !auth {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	images, err := ac.queries.RecentImages(r.Context(), 10)
 	if err != nil {
@@ -40,7 +48,15 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
-	// TODO authenticate session
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if !auth {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	if r.FormValue("preview") == fmt.Sprint(true) {
 		w.Header().Set("content-type", "text/html")

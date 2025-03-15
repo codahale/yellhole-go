@@ -132,7 +132,7 @@ async function login() {
   });
 
   if (finishResp.ok) {
-    window.location.href = '/admin/new';
+    window.location.href = '/admin';
   } else {
     window.alert('Error finishing passkey authentication.');
   }

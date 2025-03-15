@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -21,8 +23,25 @@ func newAuthController(config *config.Config, queries *db.Queries) *authControll
 }
 
 func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	// TODO check for existing passkey
-	// TODO ensure session isn't authenticated
+	registered, err := ac.queries.HasPasskey(r.Context())
+	if err != nil {
+		panic(err)
+	}
+	if registered {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Ensure session isn't authenticated.
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if auth {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
 
 	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "register.html", nil); err != nil {
@@ -36,7 +55,11 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 		panic(err)
 	}
 
-	challenge := webauthn.NewRegistrationChallenge(ac.config, uuid.New(), passkeyIDs)
+	challenge, err := webauthn.NewRegistrationChallenge(ac.config, passkeyIDs)
+	if err != nil {
+		panic(err)
+	}
+
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(&challenge); err != nil {
 		panic(err)
@@ -65,7 +88,26 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 }
 
 func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
-	// TODO ensure session isn't authenticated
+	registered, err := ac.queries.HasPasskey(r.Context())
+	if err != nil {
+		panic(err)
+	}
+	if !registered {
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
+
+	// Ensure session isn't authenticated.
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if auth {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+
 	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "login.html", nil); err != nil {
 		panic(err)
@@ -73,14 +115,125 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
-	// TODO ensure session isn't authenticated
-	// TODO insert challenge into DB
-	http.NotFound(w, r)
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if auth {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+
+	passkeyIDs, err := ac.queries.PasskeyIDs(r.Context())
+	if err != nil {
+		panic(err)
+	}
+
+	challenge, err := webauthn.NewLoginChallenge(ac.config, passkeyIDs)
+	if err != nil {
+		panic(err)
+	}
+
+	challengeID := uuid.New()
+	if err := ac.queries.CreateChallenge(r.Context(), db.CreateChallengeParams{
+		ChallengeID: challengeID.String(),
+		Bytes:       challenge.Challenge,
+	}); err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "application/json")
+	http.SetCookie(w, &http.Cookie{
+		Name:     "challengeID",
+		Value:    challengeID.String(),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   ac.config.BaseURL.Scheme == "https",
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   5 * 60, // 5 minutes
+	})
+	if err := json.NewEncoder(w).Encode(&challenge); err != nil {
+		panic(err)
+	}
 }
 
 func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
-	// TODO ensure session isn't authenticated
-	// TODO delete challenge from DB
-	// TODO insert session into DB
-	http.NotFound(w, r)
+	auth, err := isAuthenticated(r, ac.queries)
+	if err != nil {
+		panic(err)
+	}
+
+	if auth {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+
+	cookie, err := r.Cookie("challengeID")
+	if err != nil {
+		panic(err)
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "challengeID",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
+	})
+
+	// Get and remove the challenge value from the database.
+	challenge, err := ac.queries.DeleteChallenge(r.Context(), cookie.Value)
+	if err != nil {
+		panic(err)
+	}
+
+	var resp webauthn.LoginResponse
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+		panic(err)
+	}
+
+	// Find the passkey by ID.
+	passkeySPKI, err := ac.queries.FindPasskey(r.Context(), resp.RawID)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := resp.Validate(ac.config, passkeySPKI, challenge); err != nil {
+		panic(err)
+	}
+
+	sessionID := uuid.New()
+	if err := ac.queries.CreateSession(r.Context(), sessionID.String()); err != nil {
+		panic(err)
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sessionID",
+		Value:    sessionID.String(),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   ac.config.BaseURL.Scheme == "https",
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   7 * 24 * 60 * 60, // 7 weeks
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
+	cookie, err := r.Cookie("sessionID")
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		panic(err)
+	}
+
+	if cookie == nil {
+		return false, nil
+	}
+
+	auth, err := queries.SessionExists(r.Context(), cookie.Value)
+	if err != nil {
+		panic(err)
+	}
+
+	return auth, err
 }
