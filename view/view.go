@@ -18,13 +18,9 @@ var (
 	files          embed.FS
 	buildTimestamp string // injected via ldflags, must be uninitialized
 	funcs          = template.FuncMap{
-		"markdownHTML": func(s string) template.HTML {
-			v, err := markdown.HTML(s)
-			if err != nil {
-				panic(err)
-			}
-			return v
-		},
+		"markdownHTML":   markdown.HTML,
+		"markdownText":   markdown.Text,
+		"markdownImages": markdown.Images,
 		"buildTimestamp": func() string {
 			return buildTimestamp
 		},

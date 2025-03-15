@@ -1,6 +1,41 @@
 {{define "title"}}{{.Config.Title}}{{end}}
 {{define "description"}}{{.Config.Description}}{{end}}
 
+{{define "head"}}
+<link href="{{atomURL .Config}}" rel="alternate" title="Atom" type="application/atom+xml" />
+{{if eq 1 (len .Notes) }}
+{{ range .Notes}}
+{{$desc := .Body | markdownText}}
+<meta name="description" content="{{$desc}}">
+<meta property="og:url" content="{{notePageURL $.Config .NoteID}}">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{$.Config.Title}}">
+<meta property="og:description" content="{{$desc}}">
+
+<meta property="twitter:domain" content="{{$.Config.BaseURL.Host}}">
+<meta property="twitter:url" content="{{notePageURL $.Config .NoteID}}">
+<meta name="twitter:title" content="{{$.Config.Title}}">
+<meta name="twitter:description" content="{{$desc}}">
+
+{{$images := .Body | markdownImages}}
+{{ if eq 0 (len $images)}}
+<meta name="twitter:card" content="summary">
+{{else}}
+<meta name="twitter:card" content="summary_large_image">
+{{end}}
+
+{{range $images}}
+<meta property="og:image" content="{{.}}">
+<meta name="twitter:image" content="{{.}}">
+{{end}}
+
+{{end}}
+{{end}}
+
+
+{{end}}
+
 {{define "nav"}}
 <ul>
     <li>
