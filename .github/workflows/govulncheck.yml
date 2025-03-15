@@ -1,0 +1,13 @@
+name: govulncheck
+on:
+    workflow_dispatch: 
+    schedule:
+        - cron: "0 0 * * 0" 
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Security Check
+        id: govulncheck
+        uses: golang/govulncheck-action@v1
