@@ -145,7 +145,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
-	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
+	config, format, err := image.DecodeConfig(io.TeeReader(r, buf))
 	if err != nil {
 		return "", err
 	}
@@ -169,8 +169,12 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 
 	// Generate thumbnails in parallel.
 	done := make(chan error, 2)
-	go func() { done <- generateThumbnail(ic.feedRoot, origImg, id, 600) }()
-	go func() { done <- generateThumbnail(ic.thumbRoot, origImg, id, 100) }()
+	go func() {
+		done <- generateThumbnail(ic.feedRoot, origImg, id, 600, config)
+	}()
+	go func() {
+		done <- generateThumbnail(ic.thumbRoot, origImg, id, 100, config)
+	}()
 
 	// Return the first error, if any.
 	for range len(done) {
@@ -192,14 +196,14 @@ func (ic *imageController) Close() error {
 	return nil
 }
 
-func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim int) error {
+func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim int, config image.Config) error {
 	f, err := root.Create(fmt.Sprintf("%s.png", id))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	img = imaging.Thumbnail(img, maxDim, maxDim, imaging.CatmullRom)
+	img = imaging.Thumbnail(img, min(maxDim, config.Width), min(maxDim, config.Height), imaging.CatmullRom)
 	if err := png.Encode(f, img); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", id, err)
 	}
