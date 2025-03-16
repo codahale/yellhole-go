@@ -7,6 +7,17 @@
 
 {{define "content"}}
 <section>
-    <button id="register" data-passkey-only="true" disabled onclick="register()">Register Passkey</button>
+    <script type="text/javascript">
+        function registerClick() {
+            register(
+                '{{.Config.BaseURL.JoinPath "register" "start"}}',
+                '{{.Config.BaseURL.JoinPath "register" "finish"}}',
+                '{{.Config.BaseURL.JoinPath "login"}}',
+            );
+        }
+    </script>
+    <button id="register" data-passkey-only="true" disabled onclick="registerClick()">
+        Register Passkey
+    </button>
 </section>
 {{end}}

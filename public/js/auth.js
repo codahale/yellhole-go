@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', (_) => {
     });
 });
 
-async function register() {
-  const startResp = await fetch('/register/start', {
+async function register(startUrl, finishUrl, loginUrl) {
+  const startResp = await fetch(startUrl, {
     method: 'POST'
   }).catch((error) => { console.error(error) });
 
@@ -71,7 +71,7 @@ async function register() {
     'publicKeyBase64': btoa(String.fromCharCode(...new Uint8Array(credential.response.getPublicKey()))),
   };
 
-  const finishResp = await fetch('/register/finish', {
+  const finishResp = await fetch(finishUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(finishJson),
@@ -79,14 +79,14 @@ async function register() {
 
   if (finishResp.ok) {
     window.alert('Successfully registered a passkey.');
-    window.location.href = '/login';
+    window.location.href = loginUrl;
   } else {
     window.alert('Error finishing passkey registration.');
   }
 }
 
-async function login() {
-  const startResp = await fetch('/login/start', {
+async function login(startUrl, finishUrl, adminUrl) {
+  const startResp = await fetch(startUrl, {
     method: 'POST'
   }).catch((error) => { console.error(error) });
 
@@ -125,14 +125,14 @@ async function login() {
     signatureBase64: btoa(String.fromCharCode(...new Uint8Array(assertion.response.signature))),
   };
 
-  const finishResp = await fetch('/login/finish', {
+  const finishResp = await fetch(finishUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(auth),
   });
 
   if (finishResp.ok) {
-    window.location.href = '/admin';
+    window.location.href = adminUrl;
   } else {
     window.alert('Error finishing passkey authentication.');
   }

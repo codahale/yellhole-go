@@ -6,5 +6,14 @@
 {{end}}
 
 {{define "content"}}
-<button id="login" data-passkey-only="true" disabled onclick="login()">Log In With Passkey</button>
+<script type="text/javascript">
+    function loginClick() {
+        login(
+            '{{.Config.BaseURL.JoinPath "login" "start"}}',
+            '{{.Config.BaseURL.JoinPath "login" "finish"}}',
+            '{{.Config.BaseURL.JoinPath "admin"}}',
+        );
+    }
+</script>
+<button id="login" data-passkey-only="true" disabled onclick="loginClick()">Log In With Passkey</button>
 {{end}}
