@@ -72,23 +72,22 @@ func NotePageURL(c *config.Config, noteID string) *url.URL {
 }
 
 func init() {
-	dir, err := fs.ReadDir(files, ".")
-	if err != nil {
-		panic(err)
-	}
-
 	// This is a lot of hassle to accomplish a single level of nested layouts.
-	for _, f := range dir {
-		if f.IsDir() || f.Name() == "base.html" {
-			continue
+	if err := fs.WalkDir(files, ".", func(path string, d fs.DirEntry, _ error) error {
+		if d.IsDir() || d.Name() == "base.html" {
+			return nil
 		}
 
-		t, err := template.New(f.Name()).Funcs(funcs).ParseFS(files, f.Name(), "base.html")
+		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(files, path, "base.html")
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		tmpls[f.Name()] = t
+		tmpls[d.Name()] = t
+
+		return nil
+	}); err != nil {
+		panic(err)
 	}
 }
 
