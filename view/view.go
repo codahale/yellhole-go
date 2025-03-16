@@ -39,6 +39,15 @@ var (
 		"thumbImageURL": func(c *config.Config, imageID string) *url.URL {
 			return c.BaseURL.JoinPath("images", "thumb", fmt.Sprintf("%s.png", imageID))
 		},
+		"newNoteURL": func(c *config.Config) *url.URL {
+			return c.BaseURL.JoinPath("admin", "new")
+		},
+		"uploadImageURL": func(c *config.Config) *url.URL {
+			return c.BaseURL.JoinPath("admin", "images", "upload")
+		},
+		"downloadImageURL": func(c *config.Config) *url.URL {
+			return c.BaseURL.JoinPath("admin", "images", "download")
+		},
 	}
 	tmpls = make(map[string]*template.Template)
 )

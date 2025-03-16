@@ -4,7 +4,7 @@
 {{define "content"}}
 <article>
     <section>
-        <form action="/admin/new" method="post">
+        <form action="{{newNoteURL .Config}}" method="post">
             <header>
                 <h2>New Note</h2>
             </header>
@@ -31,7 +31,7 @@
 </article>
 <article>
     <section>
-        <form action="/admin/images/upload" enctype="multipart/form-data" method="post">
+        <form action="{{uploadImageURL .Config}}" enctype="multipart/form-data" method="post">
             <header>
                 <h2>Upload Images</h2>
             </header>
@@ -43,7 +43,7 @@
 </article>
 <article>
     <section>
-        <form action="/admin/images/download" method="post">
+        <form action="{{downloadImageURL .Config}}" method="post">
             <header>
                 <h2>Download Image</h2>
             </header>
