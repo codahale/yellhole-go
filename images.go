@@ -75,16 +75,6 @@ func (ic *imageController) ServeThumbImage(w http.ResponseWriter, r *http.Reques
 }
 
 func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request) {
-	auth, err := isAuthenticated(r, ic.queries)
-	if err != nil {
-		panic(err)
-	}
-
-	if !auth {
-		http.Redirect(w, r, ic.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
-		return
-	}
-
 	url := r.FormValue("url")
 	resp, err := http.Get(url)
 	if err != nil {
@@ -111,16 +101,6 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 }
 
 func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
-	auth, err := isAuthenticated(r, ic.queries)
-	if err != nil {
-		panic(err)
-	}
-
-	if !auth {
-		http.Redirect(w, r, ic.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
-		return
-	}
-
 	f, h, err := r.FormFile("image")
 	if err != nil {
 		panic(err)

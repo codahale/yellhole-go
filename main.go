@@ -99,7 +99,23 @@ func main() {
 		mux.Handle(fmt.Sprintf("GET /%s", path), assets)
 	}
 
-	var root http.Handler = mux
+	// Require authentication for all /admin requests.
+	var root http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.RequestURI, "/admin") {
+			auth, err := isAuthenticated(r, queries)
+			if err != nil {
+				panic(err)
+			}
+
+			if !auth {
+				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
+				http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+				return
+			}
+		}
+		mux.ServeHTTP(w, r)
+	})
+
 	if config.BaseURL.Path != "/" {
 		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
 		root = http.StripPrefix(nestedPrefix, mux)
