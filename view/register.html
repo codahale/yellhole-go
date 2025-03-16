@@ -2,7 +2,7 @@
 {{define "description"}}Welcome to the hole.{{end}}
 
 {{define "head"}}
-<script src="/js/auth.js?{{buildTimestamp}}"></script>
+<script src='{{assetURL .Config "js" "auth.js"}}'></script>
 {{end}}
 
 {{define "content"}}

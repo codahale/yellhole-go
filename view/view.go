@@ -48,6 +48,13 @@ var (
 		"downloadImageURL": func(c *config.Config) *url.URL {
 			return c.BaseURL.JoinPath("admin", "images", "download")
 		},
+		"assetURL": func(c *config.Config, elem ...string) *url.URL {
+			u := c.BaseURL.JoinPath(elem...)
+			q := u.Query()
+			q.Add("", buildTimestamp)
+			u.RawQuery = q.Encode()
+			return u
+		},
 	}
 	tmpls = make(map[string]*template.Template)
 )
