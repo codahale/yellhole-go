@@ -64,7 +64,3 @@ func Parse() (*Config, error) {
 	}
 	return &config, nil
 }
-
-func (c *Config) AtomURL() url.URL {
-	return *c.BaseURL.JoinPath("atom.xml")
-}
