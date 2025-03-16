@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -48,26 +46,10 @@ func main() {
 		panic(err)
 	}
 
-	// Set up a ticker to purge old sessions every five minutes.
 	queries := db.New(conn)
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			res, err := queries.PurgeSessions(context.Background())
-			if err != nil {
-				slog.Error("error purging old sessions", "err", err)
-				continue
-			}
 
-			n, err := res.RowsAffected()
-			if err != nil {
-				slog.Error("error purging old sessions", "err", err)
-				continue
-			}
-			slog.Info("purged old sessions", "count", n)
-		}
-	}()
+	// Set up a ticker to purge old sessions every five minutes.
+	go purgeOldSessionsInBackground(queries)
 
 	// Open the data directory as a file system root.
 	dataRoot, err := os.OpenRoot(config.DataDir)

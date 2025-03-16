@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -236,4 +238,23 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	}
 
 	return auth, err
+}
+
+func purgeOldSessionsInBackground(queries *db.Queries) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		res, err := queries.PurgeSessions(context.Background())
+		if err != nil {
+			slog.Error("error purging old sessions", "err", err)
+			continue
+		}
+
+		n, err := res.RowsAffected()
+		if err != nil {
+			slog.Error("error purging old sessions", "err", err)
+			continue
+		}
+		slog.Info("purged old sessions", "count", n)
+	}
 }
