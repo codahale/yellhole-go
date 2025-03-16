@@ -14,6 +14,7 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
+	sloghttp "github.com/samber/slog-http"
 	_ "golang.org/x/image/webp"
 	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"
@@ -103,6 +104,10 @@ func main() {
 		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
 		root = http.StripPrefix(nestedPrefix, mux)
 	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	root = sloghttp.Recovery(root)
+	root = sloghttp.New(logger)(root)
 
 	// Listen for HTTP requests.
 	slog.Info("listening for connections", "baseURL", config.BaseURL)
