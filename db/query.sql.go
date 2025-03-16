@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -188,13 +189,12 @@ func (q *Queries) PasskeyIDs(ctx context.Context) ([][]byte, error) {
 	return items, nil
 }
 
-const purgeSessions = `-- name: PurgeSessions :exec
+const purgeSessions = `-- name: PurgeSessions :execresult
 delete from session where created_at < datetime('now', '-7 days')
 `
 
-func (q *Queries) PurgeSessions(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, purgeSessions)
-	return err
+func (q *Queries) PurgeSessions(ctx context.Context) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeSessions)
 }
 
 const recentImages = `-- name: RecentImages :many

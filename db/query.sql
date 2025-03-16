@@ -44,7 +44,7 @@ select count(1) > 0
 from session
 where session_id = ? and created_at > datetime('now', '-7 days');
 
--- name: PurgeSessions :exec
+-- name: PurgeSessions :execresult
 delete from session where created_at < datetime('now', '-7 days');
 
 -- name: HasPasskey :one
