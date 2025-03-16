@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/codahale/yellhole-go/config"
 )
@@ -76,7 +77,7 @@ func (r *RegistrationResponse) Validate(config *config.Config) ([]byte, []byte, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid origin: %w", err)
 	}
-	if origin.String() != config.BaseURL.String() {
+	if origin.String() != strings.TrimRight(config.BaseURL.String(), "/") {
 		return nil, nil, fmt.Errorf("invalid origin: %q / %q", origin.String(), config.BaseURL.String())
 	}
 
@@ -150,7 +151,7 @@ func (r *LoginResponse) Validate(config *config.Config, passkeySPKI, challenge [
 	if err != nil {
 		return fmt.Errorf("invalid origin: %w", err)
 	}
-	if origin.String() != config.BaseURL.String() {
+	if origin.String() != strings.TrimRight(config.BaseURL.String(), "/") {
 		return fmt.Errorf("invalid origin: %q / %q", origin.String(), config.BaseURL.String())
 	}
 
