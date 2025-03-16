@@ -28,7 +28,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if registered {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if auth {
-		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if !registered {
-		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("register").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if auth {
-		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if auth {
-		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if auth {
-		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 		return
 	}
 

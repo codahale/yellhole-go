@@ -9,12 +9,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 )
 
 type imageController struct {
+	config            *config.Config
 	queries           *db.Queries
 	root              *os.Root
 	feedRoot          *os.Root
@@ -24,7 +26,7 @@ type imageController struct {
 	thumbImageHandler http.Handler
 }
 
-func newImageController(dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
+func newImageController(config *config.Config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
@@ -53,6 +55,7 @@ func newImageController(dataRoot *os.Root, queries *db.Queries) (*imageControlle
 	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
 
 	return &imageController{
+		config,
 		queries,
 		root,
 		feedRoot,
@@ -78,7 +81,7 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !auth {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, ic.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -114,7 +117,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !auth {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, ic.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 		return
 	}
 

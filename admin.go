@@ -26,7 +26,7 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !auth {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !auth {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 		return
 	}
 

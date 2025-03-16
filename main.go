@@ -57,7 +57,7 @@ func main() {
 	assets := newAssetController(public, "public")
 
 	// Create the controllers.
-	images, err := newImageController(dataRoot, queries)
+	images, err := newImageController(config, dataRoot, queries)
 	if err != nil {
 		panic(err)
 	}
