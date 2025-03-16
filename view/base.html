@@ -49,7 +49,7 @@
                 <li>
                     <hgroup>
                         <h1>
-                            <a href="/">{{template "title" .}}</a>
+                            <a href="{{.Config.BaseURL}}">{{template "title" .}}</a>
                         </h1>
                         <h2>{{block "description" .}}{{end}}</h2>
                     </hgroup>
