@@ -25,7 +25,6 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "new.html", struct {
 		Config *config.Config
 		Images []db.Image
@@ -39,7 +38,6 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 
 func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("preview") == fmt.Sprint(true) {
-		w.Header().Set("content-type", "text/html")
 		if err := view.Render(w, "preview.html", struct {
 			Config *config.Config
 			Body   string

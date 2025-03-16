@@ -45,7 +45,6 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "register.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
@@ -110,7 +109,6 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "login.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}

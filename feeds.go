@@ -40,7 +40,6 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", feedPage{
 		fc.config,
 		notes,
@@ -75,7 +74,6 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", feedPage{
 		fc.config,
 		notes,
@@ -100,7 +98,6 @@ func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("content-type", "text/html")
 	if err := view.Render(w, "feed.html", feedPage{
 		fc.config,
 		[]db.Note{note},

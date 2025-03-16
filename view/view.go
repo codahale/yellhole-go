@@ -4,8 +4,8 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"io/fs"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -91,10 +91,11 @@ func init() {
 	}
 }
 
-func Render(w io.Writer, name string, data any) error {
+func Render(w http.ResponseWriter, name string, data any) error {
 	t, ok := tmpls[name]
 	if !ok {
 		return fmt.Errorf("unknown template %q", name)
 	}
+	w.Header().Set("content-type", "text/html")
 	return t.ExecuteTemplate(w, "base.html", data)
 }
