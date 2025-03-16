@@ -5,6 +5,7 @@ go 1.24.1
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/google/uuid v1.6.0
+	github.com/samber/slog-http v1.6.0
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/image v0.25.0
 	modernc.org/libc v1.61.13
@@ -37,12 +38,10 @@ require (
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250315021048-77f118f1f596 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/riza-io/grpc-go v0.2.0 // indirect
-	github.com/samber/slog-http v1.6.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/sqlc-dev/sqlc v1.28.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/tetratelabs/wazero v1.9.0 // indirect
 	github.com/wasilibs/go-pgquery v0.0.0-20250219053243-148840c597e6 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
