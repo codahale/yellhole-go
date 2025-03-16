@@ -143,7 +143,6 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("content-type", "application/json")
 	http.SetCookie(w, &http.Cookie{
 		Name:     "challengeID",
 		Value:    challengeID.String(),
@@ -153,6 +152,8 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   5 * 60, // 5 minutes
 	})
+
+	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(&challenge); err != nil {
 		panic(err)
 	}
