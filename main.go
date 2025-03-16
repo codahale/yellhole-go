@@ -9,7 +9,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -94,9 +96,21 @@ func main() {
 		mux.Handle(fmt.Sprintf("GET /%s", path), assets)
 	}
 
+	var root http.Handler = mux
+	if config.BaseURL.Path != "/" {
+		nestedPath := path.Join(config.BaseURL.Path, "{path...}")
+		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
+
+		nested := http.NewServeMux()
+		nested.Handle(nestedPath, http.StripPrefix(nestedPrefix, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			mux.ServeHTTP(w, r)
+		})))
+		root = nested
+	}
+
 	// Listen for HTTP requests.
 	slog.Info("listening for connections", "baseURL", config.BaseURL)
-	if err := http.ListenAndServe(config.Addr, mux); err != nil {
+	if err := http.ListenAndServe(config.Addr, root); err != nil {
 		panic(err)
 	}
 }
