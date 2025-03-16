@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -101,14 +100,8 @@ func main() {
 
 	var root http.Handler = mux
 	if config.BaseURL.Path != "/" {
-		nestedPath := path.Join(config.BaseURL.Path, "{path...}")
 		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
-
-		nested := http.NewServeMux()
-		nested.Handle(nestedPath, http.StripPrefix(nestedPrefix, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			mux.ServeHTTP(w, r)
-		})))
-		root = nested
+		root = http.StripPrefix(nestedPrefix, mux)
 	}
 
 	// Listen for HTTP requests.
