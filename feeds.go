@@ -165,5 +165,5 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 type feedPage struct {
 	Config *config.Config
 	Notes  []db.Note
-	Weeks  []db.Week
+	Weeks  []db.WeeksWithNotesRow
 }
