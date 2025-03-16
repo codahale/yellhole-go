@@ -59,6 +59,7 @@ func (r *RegistrationResponse) Validate(config *config.Config) ([]byte, []byte, 
 		return nil, nil, fmt.Errorf("invalid public key type")
 	}
 
+	// Validate the collected client data.
 	var ccd struct {
 		Action      string `json:"type"`
 		Origin      string `json:"origin"`
@@ -155,7 +156,6 @@ func (r *LoginResponse) Validate(config *config.Config, passkeySPKI, challenge [
 		return fmt.Errorf("invalid origin: %q / %q", origin.String(), config.BaseURL.String())
 	}
 
-	// Decode and validate the authenticator data.
 	// Decode and validate the authenticator data.
 	h := sha256.New()
 	h.Write([]byte(config.BaseURL.Hostname()))
