@@ -122,7 +122,6 @@ func main() {
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	root = sloghttp.Recovery(root)
 	root = sloghttp.New(logger)(root)
 
 	// Listen for HTTP requests.
