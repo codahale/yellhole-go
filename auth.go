@@ -147,7 +147,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "challengeID",
 		Value:    challengeID.String(),
-		Path:     "/",
+		Path:     ac.config.BaseURL.Path,
 		HttpOnly: true,
 		Secure:   ac.config.BaseURL.Scheme == "https",
 		SameSite: http.SameSiteStrictMode,
@@ -176,7 +176,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "challengeID",
 		Value:    "",
-		Path:     "/",
+		Path:     ac.config.BaseURL.Path,
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 	})
@@ -210,7 +210,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sessionID",
 		Value:    sessionID.String(),
-		Path:     "/",
+		Path:     ac.config.BaseURL.Path,
 		HttpOnly: true,
 		Secure:   ac.config.BaseURL.Scheme == "https",
 		SameSite: http.SameSiteStrictMode,
