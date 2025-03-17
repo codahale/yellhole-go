@@ -41,9 +41,10 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := view.Render(w, "feed.html", feedPage{
-		fc.config,
-		notes,
-		weeks,
+		Config: fc.config,
+		Single: false,
+		Notes:  notes,
+		Weeks:  weeks,
 	}); err != nil {
 		panic(err)
 	}
@@ -75,9 +76,10 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := view.Render(w, "feed.html", feedPage{
-		fc.config,
-		notes,
-		weeks,
+		Config: fc.config,
+		Single: false,
+		Notes:  notes,
+		Weeks:  weeks,
 	}); err != nil {
 		panic(err)
 	}
@@ -99,9 +101,10 @@ func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := view.Render(w, "feed.html", feedPage{
-		fc.config,
-		[]db.Note{note},
-		weeks,
+		Config: fc.config,
+		Single: true,
+		Notes:  []db.Note{note},
+		Weeks:  weeks,
 	}); err != nil {
 		panic(err)
 	}
@@ -161,6 +164,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 
 type feedPage struct {
 	Config *config.Config
+	Single bool
 	Notes  []db.Note
 	Weeks  []db.WeeksWithNotesRow
 }

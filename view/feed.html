@@ -3,7 +3,7 @@
 
 {{define "head"}}
 <link href="{{atomURL .Config}}" rel="alternate" title="Atom" type="application/atom+xml" />
-{{if eq 1 (len .Notes) }}
+{{if .Single }}
 {{ range .Notes}}
 {{$desc := .Body | markdownText}}
 <meta name="description" content="{{$desc}}">
