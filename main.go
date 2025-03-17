@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -49,7 +50,9 @@ func main() {
 	queries := db.New(conn)
 
 	// Set up a ticker to purge old sessions every five minutes.
-	go purgeOldSessionsInBackground(queries)
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	go purgeOldSessionsInBackground(queries, ticker)
 
 	// Open the data directory as a file system root.
 	dataRoot, err := os.OpenRoot(config.DataDir)

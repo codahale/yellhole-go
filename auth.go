@@ -239,9 +239,7 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	return auth, err
 }
 
-func purgeOldSessionsInBackground(queries *db.Queries) {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
+func purgeOldSessionsInBackground(queries *db.Queries, ticker *time.Ticker) {
 	for range ticker.C {
 		res, err := queries.PurgeSessions(context.Background())
 		if err != nil {
