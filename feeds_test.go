@@ -11,7 +11,22 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestFeedsHome(t *testing.T) {
+func TestFeedsHomePageEmpty(t *testing.T) {
+	env := newTestApp(t)
+	defer env.teardown()
+
+	req := httptest.NewRequest("GET", "http://example.com/", nil)
+	w := httptest.NewRecorder()
+	env.ServeHTTP(w, req)
+
+	resp := w.Result()
+
+	if got, want := http.StatusOK, resp.StatusCode; got != want {
+		t.Errorf("status=%d, want=%d", got, want)
+	}
+}
+
+func TestFeedsHomePageNote(t *testing.T) {
 	env := newTestApp(t)
 	defer env.teardown()
 
