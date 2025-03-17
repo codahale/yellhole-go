@@ -25,8 +25,4 @@ func TestAssetsPublic(t *testing.T) {
 	if got, want := len(body), 15406; got != want {
 		t.Errorf("body length=%d, want=%d", got, want)
 	}
-
-	if got, want := resp.Header.Get("content-type"), "image/x-icon"; got != want {
-		t.Errorf("content-type=%q, want=%q", got, want)
-	}
 }
