@@ -16,7 +16,7 @@ func TestFeedsHome(t *testing.T) {
 	env := newTestApp(t)
 	defer env.teardown()
 
-	if err := env.app.queries.CreateNote(context.TODO(), db.CreateNoteParams{
+	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID: uuid.NewString(),
 		Body:   "It's a *test*.",
 	}); err != nil {
