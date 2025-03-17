@@ -170,15 +170,6 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 	return format, nil
 }
 
-func (ic *imageController) Close() error {
-	for _, root := range []*os.Root{ic.origRoot, ic.feedRoot, ic.thumbRoot, ic.root} {
-		if err := root.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim int, config image.Config) error {
 	f, err := root.Create(fmt.Sprintf("%s.png", id))
 	if err != nil {

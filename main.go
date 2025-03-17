@@ -59,7 +59,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer dataRoot.Close()
 
 	// Load the embedded public assets and create an asset controller.
 	assets := newAssetController(public, "public")
@@ -69,7 +68,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer images.Close()
 
 	feeds := newFeedController(config, queries)
 	admin := newAdminController(config, queries)
