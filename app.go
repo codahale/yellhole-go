@@ -109,7 +109,11 @@ func newApp(config *config.Config) (*app, error) {
 		root = http.StripPrefix(nestedPrefix, mux)
 	}
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	loggerHandler := slog.DiscardHandler
+	if config.RequestLog {
+		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
+	}
+	logger := slog.New(loggerHandler)
 	root = sloghttp.New(logger)(root)
 
 	return &app{conn, queries, purgeTicker, root}, nil
