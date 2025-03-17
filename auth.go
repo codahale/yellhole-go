@@ -82,6 +82,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	if err := ac.queries.CreatePasskey(r.Context(), db.CreatePasskeyParams{
 		PasskeyID:     passkeyID,
 		PublicKeySPKI: publicKeySPKI,
+		CreatedAt:     time.Now(),
 	}); err != nil {
 		panic(err)
 	}
@@ -139,6 +140,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	if err := ac.queries.CreateChallenge(r.Context(), db.CreateChallengeParams{
 		ChallengeID: challengeID.String(),
 		Bytes:       challenge.Challenge,
+		CreatedAt:   time.Now(),
 	}); err != nil {
 		panic(err)
 	}
@@ -204,13 +206,16 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	sessionID := uuid.New()
-	if err := ac.queries.CreateSession(r.Context(), sessionID.String()); err != nil {
+	sessionID := uuid.NewString()
+	if err := ac.queries.CreateSession(r.Context(), db.CreateSessionParams{
+		SessionID: sessionID,
+		CreatedAt: time.Now(),
+	}); err != nil {
 		panic(err)
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "sessionID",
-		Value:    sessionID.String(),
+		Value:    sessionID,
 		Path:     ac.config.BaseURL.Path,
 		HttpOnly: true,
 		Secure:   ac.config.BaseURL.Scheme == "https",

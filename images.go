@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -90,9 +91,10 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := ic.queries.CreateImage(r.Context(), db.CreateImageParams{
-		ImageID:  id.String(),
-		Filename: url,
-		Format:   format,
+		ImageID:   id.String(),
+		Filename:  url,
+		Format:    format,
+		CreatedAt: time.Now(),
 	}); err != nil {
 		panic(err)
 	}

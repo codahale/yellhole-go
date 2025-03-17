@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/google/uuid"
@@ -31,8 +32,9 @@ func TestFeedsHomePageNote(t *testing.T) {
 	defer env.teardown()
 
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
-		NoteID: uuid.NewString(),
-		Body:   "It's a *test*.",
+		NoteID:    uuid.NewString(),
+		Body:      "It's a *test*.",
+		CreatedAt: time.Now(),
 	}); err != nil {
 		t.Fatal(err)
 	}

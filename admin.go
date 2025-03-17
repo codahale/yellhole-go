@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
@@ -52,8 +53,9 @@ func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 
 	id := uuid.New().String()
 	if err := ac.queries.CreateNote(r.Context(), db.CreateNoteParams{
-		NoteID: id,
-		Body:   r.FormValue("body"),
+		NoteID:    id,
+		Body:      r.FormValue("body"),
+		CreatedAt: time.Now(),
 	}); err != nil {
 		panic(err)
 	}

@@ -1,5 +1,5 @@
 -- name: CreateNote :exec
-insert into note (note_id, body) values (?, ?);
+insert into note (note_id, body, created_at) values (?, ?, ?);
 
 -- name: NoteByID :one
 select note_id, body, created_at
@@ -32,12 +32,12 @@ order by created_at desc
 limit ?;
 
 -- name: CreateImage :exec
-insert into image (image_id, filename, format)
-values (?, ?, ?);
+insert into image (image_id, filename, format, created_at)
+values (?, ?, ?, ?);
 
 -- name: CreateSession :exec
-insert into session (session_id)
-values (?);
+insert into session (session_id, created_at)
+values (?, ?);
 
 -- name: SessionExists :one
 select count(1) > 0
@@ -57,10 +57,10 @@ select public_key_spki from passkey where passkey_id = ?;
 select passkey_id from passkey;
 
 -- name: CreatePasskey :exec
-insert into passkey (passkey_id, public_key_spki) values (?, ?);
+insert into passkey (passkey_id, public_key_spki, created_at) values (?, ?, ?);
 
 -- name: CreateChallenge :exec
-insert into challenge (challenge_id, bytes) values (?, ?);
+insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?);
 
 -- name: DeleteChallenge :one
 delete from challenge

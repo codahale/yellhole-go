@@ -12,70 +12,84 @@ import (
 )
 
 const createChallenge = `-- name: CreateChallenge :exec
-insert into challenge (challenge_id, bytes) values (?, ?)
+insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?)
 `
 
 type CreateChallengeParams struct {
 	ChallengeID string
 	Bytes       []byte
+	CreatedAt   time.Time
 }
 
 func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) error {
-	_, err := q.db.ExecContext(ctx, createChallenge, arg.ChallengeID, arg.Bytes)
+	_, err := q.db.ExecContext(ctx, createChallenge, arg.ChallengeID, arg.Bytes, arg.CreatedAt)
 	return err
 }
 
 const createImage = `-- name: CreateImage :exec
-insert into image (image_id, filename, format)
-values (?, ?, ?)
+insert into image (image_id, filename, format, created_at)
+values (?, ?, ?, ?)
 `
 
 type CreateImageParams struct {
-	ImageID  string
-	Filename string
-	Format   string
+	ImageID   string
+	Filename  string
+	Format    string
+	CreatedAt time.Time
 }
 
 func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) error {
-	_, err := q.db.ExecContext(ctx, createImage, arg.ImageID, arg.Filename, arg.Format)
+	_, err := q.db.ExecContext(ctx, createImage,
+		arg.ImageID,
+		arg.Filename,
+		arg.Format,
+		arg.CreatedAt,
+	)
 	return err
 }
 
 const createNote = `-- name: CreateNote :exec
-insert into note (note_id, body) values (?, ?)
+insert into note (note_id, body, created_at) values (?, ?, ?)
 `
 
 type CreateNoteParams struct {
-	NoteID string
-	Body   string
+	NoteID    string
+	Body      string
+	CreatedAt time.Time
 }
 
 func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
-	_, err := q.db.ExecContext(ctx, createNote, arg.NoteID, arg.Body)
+	_, err := q.db.ExecContext(ctx, createNote, arg.NoteID, arg.Body, arg.CreatedAt)
 	return err
 }
 
 const createPasskey = `-- name: CreatePasskey :exec
-insert into passkey (passkey_id, public_key_spki) values (?, ?)
+insert into passkey (passkey_id, public_key_spki, created_at) values (?, ?, ?)
 `
 
 type CreatePasskeyParams struct {
 	PasskeyID     []byte
 	PublicKeySPKI []byte
+	CreatedAt     time.Time
 }
 
 func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) error {
-	_, err := q.db.ExecContext(ctx, createPasskey, arg.PasskeyID, arg.PublicKeySPKI)
+	_, err := q.db.ExecContext(ctx, createPasskey, arg.PasskeyID, arg.PublicKeySPKI, arg.CreatedAt)
 	return err
 }
 
 const createSession = `-- name: CreateSession :exec
-insert into session (session_id)
-values (?)
+insert into session (session_id, created_at)
+values (?, ?)
 `
 
-func (q *Queries) CreateSession(ctx context.Context, sessionID string) error {
-	_, err := q.db.ExecContext(ctx, createSession, sessionID)
+type CreateSessionParams struct {
+	SessionID string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createSession, arg.SessionID, arg.CreatedAt)
 	return err
 }
 
