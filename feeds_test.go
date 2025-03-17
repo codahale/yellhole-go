@@ -50,7 +50,8 @@ func TestFeedsHomePageNote(t *testing.T) {
 		t.Errorf("status=%d, want=%d", got, want)
 	}
 
-	if want := "It's a <em>test</em>."; strings.Contains(string(body), want) {
+	if want := "It&rsquo;s a <em>test</em>."; !strings.Contains(string(body), want) {
+		t.Log(string(body))
 		t.Errorf("note not in body, want=%q", want)
 	}
 }
