@@ -14,8 +14,8 @@ limit ?;
 
 -- name: WeeksWithNotes :many
 select
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as date) as start_date,
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as date) as end_date
+    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as text) as start_date,
+    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as text) as end_date
 from note
 group by 1 order by 1 desc;
 

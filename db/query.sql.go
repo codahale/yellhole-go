@@ -277,15 +277,15 @@ func (q *Queries) SessionExists(ctx context.Context, sessionID string) (bool, er
 
 const weeksWithNotes = `-- name: WeeksWithNotes :many
 select
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as date) as start_date,
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as date) as end_date
+    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as text) as start_date,
+    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as text) as end_date
 from note
 group by 1 order by 1 desc
 `
 
 type WeeksWithNotesRow struct {
-	StartDate time.Time
-	EndDate   time.Time
+	StartDate string
+	EndDate   string
 }
 
 func (q *Queries) WeeksWithNotes(ctx context.Context) ([]WeeksWithNotesRow, error) {
