@@ -92,3 +92,61 @@ func TestFeedsWeeksPage(t *testing.T) {
 		t.Errorf("note in body, not want=%q", notWant)
 	}
 }
+
+func TestFeedsWeeksPage404(t *testing.T) {
+	env := newTestApp(t)
+
+	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
+	w := httptest.NewRecorder()
+	env.ServeHTTP(w, req)
+
+	resp := w.Result()
+
+	if got, want := http.StatusNotFound, resp.StatusCode; got != want {
+		t.Errorf("status=%d, want=%d", got, want)
+	}
+}
+
+func TestFeedsNotePage(t *testing.T) {
+	env := newTestApp(t)
+
+	noteID := uuid.NewString()
+	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+		NoteID:    noteID,
+		Body:      "An example.",
+		CreatedAt: time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
+	w := httptest.NewRecorder()
+	env.ServeHTTP(w, req)
+
+	resp := w.Result()
+	body, _ := io.ReadAll(resp.Body)
+
+	if got, want := http.StatusOK, resp.StatusCode; got != want {
+		t.Errorf("status=%d, want=%d", got, want)
+	}
+
+	if want := "An example"; !strings.Contains(string(body), want) {
+		t.Errorf("note not in body, want=%q", want)
+	}
+}
+
+func TestFeedsNotePage404(t *testing.T) {
+	env := newTestApp(t)
+
+	noteID := uuid.NewString()
+
+	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
+	w := httptest.NewRecorder()
+	env.ServeHTTP(w, req)
+
+	resp := w.Result()
+
+	if got, want := http.StatusNotFound, resp.StatusCode; got != want {
+		t.Errorf("status=%d, want=%d", got, want)
+	}
+}
