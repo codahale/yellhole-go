@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -148,5 +149,37 @@ func TestFeedsNotePage404(t *testing.T) {
 
 	if got, want := http.StatusNotFound, resp.StatusCode; got != want {
 		t.Errorf("status=%d, want=%d", got, want)
+	}
+}
+
+func TestFeedsAtomFeed(t *testing.T) {
+	env := newTestApp(t)
+
+	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+		NoteID:    uuid.NewString(),
+		Body:      "It's a *test*.",
+		CreatedAt: time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", "http://example.com/atom.xml", nil)
+	w := httptest.NewRecorder()
+	env.ServeHTTP(w, req)
+
+	resp := w.Result()
+	body, _ := io.ReadAll(resp.Body)
+
+	if got, want := http.StatusOK, resp.StatusCode; got != want {
+		t.Errorf("status=%d, want=%d", got, want)
+	}
+
+	if want := html.EscapeString("It&rsquo;s a <em>test</em>."); !strings.Contains(string(body), want) {
+		t.Log(string(body))
+		t.Errorf("note not in body, want=%q", want)
+	}
+
+	if got, want := resp.Header.Get("content-type"), "application/atom+xml"; got != want {
+		t.Errorf("content-type=%q, want=%q", got, want)
 	}
 }
