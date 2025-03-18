@@ -2,13 +2,10 @@ package main
 
 import (
 	"embed"
-	_ "image/gif"
-	_ "image/jpeg"
 	"log/slog"
 	"net/http"
 
 	"github.com/codahale/yellhole-go/config"
-	_ "golang.org/x/image/webp"
 	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"
 )

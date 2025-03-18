@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
 	"io"
 	"net/http"
@@ -14,6 +16,7 @@ import (
 	"github.com/codahale/yellhole-go/db"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	_ "golang.org/x/image/webp"
 )
 
 type imageController struct {
