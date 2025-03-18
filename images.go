@@ -14,8 +14,8 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
-	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	"github.com/nfnt/resize"
 	_ "golang.org/x/image/webp"
 )
 
@@ -182,8 +182,8 @@ func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim int,
 	}
 	defer f.Close()
 
-	img = imaging.Thumbnail(img, min(maxDim, config.Width), min(maxDim, config.Height), imaging.CatmullRom)
-	if err := png.Encode(f, img); err != nil {
+	thumbnail := resize.Thumbnail(uint(maxDim), uint(maxDim), img, resize.Lanczos2)
+	if err := png.Encode(f, thumbnail); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", id, err)
 	}
 
