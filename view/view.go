@@ -34,10 +34,10 @@ var (
 		"weekPageURL": WeekPageURL,
 		"notePageURL": NotePageURL,
 		"feedImageURL": func(c *config.Config, imageID string) *url.URL {
-			return c.BaseURL.JoinPath("images", "feed", fmt.Sprintf("%s.png", imageID))
+			return c.BaseURL.JoinPath("images", "feed", imageID+".png")
 		},
 		"thumbImageURL": func(c *config.Config, imageID string) *url.URL {
-			return c.BaseURL.JoinPath("images", "thumb", fmt.Sprintf("%s.png", imageID))
+			return c.BaseURL.JoinPath("images", "thumb", imageID+".png")
 		},
 		"newNoteURL": func(c *config.Config) *url.URL {
 			return c.BaseURL.JoinPath("admin", "new")

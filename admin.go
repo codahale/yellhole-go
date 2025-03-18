@@ -60,5 +60,5 @@ func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("../note/%s", id), http.StatusSeeOther)
+	http.Redirect(w, r, "../note/"+id, http.StatusSeeOther)
 }

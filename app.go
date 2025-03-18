@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -84,7 +83,7 @@ func newApp(config *config.Config) (*app, error) {
 	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.ServeThumbImage)))
 
 	for _, path := range assets.AssetPaths() {
-		mux.Handle(fmt.Sprintf("GET /%s", path), assets)
+		mux.Handle("GET /"+path, assets)
 	}
 
 	// Require authentication for all /admin requests.
