@@ -36,7 +36,9 @@
                 <h2>Upload Images</h2>
             </header>
             <label for="image">Images:</label>
-            <input type="file" id="image" name="image" accept="image/*" multiple oninput="updateUpload()">
+            <input type="file" id="image" name="image"
+                accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/webp,image/jpeg" multiple
+                oninput="updateUpload()">
             <button id="upload" type="submit" disabled>Upload</button>
         </form>
     </section>
