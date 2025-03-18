@@ -14,7 +14,6 @@ import (
 
 func TestFeedsHomePageEmpty(t *testing.T) {
 	env := newTestApp(t)
-	defer env.teardown()
 
 	req := httptest.NewRequest("GET", "http://example.com/", nil)
 	w := httptest.NewRecorder()
@@ -29,7 +28,6 @@ func TestFeedsHomePageEmpty(t *testing.T) {
 
 func TestFeedsHomePageNote(t *testing.T) {
 	env := newTestApp(t)
-	defer env.teardown()
 
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
@@ -58,7 +56,6 @@ func TestFeedsHomePageNote(t *testing.T) {
 
 func TestFeedsWeeksPage(t *testing.T) {
 	env := newTestApp(t)
-	defer env.teardown()
 
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),

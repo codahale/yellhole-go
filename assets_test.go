@@ -9,7 +9,6 @@ import (
 
 func TestAssetsPublic(t *testing.T) {
 	env := newTestApp(t)
-	defer env.teardown()
 
 	req := httptest.NewRequest("GET", "http://example.com/favicon.ico", nil)
 	w := httptest.NewRecorder()

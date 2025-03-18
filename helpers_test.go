@@ -41,18 +41,16 @@ func newTestApp(t *testing.T) *testApp {
 		t.Fatal(err)
 	}
 
+	t.Cleanup(func() {
+		if err := app.close(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	return &testApp{app, t}
 }
 
 func (e *testApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.t.Helper()
 	e.app.ServeHTTP(w, r)
-}
-
-func (e *testApp) teardown() {
-	e.t.Helper()
-
-	if err := e.app.close(); err != nil {
-		e.t.Fatal(err)
-	}
 }
