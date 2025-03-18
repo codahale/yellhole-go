@@ -158,10 +158,13 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 	// Generate thumbnails in parallel.
 	done := make(chan error, 2)
 	go func() {
-		done <- generateThumbnail(ic.feedRoot, origImg, id, 600, config)
+		done <- generateThumbnail(ic.feedRoot, origImg, id, 600)
 	}()
 	go func() {
-		done <- generateThumbnail(ic.thumbRoot, origImg, id, 100, config)
+		done <- func() error {
+			var _ image.Config = config
+			return generateThumbnail(ic.thumbRoot, origImg, id, 100)
+		}()
 	}()
 
 	// Return the first error, if any.
@@ -175,14 +178,14 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 	return format, nil
 }
 
-func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim int, config image.Config) error {
+func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim uint) error {
 	f, err := root.Create(fmt.Sprintf("%s.png", id))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	thumbnail := resize.Thumbnail(uint(maxDim), uint(maxDim), img, resize.Lanczos2)
+	thumbnail := resize.Thumbnail(maxDim, maxDim, img, resize.Lanczos2)
 	if err := png.Encode(f, thumbnail); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", id, err)
 	}
