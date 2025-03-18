@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', (_) => {
   if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
+    window.alert('Passkeys not enabled');
     return;
   }
 
