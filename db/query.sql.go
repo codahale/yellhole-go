@@ -208,12 +208,20 @@ func (q *Queries) PasskeyIDs(ctx context.Context) ([][]byte, error) {
 	return items, nil
 }
 
-const purgeSessions = `-- name: PurgeSessions :execresult
-delete from session where created_at < datetime('now', '-7 days')
+const purgeChallenges = `-- name: PurgeChallenges :execresult
+delete from challenge where created_at < ?
 `
 
-func (q *Queries) PurgeSessions(ctx context.Context) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeSessions)
+func (q *Queries) PurgeChallenges(ctx context.Context, createdAt time.Time) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeChallenges, createdAt)
+}
+
+const purgeSessions = `-- name: PurgeSessions :execresult
+delete from session where created_at < ?
+`
+
+func (q *Queries) PurgeSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeSessions, createdAt)
 }
 
 const recentImages = `-- name: RecentImages :many
@@ -284,11 +292,16 @@ func (q *Queries) RecentNotes(ctx context.Context, limit int64) ([]Note, error) 
 const sessionExists = `-- name: SessionExists :one
 select count(1) > 0
 from session
-where session_id = ? and created_at > datetime('now', '-7 days')
+where session_id = ? and created_at > ?
 `
 
-func (q *Queries) SessionExists(ctx context.Context, sessionID string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, sessionExists, sessionID)
+type SessionExistsParams struct {
+	SessionID string
+	CreatedAt time.Time
+}
+
+func (q *Queries) SessionExists(ctx context.Context, arg SessionExistsParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, sessionExists, arg.SessionID, arg.CreatedAt)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err

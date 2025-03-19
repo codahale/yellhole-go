@@ -42,10 +42,13 @@ values (?, ?);
 -- name: SessionExists :one
 select count(1) > 0
 from session
-where session_id = ? and created_at > datetime('now', '-7 days');
+where session_id = ? and created_at > ?;
 
 -- name: PurgeSessions :execresult
-delete from session where created_at < datetime('now', '-7 days');
+delete from session where created_at < ?;
+
+-- name: PurgeChallenges :execresult
+delete from challenge where created_at < ?;
 
 -- name: HasPasskey :one
 select count(passkey_id) > 0 from passkey;

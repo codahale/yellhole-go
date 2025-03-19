@@ -223,7 +223,10 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 		return false, nil
 	}
 
-	auth, err := queries.SessionExists(r.Context(), cookie.Value)
+	auth, err := queries.SessionExists(r.Context(), db.SessionExistsParams{
+		SessionID: cookie.Value,
+		CreatedAt: time.Now().AddDate(0, 0, -7),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -231,19 +234,39 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	return auth, err
 }
 
-func purgeOldSessionsInBackground(queries *db.Queries, ticker *time.Ticker) {
+func purgeOldRows(queries *db.Queries, ticker *time.Ticker) {
 	for range ticker.C {
-		res, err := queries.PurgeSessions(context.Background())
-		if err != nil {
-			slog.Error("error purging old sessions", "err", err)
-			continue
-		}
-
-		n, err := res.RowsAffected()
-		if err != nil {
-			slog.Error("error purging old sessions", "err", err)
-			continue
-		}
-		slog.Info("purged old sessions", "count", n)
+		purgeOldSessions(queries)
+		purgeOldChallenges(queries)
 	}
+}
+
+func purgeOldSessions(queries *db.Queries) {
+	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7))
+	if err != nil {
+		slog.Error("error purging old sessions", "err", err)
+		return
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		slog.Error("error purging old sessions", "err", err)
+		return
+	}
+	slog.Info("purged old sessions", "count", n)
+}
+
+func purgeOldChallenges(queries *db.Queries) {
+	res, err := queries.PurgeChallenges(context.Background(), time.Now().Add(-5*time.Minute))
+	if err != nil {
+		slog.Error("error purging old challenge", "err", err)
+		return
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		slog.Error("error purging old challenge", "err", err)
+		return
+	}
+	slog.Info("purged old challenges", "count", n)
 }

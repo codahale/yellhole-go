@@ -38,7 +38,7 @@ func newApp(config *config.Config) (*app, error) {
 
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
-	go purgeOldSessionsInBackground(queries, purgeTicker)
+	go purgeOldRows(queries, purgeTicker)
 
 	// Open the data directory as a file system root.
 	dataRoot, err := os.OpenRoot(config.DataDir)
