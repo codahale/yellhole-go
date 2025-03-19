@@ -73,7 +73,7 @@
     <footer>
         <a href="{{notePageURL $.Config .NoteID}}">
             <time datetime="{{.CreatedAt | rfc3339}}">
-                {{.CreatedAt.Local}}
+                {{.CreatedAt | localTime}}
             </time>
         </a>
     </footer>

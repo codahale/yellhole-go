@@ -8,8 +8,35 @@ package db
 import (
 	"context"
 	"database/sql"
-	"time"
 )
+
+const allNoteTimestamps = `-- name: AllNoteTimestamps :many
+select created_at
+from note
+`
+
+func (q *Queries) AllNoteTimestamps(ctx context.Context) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, allNoteTimestamps)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var created_at int64
+		if err := rows.Scan(&created_at); err != nil {
+			return nil, err
+		}
+		items = append(items, created_at)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const createChallenge = `-- name: CreateChallenge :exec
 insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?)
@@ -18,7 +45,7 @@ insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?)
 type CreateChallengeParams struct {
 	ChallengeID string
 	Bytes       []byte
-	CreatedAt   time.Time
+	CreatedAt   int64
 }
 
 func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) error {
@@ -35,7 +62,7 @@ type CreateImageParams struct {
 	ImageID   string
 	Filename  string
 	Format    string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) error {
@@ -55,7 +82,7 @@ insert into note (note_id, body, created_at) values (?, ?, ?)
 type CreateNoteParams struct {
 	NoteID    string
 	Body      string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
@@ -70,7 +97,7 @@ insert into passkey (passkey_id, public_key_spki, created_at) values (?, ?, ?)
 type CreatePasskeyParams struct {
 	PasskeyID     []byte
 	PublicKeySPKI []byte
-	CreatedAt     time.Time
+	CreatedAt     int64
 }
 
 func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) error {
@@ -85,7 +112,7 @@ values (?, ?)
 
 type CreateSessionParams struct {
 	SessionID string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
@@ -101,7 +128,7 @@ returning bytes
 
 type DeleteChallengeParams struct {
 	ChallengeID string
-	CreatedAt   time.Time
+	CreatedAt   int64
 }
 
 func (q *Queries) DeleteChallenge(ctx context.Context, arg DeleteChallengeParams) ([]byte, error) {
@@ -154,8 +181,8 @@ order by created_at desc
 `
 
 type NotesByDateParams struct {
-	Start time.Time
-	End   time.Time
+	Start int64
+	End   int64
 }
 
 func (q *Queries) NotesByDate(ctx context.Context, arg NotesByDateParams) ([]Note, error) {
@@ -212,7 +239,7 @@ const purgeChallenges = `-- name: PurgeChallenges :execresult
 delete from challenge where created_at < ?
 `
 
-func (q *Queries) PurgeChallenges(ctx context.Context, createdAt time.Time) (sql.Result, error) {
+func (q *Queries) PurgeChallenges(ctx context.Context, createdAt int64) (sql.Result, error) {
 	return q.db.ExecContext(ctx, purgeChallenges, createdAt)
 }
 
@@ -220,7 +247,7 @@ const purgeSessions = `-- name: PurgeSessions :execresult
 delete from session where created_at < ?
 `
 
-func (q *Queries) PurgeSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
+func (q *Queries) PurgeSessions(ctx context.Context, createdAt int64) (sql.Result, error) {
 	return q.db.ExecContext(ctx, purgeSessions, createdAt)
 }
 
@@ -297,7 +324,7 @@ where session_id = ? and created_at > ?
 
 type SessionExistsParams struct {
 	SessionID string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 func (q *Queries) SessionExists(ctx context.Context, arg SessionExistsParams) (bool, error) {
@@ -305,40 +332,4 @@ func (q *Queries) SessionExists(ctx context.Context, arg SessionExistsParams) (b
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
-}
-
-const weeksWithNotes = `-- name: WeeksWithNotes :many
-select
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as text) as start_date,
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as text) as end_date
-from note
-group by 1 order by 1 desc
-`
-
-type WeeksWithNotesRow struct {
-	StartDate string
-	EndDate   string
-}
-
-func (q *Queries) WeeksWithNotes(ctx context.Context) ([]WeeksWithNotesRow, error) {
-	rows, err := q.db.QueryContext(ctx, weeksWithNotes)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []WeeksWithNotesRow
-	for rows.Next() {
-		var i WeeksWithNotesRow
-		if err := rows.Scan(&i.StartDate, &i.EndDate); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

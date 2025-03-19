@@ -29,8 +29,11 @@ var (
 		"currentYear": func() int {
 			return time.Now().Local().Year()
 		},
-		"rfc3339": func(t *time.Time) string {
-			return t.UTC().Format(time.RFC3339)
+		"rfc3339": func(t64 int64) string {
+			return time.Unix(t64, 0).Format(time.RFC3339)
+		},
+		"localTime": func(t64 int64) string {
+			return time.Unix(t64, 0).Local().String()
 		},
 		"atomURL":     AtomURL,
 		"weekPageURL": WeekPageURL,

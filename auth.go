@@ -84,7 +84,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	if err := ac.queries.CreatePasskey(r.Context(), db.CreatePasskeyParams{
 		PasskeyID:     passkeyID,
 		PublicKeySPKI: publicKeySPKI,
-		CreatedAt:     time.Now(),
+		CreatedAt:     time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}
@@ -141,7 +141,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	if err := ac.queries.CreateChallenge(r.Context(), db.CreateChallengeParams{
 		ChallengeID: challenge.ChallengeID,
 		Bytes:       challenge.Challenge,
-		CreatedAt:   time.Now(),
+		CreatedAt:   time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}
@@ -173,7 +173,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	// Get and remove the challenge value from the database.
 	challenge, err := ac.queries.DeleteChallenge(r.Context(), db.DeleteChallengeParams{
 		ChallengeID: resp.ChallengeID,
-		CreatedAt:   time.Now().Add(-5 * time.Minute),
+		CreatedAt:   time.Now().Add(-5 * time.Minute).Unix(),
 	})
 	if errors.Is(err, sql.ErrNoRows) {
 		slog.Error("invalid challenge", "id", sloghttp.GetRequestID(r))
@@ -196,7 +196,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	sessionID := uuid.NewString()
 	if err := ac.queries.CreateSession(r.Context(), db.CreateSessionParams{
 		SessionID: sessionID,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}
@@ -225,7 +225,7 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 
 	auth, err := queries.SessionExists(r.Context(), db.SessionExistsParams{
 		SessionID: cookie.Value,
-		CreatedAt: time.Now().AddDate(0, 0, -7),
+		CreatedAt: time.Now().AddDate(0, 0, -7).Unix(),
 	})
 	if err != nil {
 		panic(err)
@@ -242,7 +242,7 @@ func purgeOldRows(queries *db.Queries, ticker *time.Ticker) {
 }
 
 func purgeOldSessions(queries *db.Queries) {
-	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7))
+	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7).Unix())
 	if err != nil {
 		slog.Error("error purging old sessions", "err", err)
 		return
@@ -257,7 +257,7 @@ func purgeOldSessions(queries *db.Queries) {
 }
 
 func purgeOldChallenges(queries *db.Queries) {
-	res, err := queries.PurgeChallenges(context.Background(), time.Now().Add(-5*time.Minute))
+	res, err := queries.PurgeChallenges(context.Background(), time.Now().Add(-5*time.Minute).Unix())
 	if err != nil {
 		slog.Error("error purging old challenge", "err", err)
 		return

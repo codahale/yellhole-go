@@ -33,7 +33,7 @@ func TestFeedsHomePageNote(t *testing.T) {
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "It's a *test*.",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestFeedsWeeksPage(t *testing.T) {
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "This one's in March.",
-		CreatedAt: time.Date(2025, 3, 10, 10, 2, 0, 0, time.Local),
+		CreatedAt: time.Date(2025, 3, 10, 10, 2, 0, 0, time.Local).Unix(),
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestFeedsWeeksPage(t *testing.T) {
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "This one's in April.",
-		CreatedAt: time.Date(2025, 4, 10, 10, 2, 0, 0, time.Local),
+		CreatedAt: time.Date(2025, 4, 10, 10, 2, 0, 0, time.Local).Unix(),
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestFeedsNotePage(t *testing.T) {
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    noteID,
 		Body:      "An example.",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestFeedsAtomFeed(t *testing.T) {
 	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "It's a *test*.",
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		t.Fatal(err)
 	}

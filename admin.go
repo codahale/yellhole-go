@@ -55,7 +55,7 @@ func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	if err := ac.queries.CreateNote(r.Context(), db.CreateNoteParams{
 		NoteID:    id,
 		Body:      r.FormValue("body"),
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}

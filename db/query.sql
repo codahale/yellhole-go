@@ -12,12 +12,9 @@ from note
 order by created_at desc
 limit ?;
 
--- name: WeeksWithNotes :many
-select
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0', '-7 days') as text) as start_date,
-    cast(date(datetime(created_at, 'localtime'), 'weekday 0') as text) as end_date
-from note
-group by 1 order by 1 desc;
+-- name: AllNoteTimestamps :many
+select created_at
+from note;
 
 -- name: NotesByDate :many
 select note_id, body, created_at

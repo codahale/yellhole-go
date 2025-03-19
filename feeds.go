@@ -58,8 +58,8 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	notes, err := fc.queries.NotesByDate(r.Context(), db.NotesByDateParams{
-		Start: start,
-		End:   start.AddDate(0, 0, 7),
+		Start: start.Unix(),
+		End:   start.AddDate(0, 0, 7).Unix(),
 	})
 	if err != nil {
 		panic(err)
@@ -130,7 +130,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(notes) > 0 {
-		feed.Updated = atom.Time(notes[0].CreatedAt)
+		feed.Updated = atom.Time(time.Unix(notes[0].CreatedAt, 0))
 	}
 
 	for _, note := range notes {
@@ -150,8 +150,8 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 				Href: view.NotePageURL(fc.config, note.NoteID).String(),
 				Rel:  "alternate",
 			}},
-			Published: atom.Time(note.CreatedAt),
-			Updated:   atom.Time(note.CreatedAt),
+			Published: atom.Time(time.Unix(note.CreatedAt, 0)),
+			Updated:   atom.Time(time.Unix(note.CreatedAt, 0)),
 		}
 		feed.Entry = append(feed.Entry, &entry)
 	}
@@ -166,5 +166,5 @@ type feedPage struct {
 	Config *config.Config
 	Single bool
 	Notes  []db.Note
-	Weeks  []db.WeeksWithNotesRow
+	Weeks  []db.Week
 }

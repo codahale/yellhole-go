@@ -4,36 +4,32 @@
 
 package db
 
-import (
-	"time"
-)
-
 type Challenge struct {
 	ChallengeID string
 	Bytes       []byte
-	CreatedAt   time.Time
+	CreatedAt   int64
 }
 
 type Image struct {
 	ImageID   string
 	Filename  string
 	Format    string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 type Note struct {
 	NoteID    string
 	Body      string
-	CreatedAt time.Time
+	CreatedAt int64
 }
 
 type Passkey struct {
 	PasskeyID     []byte
 	PublicKeySPKI []byte
-	CreatedAt     time.Time
+	CreatedAt     int64
 }
 
 type Session struct {
 	SessionID string
-	CreatedAt time.Time
+	CreatedAt int64
 }

@@ -97,7 +97,7 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 		ImageID:   id.String(),
 		Filename:  url,
 		Format:    format,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}
