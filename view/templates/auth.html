@@ -1,0 +1,22 @@
+{{define "tail"}}
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', (_) => {
+        if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
+            window.alert('Passkeys not enabled');
+            return;
+        }
+
+        Promise.all([
+            PublicKeyCredential.isConditionalMediationAvailable(),
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()])
+            .then((values) => {
+                if (values.every(x => x === true)) {
+                    document.querySelectorAll('button[data-passkey-only="true"]').forEach(e => {
+                        e.disabled = false;
+                    });
+                }
+            });
+    });
+</script>
+{{block "auth-tail" .}}{{end}}
+{{end}}

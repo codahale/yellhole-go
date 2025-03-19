@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/codahale/yellhole-go/config"
@@ -14,8 +16,8 @@ import (
 )
 
 var (
-	//go:embed *.html
-	files          embed.FS
+	//go:embed templates
+	templatesDir   embed.FS
 	buildTimestamp string // injected via ldflags, must be uninitialized
 	funcs          = template.FuncMap{
 		"markdownHTML":   markdown.HTML,
@@ -72,18 +74,36 @@ func NotePageURL(c *config.Config, noteID string) *url.URL {
 }
 
 func init() {
-	// This is a lot of hassle to accomplish a single level of nested layouts.
-	if err := fs.WalkDir(files, ".", func(path string, d fs.DirEntry, _ error) error {
-		if d.IsDir() || d.Name() == "base.html" {
+	if err := fs.WalkDir(templatesDir, "templates", func(tmplPath string, d fs.DirEntry, err error) error {
+		// Ignore directories.
+		if d.IsDir() {
 			return nil
 		}
 
-		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(files, path, "base.html")
+		// Propagate errors.
 		if err != nil {
 			return err
 		}
 
-		tmpls[d.Name()] = t
+		// Convert templates/a/b/c.html into a template parse pattern of the following:
+		//
+		//   templates/a/b/c.html templates/a/b.html templates/a.html templates/base.html
+		parsePath := []string{tmplPath}
+		dir := path.Dir(tmplPath)
+		for dir != "templates" {
+			parsePath = append(parsePath, dir+".html")
+			dir = path.Dir(dir)
+		}
+		parsePath = append(parsePath, "templates/base.html")
+
+		// Parse the template in its inheritance path.
+		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templatesDir, parsePath...)
+		if err != nil {
+			return err
+		}
+
+		// Add the template using its relative path in the templates directory (e.g. "a/b/c.html").
+		tmpls[strings.TrimPrefix(tmplPath, "templates/")] = t
 
 		return nil
 	}); err != nil {

@@ -95,12 +95,17 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 
 const deleteChallenge = `-- name: DeleteChallenge :one
 delete from challenge
-where challenge_id = ? and created_at > datetime('now', '-5 minutes')
+where challenge_id = ? and created_at > ? 
 returning bytes
 `
 
-func (q *Queries) DeleteChallenge(ctx context.Context, challengeID string) ([]byte, error) {
-	row := q.db.QueryRowContext(ctx, deleteChallenge, challengeID)
+type DeleteChallengeParams struct {
+	ChallengeID string
+	CreatedAt   time.Time
+}
+
+func (q *Queries) DeleteChallenge(ctx context.Context, arg DeleteChallengeParams) ([]byte, error) {
+	row := q.db.QueryRowContext(ctx, deleteChallenge, arg.ChallengeID, arg.CreatedAt)
 	var bytes []byte
 	err := row.Scan(&bytes)
 	return bytes, err

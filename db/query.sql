@@ -64,5 +64,5 @@ insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?);
 
 -- name: DeleteChallenge :one
 delete from challenge
-where challenge_id = ? and created_at > datetime('now', '-5 minutes')
+where challenge_id = ? and created_at > ? 
 returning bytes;

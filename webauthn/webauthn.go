@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/codahale/yellhole-go/config"
+	"github.com/google/uuid"
 )
 
 type RegistrationChallenge struct {
@@ -104,9 +105,10 @@ func (r *RegistrationResponse) Validate(config *config.Config) ([]byte, []byte, 
 }
 
 type LoginChallenge struct {
-	RpID       string   `json:"rpId"`
-	Challenge  []byte   `json:"challengeBase64"`
-	PasskeyIDs [][]byte `json:"passkeyIdsBase64"`
+	RpID        string   `json:"rpId"`
+	ChallengeID string   `json:"challengeId"`
+	Challenge   []byte   `json:"challengeBase64"`
+	PasskeyIDs  [][]byte `json:"passkeyIdsBase64"`
 }
 
 func NewLoginChallenge(config *config.Config, passkeyIDs [][]byte) (*LoginChallenge, error) {
@@ -115,14 +117,16 @@ func NewLoginChallenge(config *config.Config, passkeyIDs [][]byte) (*LoginChalle
 		return nil, err
 	}
 	return &LoginChallenge{
-		RpID:       config.BaseURL.Hostname(),
-		Challenge:  challenge,
-		PasskeyIDs: passkeyIDs,
+		RpID:        config.BaseURL.Hostname(),
+		ChallengeID: uuid.NewString(),
+		Challenge:   challenge,
+		PasskeyIDs:  passkeyIDs,
 	}, nil
 }
 
 type LoginResponse struct {
 	RawID             []byte `json:"rawIdBase64"`
+	ChallengeID       string `json:"challengeId"`
 	ClientDataJSON    []byte `json:"clientDataJSONBase64"`
 	AuthenticatorData []byte `json:"authenticatorDataBase64"`
 	Signature         []byte `json:"signatureBase64"`

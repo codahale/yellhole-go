@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -13,6 +14,7 @@ import (
 	"github.com/codahale/yellhole-go/view"
 	"github.com/codahale/yellhole-go/webauthn"
 	"github.com/google/uuid"
+	sloghttp "github.com/samber/slog-http"
 )
 
 type authController struct {
@@ -45,7 +47,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := view.Render(w, "register.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := view.Render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
@@ -110,7 +112,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := view.Render(w, "login.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := view.Render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
@@ -136,24 +138,13 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	challengeID := uuid.New()
 	if err := ac.queries.CreateChallenge(r.Context(), db.CreateChallengeParams{
-		ChallengeID: challengeID.String(),
+		ChallengeID: challenge.ChallengeID,
 		Bytes:       challenge.Challenge,
 		CreatedAt:   time.Now(),
 	}); err != nil {
 		panic(err)
 	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "challengeID",
-		Value:    challengeID.String(),
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Secure:   ac.config.BaseURL.Scheme == "https",
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   5 * 60, // 5 minutes
-	})
 
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(&challenge); err != nil {
@@ -172,27 +163,23 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("challengeID")
-	if err != nil {
-		panic(err)
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "challengeID",
-		Value:    "",
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Expires:  time.Unix(0, 0),
-	})
-
-	// Get and remove the challenge value from the database.
-	challenge, err := ac.queries.DeleteChallenge(r.Context(), cookie.Value)
-	if err != nil {
-		panic(err)
-	}
-
+	// Decode the body.
 	var resp webauthn.LoginResponse
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+		panic(err)
+	}
+
+	// Get and remove the challenge value from the database.
+	challenge, err := ac.queries.DeleteChallenge(r.Context(), db.DeleteChallengeParams{
+		ChallengeID: resp.ChallengeID,
+		CreatedAt:   time.Now().Add(-5 * time.Minute),
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		slog.Error("invalid challenge", "id", sloghttp.GetRequestID(r))
+		http.Error(w, "Invalid challenge", http.StatusBadRequest)
+		return
+	} else if err != nil {
 		panic(err)
 	}
 
