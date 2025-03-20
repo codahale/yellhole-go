@@ -16,8 +16,9 @@ func TestMain(m *testing.M) {
 }
 
 type testApp struct {
-	app *app
-	t   *testing.T
+	app     *app
+	tempDir string
+	t       *testing.T
 }
 
 func newTestApp(t *testing.T) *testApp {
@@ -28,10 +29,11 @@ func newTestApp(t *testing.T) *testApp {
 		t.Fatal(err)
 	}
 
+	tempDir := t.TempDir()
 	config := &config.Config{
 		Addr:        "localhost:8080",
 		BaseURL:     baseURL,
-		DataDir:     t.TempDir(),
+		DataDir:     tempDir,
 		Title:       "Test Yell",
 		Description: "Gotta go fast.",
 		RequestLog:  false,
@@ -47,7 +49,7 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	return &testApp{app, t}
+	return &testApp{app, tempDir, t}
 }
 
 func (e *testApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
