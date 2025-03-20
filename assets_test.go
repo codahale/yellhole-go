@@ -8,11 +8,11 @@ import (
 )
 
 func TestAssetsPublic(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/favicon.ico", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)

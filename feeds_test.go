@@ -14,11 +14,11 @@ import (
 )
 
 func TestFeedsHomePageEmpty(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 
@@ -28,9 +28,9 @@ func TestFeedsHomePageEmpty(t *testing.T) {
 }
 
 func TestFeedsHomePageNote(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
-	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+	if err := app.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "It's a *test*.",
 		CreatedAt: time.Now().Unix(),
@@ -40,7 +40,7 @@ func TestFeedsHomePageNote(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://example.com/", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)
@@ -56,9 +56,9 @@ func TestFeedsHomePageNote(t *testing.T) {
 }
 
 func TestFeedsWeeksPage(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
-	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+	if err := app.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "This one's in March.",
 		CreatedAt: time.Date(2025, 3, 10, 10, 2, 0, 0, time.Local).Unix(),
@@ -66,7 +66,7 @@ func TestFeedsWeeksPage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+	if err := app.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "This one's in April.",
 		CreatedAt: time.Date(2025, 4, 10, 10, 2, 0, 0, time.Local).Unix(),
@@ -76,7 +76,7 @@ func TestFeedsWeeksPage(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)
@@ -95,11 +95,11 @@ func TestFeedsWeeksPage(t *testing.T) {
 }
 
 func TestFeedsWeeksPage404(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 
@@ -109,10 +109,10 @@ func TestFeedsWeeksPage404(t *testing.T) {
 }
 
 func TestFeedsNotePage(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
 	noteID := uuid.NewString()
-	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+	if err := app.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    noteID,
 		Body:      "An example.",
 		CreatedAt: time.Now().Unix(),
@@ -122,7 +122,7 @@ func TestFeedsNotePage(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)
@@ -137,13 +137,13 @@ func TestFeedsNotePage(t *testing.T) {
 }
 
 func TestFeedsNotePage404(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
 	noteID := uuid.NewString()
 
 	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 
@@ -153,9 +153,9 @@ func TestFeedsNotePage404(t *testing.T) {
 }
 
 func TestFeedsAtomFeed(t *testing.T) {
-	env := newTestApp(t)
+	app := newTestApp(t)
 
-	if err := env.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
+	if err := app.app.queries.CreateNote(t.Context(), db.CreateNoteParams{
 		NoteID:    uuid.NewString(),
 		Body:      "It's a *test*.",
 		CreatedAt: time.Now().Unix(),
@@ -165,7 +165,7 @@ func TestFeedsAtomFeed(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://example.com/atom.xml", nil)
 	w := httptest.NewRecorder()
-	env.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)
