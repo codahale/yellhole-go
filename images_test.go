@@ -12,11 +12,13 @@ import (
 func TestServeFeedImage(t *testing.T) {
 	env := newTestApp(t)
 
-	if err := os.WriteFile(filepath.Join(env.tempDir, "images", "feed", "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"), []byte("feed"), 0666); err != nil {
+	imageFilename := "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"
+
+	if err := os.WriteFile(filepath.Join(env.tempDir, "images", "feed", imageFilename), []byte("feed"), 0666); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/images/feed/b5621adf-c26c-4a3d-9793-5bb492afdab6.png", nil)
+	req := httptest.NewRequest("GET", "http://example.com/images/feed/"+imageFilename, nil)
 	w := httptest.NewRecorder()
 	env.ServeHTTP(w, req)
 
@@ -35,11 +37,13 @@ func TestServeFeedImage(t *testing.T) {
 func TestServeThumbImage(t *testing.T) {
 	env := newTestApp(t)
 
-	if err := os.WriteFile(filepath.Join(env.tempDir, "images", "thumb", "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"), []byte("thumb"), 0666); err != nil {
+	imageFilename := "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"
+
+	if err := os.WriteFile(filepath.Join(env.tempDir, "images", "thumb", imageFilename), []byte("thumb"), 0666); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/images/thumb/b5621adf-c26c-4a3d-9793-5bb492afdab6.png", nil)
+	req := httptest.NewRequest("GET", "http://example.com/images/thumb/"+imageFilename, nil)
 	w := httptest.NewRecorder()
 	env.ServeHTTP(w, req)
 
