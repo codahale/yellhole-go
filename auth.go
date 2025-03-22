@@ -85,15 +85,7 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Pass the webauthn session ID to the browser via a cookie.
-	http.SetCookie(w, &http.Cookie{
-		Name:     "registrationSessionID",
-		Value:    registrationSessionID,
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Secure:   ac.config.BaseURL.Scheme == "https",
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   60,
-	})
+	http.SetCookie(w, ac.secureCookie("registrationSessionID", registrationSessionID, 60))
 
 	// Render the attestation challenge as a JSON object.
 	w.Header().Set("content-type", "application/json")
@@ -218,28 +210,20 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	sessionID := uuid.NewString()
+	loginSessionID := uuid.NewString()
 	sessionJSON, err := json.Marshal(session)
 	if err != nil {
 		panic(err)
 	}
 	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
-		WebauthnSessionID: sessionID,
+		WebauthnSessionID: loginSessionID,
 		SessionData:       sessionJSON,
 		CreatedAt:         time.Now().Unix(),
 	}); err != nil {
 		panic(err)
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "loginSessionID",
-		Value:    sessionID,
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Secure:   ac.config.BaseURL.Scheme == "https",
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   60,
-	})
+	http.SetCookie(w, ac.secureCookie("loginSessionID", loginSessionID, 60))
 
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(assertion); err != nil {
@@ -273,13 +257,13 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find, delete, and decode the webauthn session data.
-	webauthnSessionID, err := r.Cookie("loginSessionID")
+	loginSessionID, err := r.Cookie("loginSessionID")
 	if err != nil {
 		panic(err)
 	}
 
 	session, err := ac.queries.DeleteWebauthnSession(r.Context(), db.DeleteWebauthnSessionParams{
-		WebauthnSessionID: webauthnSessionID.Value,
+		WebauthnSessionID: loginSessionID.Value,
 		CreatedAt:         time.Now().Add(-1 * time.Minute).Unix(),
 	})
 	if err != nil {
@@ -318,20 +302,24 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		panic(err)
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "sessionID",
-		Value:    sessionID,
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Secure:   ac.config.BaseURL.Scheme == "https",
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   7 * 24 * 60 * 60, // 7 weeks
-	})
+	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
 
 	// Return a success object.
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
 		panic(err)
+	}
+}
+
+func (ac *authController) secureCookie(name, value string, maxAge int) *http.Cookie {
+	return &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     ac.config.BaseURL.Path,
+		HttpOnly: true,
+		Secure:   ac.config.BaseURL.Scheme == "https",
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   maxAge,
 	}
 }
 
