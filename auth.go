@@ -144,6 +144,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
+	http.SetCookie(w, ac.secureCookie("registrationSessionID", "", -1))
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
 		panic(err)
@@ -303,6 +304,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
+	http.SetCookie(w, ac.secureCookie("loginSessionID", "", -1))
 
 	// Return a success object.
 	w.Header().Set("content-type", "application/json")
