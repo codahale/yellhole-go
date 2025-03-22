@@ -1,21 +1,19 @@
+{{define "head"}}
+<script src='{{assetURL .Config "js" "simplewebauthn-browser-13.1.0.min.js"}}'></script>
+{{end}}
+
 {{define "tail"}}
 <script type="text/javascript">
+    const { browserSupportsWebAuthn } = SimpleWebAuthnBrowser;
     document.addEventListener('DOMContentLoaded', (_) => {
-        if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
+        if (!browserSupportsWebAuthn()) {
             window.alert('Passkeys not enabled');
             return;
         }
 
-        Promise.all([
-            PublicKeyCredential.isConditionalMediationAvailable(),
-            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()])
-            .then((values) => {
-                if (values.every(x => x === true)) {
-                    document.querySelectorAll('button[data-passkey-only="true"]').forEach(e => {
-                        e.disabled = false;
-                    });
-                }
-            });
+        document.querySelectorAll('button[data-passkey-only="true"]').forEach(e => {
+            e.disabled = false;
+        });
     });
 </script>
 {{block "auth-tail" .}}{{end}}

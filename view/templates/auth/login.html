@@ -2,63 +2,42 @@
 {{define "description"}}Speak frenemy and enter.{{end}}
 
 {{define "content"}}
-<button id="login" data-passkey-only="true" disabled onclick="login()">Log In With Passkey</button>
+<button id="login" data-passkey-only="true" disabled>Log In With Passkey</button>
+<p id="message"></p>
 {{end}}
 
 {{define "auth-tail"}}
 <script type="text/javascript">
-    async function login(startUrl, finishUrl, adminUrl) {
-        const startResp = await fetch('{{.Config.BaseURL.JoinPath "login" "start"}}', {
-            method: 'POST'
-        }).catch((error) => { console.error(error) });
+    const { startAuthentication } = SimpleWebAuthnBrowser;
+    const btnLogin = document.getElementById('login');
+    const pMessage = document.getElementById('message');
+    btnLogin.addEventListener('click', async () => {
+        pMessage.innerHTML = '';
+        const startResp = await fetch('{{.Config.BaseURL.JoinPath "login" "start"}}', { method: 'POST' });
+        const startJSON = await startResp.json();
 
-        if (!startResp.ok) {
-            window.alert('Error starting passkey authentication.');
-            return;
+        let finishReq;
+        try {
+            finishReq = await startAuthentication({ optionsJSON: startJSON.publicKey });
+        } catch (error) {
+            pMessage.innerText = error;
+            throw error;
         }
-
-        const startJson = await startResp.json()
-            .catch((error) => { console.error(error) });
-
-
-        const authOptions = {
-            publicKey: {
-                challenge: Uint8Array.from(atob(startJson.challengeBase64), c => c.charCodeAt(0)),
-                rpId: startJson.rpId,
-                allowCredentials: startJson.passkeyIdsBase64.map(id => {
-                    return {
-                        type: 'public-key',
-                        id: Uint8Array.from(atob(id), c => c.charCodeAt(0)),
-                    };
-                }),
-            },
-        };
-
-        const assertion = await navigator.credentials.get(authOptions).catch(error => console.log(error));
-        if (!assertion) {
-            window.alert('Error authentication with passkey.')
-            return;
-        }
-
-        const auth = {
-            rawIdBase64: btoa(String.fromCharCode(...new Uint8Array(assertion.rawId))),
-            challengeId: startJson.challengeId,
-            clientDataJSONBase64: btoa(new TextDecoder().decode(assertion.response.clientDataJSON)),
-            authenticatorDataBase64: btoa(String.fromCharCode(...new Uint8Array(assertion.response.authenticatorData))),
-            signatureBase64: btoa(String.fromCharCode(...new Uint8Array(assertion.response.signature))),
-        };
 
         const finishResp = await fetch('{{.Config.BaseURL.JoinPath "login" "finish"}}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(auth),
+            body: JSON.stringify(finishReq),
         });
 
-        if (finishResp.ok) {
+        const finishJSON = await finishResp.json();
+
+        if (finishJSON && finishJSON.verified) {
             window.location.href = '{{.Config.BaseURL.JoinPath "admin"}}';
         } else {
-            window.alert('Error finishing passkey authentication.');
+            console.log(finishJSON);
+            window.alert('Error logging in with passkey.')
         }
-    }
+    });
 </script>
 {{end}}

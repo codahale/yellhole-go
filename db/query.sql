@@ -44,25 +44,22 @@ where session_id = ? and created_at > ?;
 -- name: PurgeSessions :execresult
 delete from session where created_at < ?;
 
--- name: PurgeChallenges :execresult
-delete from challenge where created_at < ?;
+-- name: CreateWebauthnCredential :exec
+insert into webauthn_credential (credential_data, created_at) values (?, ?);
 
--- name: HasPasskey :one
-select count(passkey_id) > 0 from passkey;
+-- name: WebauthnCredentials :many
+select credential_data from webauthn_credential;
 
--- name: FindPasskey :one
-select public_key_spki from passkey where passkey_id = ?;
+-- name: HasWebauthnCredential :one
+select count(1) > 0 from webauthn_credential;
 
--- name: PasskeyIDs :many
-select passkey_id from passkey;
+-- name: CreateWebauthnSession :exec
+insert into webauthn_session (webauthn_session_id, session_data, created_at) values (?, ?, ?);
 
--- name: CreatePasskey :exec
-insert into passkey (passkey_id, public_key_spki, created_at) values (?, ?, ?);
+-- name: DeleteWebauthnSession :one
+delete from webauthn_session 
+where webauthn_session_id = ? and created_at > ? 
+returning session_data;
 
--- name: CreateChallenge :exec
-insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?);
-
--- name: DeleteChallenge :one
-delete from challenge
-where challenge_id = ? and created_at > ? 
-returning bytes;
+-- name: PurgeWebauthnSessions :execresult
+delete from webauthn_session where created_at < ?;

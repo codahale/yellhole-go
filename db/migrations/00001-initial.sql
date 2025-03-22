@@ -21,15 +21,14 @@ create table session (
     created_at integer not null
 );
 
-create table passkey (
-    passkey_id blob primary key not null,
-    public_key_spki blob not null,
+create table webauthn_credential (
+    credential_data blob not null,
     created_at integer not null
 );
 
-create table challenge (
-    challenge_id text primary key not null,
-    bytes blob not null,
+create table webauthn_session (
+    webauthn_session_id text primary key not null,
+    session_data blob not null,
     created_at integer not null
 );
 

@@ -3,82 +3,51 @@
 
 {{define "content"}}
 <section>
-    <button id="register" data-passkey-only="true" disabled onclick="register()">
+    <button id="register" data-passkey-only="true" disabled>
         Register Passkey
     </button>
+    <p id="message"></p>
 </section>
 {{end}}
 
 {{define "auth-tail"}}
-<script type="text/javascript">
-    async function register() {
-        const startResp = await fetch('{{.Config.BaseURL.JoinPath "register" "start"}}', {
-            method: 'POST'
-        }).catch((error) => { console.error(error) });
+<script>
+    const { startRegistration } = SimpleWebAuthnBrowser;
+    const btnRegister = document.getElementById('register');
+    const pMessage = document.getElementById('message');
+    btnRegister.addEventListener('click', async () => {
+        pMessage.innerHTML = '';
+        const startResp = await fetch('{{.Config.BaseURL.JoinPath "register" "start"}}', { method: 'POST' });
+        const startJSON = await startResp.json();
 
-        if (!startResp.ok) {
-            window.alert('Error starting passkey registration.');
-            return;
-        }
-
-        const startJson = await startResp.json()
-            .catch((error) => { console.error(error) });
-
-        const createOptions = {
-            publicKey: {
-                rp: {
-                    id: startJson.rpId,
-                    name: '',
-                },
-
-                user: {
-                    id: Uint8Array.from(atob(startJson.userIdBase64), c => c.charCodeAt(0)),
-                    name: startJson.username,
-                    displayName: '',
-                },
-                excludeCredentials: startJson.passkeyIdsBase64.map(id => {
-                    return {
-                        type: 'public-key',
-                        id: Uint8Array.from(atob(id), c => c.charCodeAt(0)),
-                    };
-                }),
-                pubKeyCredParams: [{
-                    type: 'public-key',
-                    alg: -7 // P-256 ECDSA
-                }],
-                challenge: new Uint8Array([0]),
-                authenticatorSelection: {
-                    authenticatorAttachment: 'platform',
-                    requireResidentKey: true,
-                },
-                timeout: 180000,
+        let finishReq;
+        try {
+            finishReq = await startRegistration({ optionsJSON: startJSON.publicKey });
+        } catch (error) {
+            if (error.name === 'InvalidStateError') {
+                pMessage.innerText = 'Error: Authenticator was probably already registered by user';
+            } else {
+                pMessage.innerText = error;
             }
-        };
 
-        const credential = await navigator.credentials.create(createOptions)
-            .catch((error) => { window.alert(error); });
-        if (!credential) {
-            return;
+            throw error;
         }
-
-        const finishJson = {
-            'clientDataJSONBase64': btoa(new TextDecoder().decode(credential.response.clientDataJSON)),
-            'authenticatorDataBase64': btoa(String.fromCharCode(...new Uint8Array(credential.response.getAuthenticatorData()))),
-            'publicKeyBase64': btoa(String.fromCharCode(...new Uint8Array(credential.response.getPublicKey()))),
-        };
 
         const finishResp = await fetch('{{.Config.BaseURL.JoinPath "register" "finish"}}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(finishJson),
+            body: JSON.stringify(finishReq),
         });
 
-        if (finishResp.ok) {
-            window.alert('Successfully registered a passkey.');
+        const finishJSON = await finishResp.json();
+
+        if (finishJSON && finishJSON.verified) {
+            window.alert('Passkey successfully registered.')
             window.location.href = '{{.Config.BaseURL.JoinPath "login"}}';
         } else {
-            window.alert('Error finishing passkey registration.');
+            console.log(finishJSON);
+            window.alert('Error registering passkey.')
         }
-    }
+    });
 </script>
 {{end}}

@@ -38,21 +38,6 @@ func (q *Queries) AllNoteTimestamps(ctx context.Context) ([]int64, error) {
 	return items, nil
 }
 
-const createChallenge = `-- name: CreateChallenge :exec
-insert into challenge (challenge_id, bytes, created_at) values (?, ?, ?)
-`
-
-type CreateChallengeParams struct {
-	ChallengeID string
-	Bytes       []byte
-	CreatedAt   int64
-}
-
-func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) error {
-	_, err := q.db.ExecContext(ctx, createChallenge, arg.ChallengeID, arg.Bytes, arg.CreatedAt)
-	return err
-}
-
 const createImage = `-- name: CreateImage :exec
 insert into image (image_id, filename, format, created_at)
 values (?, ?, ?, ?)
@@ -90,21 +75,6 @@ func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
 	return err
 }
 
-const createPasskey = `-- name: CreatePasskey :exec
-insert into passkey (passkey_id, public_key_spki, created_at) values (?, ?, ?)
-`
-
-type CreatePasskeyParams struct {
-	PasskeyID     []byte
-	PublicKeySPKI []byte
-	CreatedAt     int64
-}
-
-func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) error {
-	_, err := q.db.ExecContext(ctx, createPasskey, arg.PasskeyID, arg.PublicKeySPKI, arg.CreatedAt)
-	return err
-}
-
 const createSession = `-- name: CreateSession :exec
 insert into session (session_id, created_at)
 values (?, ?)
@@ -120,41 +90,59 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 	return err
 }
 
-const deleteChallenge = `-- name: DeleteChallenge :one
-delete from challenge
-where challenge_id = ? and created_at > ? 
-returning bytes
+const createWebauthnCredential = `-- name: CreateWebauthnCredential :exec
+insert into webauthn_credential (credential_data, created_at) values (?, ?)
 `
 
-type DeleteChallengeParams struct {
-	ChallengeID string
-	CreatedAt   int64
+type CreateWebauthnCredentialParams struct {
+	CredentialData []byte
+	CreatedAt      int64
 }
 
-func (q *Queries) DeleteChallenge(ctx context.Context, arg DeleteChallengeParams) ([]byte, error) {
-	row := q.db.QueryRowContext(ctx, deleteChallenge, arg.ChallengeID, arg.CreatedAt)
-	var bytes []byte
-	err := row.Scan(&bytes)
-	return bytes, err
+func (q *Queries) CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) error {
+	_, err := q.db.ExecContext(ctx, createWebauthnCredential, arg.CredentialData, arg.CreatedAt)
+	return err
 }
 
-const findPasskey = `-- name: FindPasskey :one
-select public_key_spki from passkey where passkey_id = ?
+const createWebauthnSession = `-- name: CreateWebauthnSession :exec
+insert into webauthn_session (webauthn_session_id, session_data, created_at) values (?, ?, ?)
 `
 
-func (q *Queries) FindPasskey(ctx context.Context, passkeyID []byte) ([]byte, error) {
-	row := q.db.QueryRowContext(ctx, findPasskey, passkeyID)
-	var public_key_spki []byte
-	err := row.Scan(&public_key_spki)
-	return public_key_spki, err
+type CreateWebauthnSessionParams struct {
+	WebauthnSessionID string
+	SessionData       []byte
+	CreatedAt         int64
 }
 
-const hasPasskey = `-- name: HasPasskey :one
-select count(passkey_id) > 0 from passkey
+func (q *Queries) CreateWebauthnSession(ctx context.Context, arg CreateWebauthnSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createWebauthnSession, arg.WebauthnSessionID, arg.SessionData, arg.CreatedAt)
+	return err
+}
+
+const deleteWebauthnSession = `-- name: DeleteWebauthnSession :one
+delete from webauthn_session 
+where webauthn_session_id = ? and created_at > ? 
+returning session_data
 `
 
-func (q *Queries) HasPasskey(ctx context.Context) (bool, error) {
-	row := q.db.QueryRowContext(ctx, hasPasskey)
+type DeleteWebauthnSessionParams struct {
+	WebauthnSessionID string
+	CreatedAt         int64
+}
+
+func (q *Queries) DeleteWebauthnSession(ctx context.Context, arg DeleteWebauthnSessionParams) ([]byte, error) {
+	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, arg.WebauthnSessionID, arg.CreatedAt)
+	var session_data []byte
+	err := row.Scan(&session_data)
+	return session_data, err
+}
+
+const hasWebauthnCredential = `-- name: HasWebauthnCredential :one
+select count(1) > 0 from webauthn_credential
+`
+
+func (q *Queries) HasWebauthnCredential(ctx context.Context) (bool, error) {
+	row := q.db.QueryRowContext(ctx, hasWebauthnCredential)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -208,47 +196,20 @@ func (q *Queries) NotesByDate(ctx context.Context, arg NotesByDateParams) ([]Not
 	return items, nil
 }
 
-const passkeyIDs = `-- name: PasskeyIDs :many
-select passkey_id from passkey
-`
-
-func (q *Queries) PasskeyIDs(ctx context.Context) ([][]byte, error) {
-	rows, err := q.db.QueryContext(ctx, passkeyIDs)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items [][]byte
-	for rows.Next() {
-		var passkey_id []byte
-		if err := rows.Scan(&passkey_id); err != nil {
-			return nil, err
-		}
-		items = append(items, passkey_id)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const purgeChallenges = `-- name: PurgeChallenges :execresult
-delete from challenge where created_at < ?
-`
-
-func (q *Queries) PurgeChallenges(ctx context.Context, createdAt int64) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeChallenges, createdAt)
-}
-
 const purgeSessions = `-- name: PurgeSessions :execresult
 delete from session where created_at < ?
 `
 
 func (q *Queries) PurgeSessions(ctx context.Context, createdAt int64) (sql.Result, error) {
 	return q.db.ExecContext(ctx, purgeSessions, createdAt)
+}
+
+const purgeWebauthnSessions = `-- name: PurgeWebauthnSessions :execresult
+delete from webauthn_session where created_at < ?
+`
+
+func (q *Queries) PurgeWebauthnSessions(ctx context.Context, createdAt int64) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeWebauthnSessions, createdAt)
 }
 
 const recentImages = `-- name: RecentImages :many
@@ -332,4 +293,31 @@ func (q *Queries) SessionExists(ctx context.Context, arg SessionExistsParams) (b
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const webauthnCredentials = `-- name: WebauthnCredentials :many
+select credential_data from webauthn_credential
+`
+
+func (q *Queries) WebauthnCredentials(ctx context.Context) ([][]byte, error) {
+	rows, err := q.db.QueryContext(ctx, webauthnCredentials)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items [][]byte
+	for rows.Next() {
+		var credential_data []byte
+		if err := rows.Scan(&credential_data); err != nil {
+			return nil, err
+		}
+		items = append(items, credential_data)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

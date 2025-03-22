@@ -3,6 +3,7 @@ module github.com/codahale/yellhole-go
 go 1.24.1
 
 require (
+	github.com/go-webauthn/webauthn v0.12.2
 	github.com/google/uuid v1.6.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/samber/slog-http v1.6.0
@@ -20,8 +21,12 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.0 // indirect
+	github.com/go-webauthn/x v0.1.19 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/cel-go v0.24.1 // indirect
+	github.com/google/go-tpm v0.9.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -29,6 +34,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pganalyze/pg_query_go/v5 v5.1.0 // indirect
 	github.com/pganalyze/pg_query_go/v6 v6.0.0 // indirect
@@ -45,6 +51,7 @@ require (
 	github.com/tetratelabs/wazero v1.9.0 // indirect
 	github.com/wasilibs/go-pgquery v0.0.0-20250219053243-148840c597e6 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
+	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
