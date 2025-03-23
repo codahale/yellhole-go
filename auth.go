@@ -64,10 +64,13 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 
 func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) {
 	// Create a new webauthn attestation challenge.
-	creation, session, err := ac.webauthn.BeginRegistration(webauthnUser{
-		name:        ac.config.Author,
-		credentials: []*db.JSONCredential{},
-	})
+	creation, session, err := ac.webauthn.BeginRegistration(
+		webauthnUser{
+			name:        ac.config.Author,
+			credentials: []*db.JSONCredential{},
+		},
+		webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
+	)
 	if err != nil {
 		panic(err)
 	}
