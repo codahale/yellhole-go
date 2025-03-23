@@ -8,3 +8,10 @@ sql:
         package: "db"
         out: "."
         initialisms: ["id", "spki"]
+        overrides:
+          - column: "webauthn_credential.credential_data"
+            go_type:
+              type: "*JSONCredential"
+          - column: "webauthn_session.session_data"
+            go_type:
+              type: "*JSONSessionData"

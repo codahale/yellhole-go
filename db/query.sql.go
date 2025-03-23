@@ -95,7 +95,7 @@ insert into webauthn_credential (credential_data, created_at) values (?, ?)
 `
 
 type CreateWebauthnCredentialParams struct {
-	CredentialData []byte
+	CredentialData *JSONCredential
 	CreatedAt      int64
 }
 
@@ -110,7 +110,7 @@ insert into webauthn_session (webauthn_session_id, session_data, created_at) val
 
 type CreateWebauthnSessionParams struct {
 	WebauthnSessionID string
-	SessionData       []byte
+	SessionData       *JSONSessionData
 	CreatedAt         int64
 }
 
@@ -130,9 +130,9 @@ type DeleteWebauthnSessionParams struct {
 	CreatedAt         int64
 }
 
-func (q *Queries) DeleteWebauthnSession(ctx context.Context, arg DeleteWebauthnSessionParams) ([]byte, error) {
+func (q *Queries) DeleteWebauthnSession(ctx context.Context, arg DeleteWebauthnSessionParams) (*JSONSessionData, error) {
 	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, arg.WebauthnSessionID, arg.CreatedAt)
-	var session_data []byte
+	var session_data *JSONSessionData
 	err := row.Scan(&session_data)
 	return session_data, err
 }
@@ -299,15 +299,15 @@ const webauthnCredentials = `-- name: WebauthnCredentials :many
 select credential_data from webauthn_credential
 `
 
-func (q *Queries) WebauthnCredentials(ctx context.Context) ([][]byte, error) {
+func (q *Queries) WebauthnCredentials(ctx context.Context) ([]*JSONCredential, error) {
 	rows, err := q.db.QueryContext(ctx, webauthnCredentials)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items [][]byte
+	var items []*JSONCredential
 	for rows.Next() {
-		var credential_data []byte
+		var credential_data *JSONCredential
 		if err := rows.Scan(&credential_data); err != nil {
 			return nil, err
 		}

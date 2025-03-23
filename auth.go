@@ -64,7 +64,7 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 	// Create a new webauthn attestation challenge.
 	creation, session, err := ac.webauthn.BeginRegistration(webauthnUser{
 		name:        ac.config.Author,
-		credentials: []webauthn.Credential{},
+		credentials: []*db.JSONCredential{},
 	})
 	if err != nil {
 		panic(err)
@@ -72,13 +72,9 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 
 	// Store the webauthn session data in the DB.
 	registrationSessionID := uuid.NewString()
-	registrationSessionJSON, err := json.Marshal(session)
-	if err != nil {
-		panic(err)
-	}
 	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
 		WebauthnSessionID: registrationSessionID,
-		SessionData:       registrationSessionJSON,
+		SessionData:       &db.JSONSessionData{Data: *session},
 		CreatedAt:         time.Now().Unix(),
 	}); err != nil {
 		panic(err)
@@ -110,18 +106,13 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
-	var sessionData webauthn.SessionData
-	if err := json.Unmarshal([]byte(session), &sessionData); err != nil {
-		panic(err)
-	}
-
 	// Validate the attestation response.
 	cred, err := ac.webauthn.FinishRegistration(
 		webauthnUser{
 			name:        ac.config.Author,
-			credentials: []webauthn.Credential{},
+			credentials: []*db.JSONCredential{},
 		},
-		sessionData,
+		session.Data,
 		r)
 	if err != nil {
 		slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
@@ -132,13 +123,8 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	credJSON, err := json.Marshal(cred)
-	if err != nil {
-		panic(err)
-	}
-
 	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.CreateWebauthnCredentialParams{
-		CredentialData: credJSON,
+		CredentialData: &db.JSONCredential{Data: cred},
 		CreatedAt:      time.Now().Unix(),
 	}); err != nil {
 		panic(err)
@@ -189,17 +175,9 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch all credentials from the database.
-	credBytes, err := ac.queries.WebauthnCredentials(r.Context())
+	credentials, err := ac.queries.WebauthnCredentials(r.Context())
 	if err != nil {
 		panic(err)
-	}
-
-	// Decode them from JSON.
-	credentials := make([]webauthn.Credential, len(credBytes))
-	for i := range credBytes {
-		if err := json.Unmarshal(credBytes[i], &credentials[i]); err != nil {
-			panic(err)
-		}
 	}
 
 	// Create a webauthn login challenge.
@@ -212,13 +190,9 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	loginSessionID := uuid.NewString()
-	sessionJSON, err := json.Marshal(session)
-	if err != nil {
-		panic(err)
-	}
 	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
 		WebauthnSessionID: loginSessionID,
-		SessionData:       sessionJSON,
+		SessionData:       &db.JSONSessionData{Data: *session},
 		CreatedAt:         time.Now().Unix(),
 	}); err != nil {
 		panic(err)
@@ -244,17 +218,9 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch all credentials from the database.
-	credBytes, err := ac.queries.WebauthnCredentials(r.Context())
+	credentials, err := ac.queries.WebauthnCredentials(r.Context())
 	if err != nil {
 		panic(err)
-	}
-
-	// Decode them from JSON.
-	credentials := make([]webauthn.Credential, len(credBytes))
-	for i := range credBytes {
-		if err := json.Unmarshal(credBytes[i], &credentials[i]); err != nil {
-			panic(err)
-		}
 	}
 
 	// Find, delete, and decode the webauthn session data.
@@ -271,18 +237,13 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	var sessionData webauthn.SessionData
-	if err := json.Unmarshal([]byte(session), &sessionData); err != nil {
-		panic(err)
-	}
-
 	// Validate the webauthn challenge.
 	_, err = ac.webauthn.FinishLogin(
 		webauthnUser{
 			name:        ac.config.Author,
 			credentials: credentials,
 		},
-		sessionData,
+		session.Data,
 		r,
 	)
 	if err != nil {
@@ -385,11 +346,15 @@ func purgeOldWebauthnSessions(queries *db.Queries) {
 
 type webauthnUser struct {
 	name        string
-	credentials []webauthn.Credential
+	credentials []*db.JSONCredential
 }
 
 func (w webauthnUser) WebAuthnCredentials() []webauthn.Credential {
-	return w.credentials
+	creds := make([]webauthn.Credential, len(w.credentials))
+	for i := range w.credentials {
+		creds[i] = *w.credentials[i].Data
+	}
+	return creds
 }
 
 func (w webauthnUser) WebAuthnDisplayName() string {

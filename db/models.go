@@ -23,12 +23,12 @@ type Session struct {
 }
 
 type WebauthnCredential struct {
-	CredentialData []byte
+	CredentialData *JSONCredential
 	CreatedAt      int64
 }
 
 type WebauthnSession struct {
 	WebauthnSessionID string
-	SessionData       []byte
+	SessionData       *JSONSessionData
 	CreatedAt         int64
 }
