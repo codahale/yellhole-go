@@ -24,13 +24,15 @@ type authController struct {
 }
 
 func newAuthController(config *config.Config, queries *db.Queries) *authController {
-	return &authController{config, queries, &webauthn.WebAuthn{
-		Config: &webauthn.Config{
-			RPID:          config.BaseURL.Hostname(),
-			RPDisplayName: config.Title,
-			RPOrigins:     []string{strings.TrimRight(config.BaseURL.String(), "/")},
-		},
-	}}
+	webauthn, err := webauthn.New(&webauthn.Config{
+		RPID:          config.BaseURL.Hostname(),
+		RPDisplayName: config.Title,
+		RPOrigins:     []string{strings.TrimRight(config.BaseURL.String(), "/")},
+	})
+	if err != nil {
+		panic(err)
+	}
+	return &authController{config, queries, webauthn}
 }
 
 func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
