@@ -54,7 +54,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Render the page.
+	// Respond with the login page.
 	if err := view.Render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
@@ -80,10 +80,10 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 		panic(err)
 	}
 
-	// Pass the webauthn session ID to the browser via a cookie.
+	// Set a registration session ID cookie.
 	http.SetCookie(w, ac.secureCookie("registrationSessionID", registrationSessionID, 60))
 
-	// Render the attestation challenge as a JSON object.
+	// Respond with the attestation challenge.
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(creation); err != nil {
 		panic(err)
@@ -115,6 +115,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		session.Data,
 		r)
 	if err != nil {
+		// If the attestation is invalid, respond with verified=false.
 		slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
 		w.Header().Set("content-type", "application/json")
 		if err := json.NewEncoder(w).Encode(map[string]bool{"verified": false}); err != nil {
@@ -123,6 +124,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Store the new credential in the database.
 	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.CreateWebauthnCredentialParams{
 		CredentialData: &db.JSONCredential{Data: cred},
 		CreatedAt:      time.Now().Unix(),
@@ -130,7 +132,10 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
+	// Delete the registration session ID cookie.
 	http.SetCookie(w, ac.secureCookie("registrationSessionID", "", -1))
+
+	// Respond with verified=true.
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
 		panic(err)
@@ -138,6 +143,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 }
 
 func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
+	// Redirect to registration if no credentials exist.
 	registered, err := ac.queries.HasWebauthnCredential(r.Context())
 	if err != nil {
 		panic(err)
@@ -158,12 +164,14 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Respond with the login page.
 	if err := view.Render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
 
 func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
+	// Ensure request isn't already authenticated.
 	auth, err := isAuthenticated(r, ac.queries)
 	if err != nil {
 		panic(err)
@@ -189,6 +197,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// Store the challenge in the database.
 	loginSessionID := uuid.NewString()
 	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
 		WebauthnSessionID: loginSessionID,
@@ -198,8 +207,10 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// Assign a login session ID cookie.
 	http.SetCookie(w, ac.secureCookie("loginSessionID", loginSessionID, 60))
 
+	// Respond with the login challenge.
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(assertion); err != nil {
 		panic(err)
@@ -207,6 +218,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
+	// Ensure request isn't already authenticated.
 	auth, err := isAuthenticated(r, ac.queries)
 	if err != nil {
 		panic(err)
@@ -223,12 +235,13 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Find, delete, and decode the webauthn session data.
+	// Get the ID of the login session.
 	loginSessionID, err := r.Cookie("loginSessionID")
 	if err != nil {
 		panic(err)
 	}
 
+	// Find and delete it from the database.
 	session, err := ac.queries.DeleteWebauthnSession(r.Context(), db.DeleteWebauthnSessionParams{
 		WebauthnSessionID: loginSessionID.Value,
 		CreatedAt:         time.Now().Add(-1 * time.Minute).Unix(),
@@ -247,7 +260,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		r,
 	)
 	if err != nil {
-		// Return an error object if the login attempt failed.
+		// Respond with verified=false if the challenge response was invalid.
 		slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
 		w.Header().Set("content-type", "application/json")
 		if err := json.NewEncoder(w).Encode(map[string]bool{"verified": false}); err != nil {
@@ -265,9 +278,11 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
+
+	// Delete the login session ID cookie.
 	http.SetCookie(w, ac.secureCookie("loginSessionID", "", -1))
 
-	// Return a success object.
+	// Respond with verified=true.
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
 		panic(err)
