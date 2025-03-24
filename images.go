@@ -137,7 +137,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
-	config, format, err := image.DecodeConfig(io.TeeReader(r, buf))
+	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
 	if err != nil {
 		return "", err
 	}
@@ -167,10 +167,7 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 		done <- generateThumbnail(ic.feedRoot, origImg, id, 600)
 	}()
 	go func() {
-		done <- func() error {
-			var _ image.Config = config
-			return generateThumbnail(ic.thumbRoot, origImg, id, 100)
-		}()
+		done <- generateThumbnail(ic.thumbRoot, origImg, id, 100)
 	}()
 
 	// Return the first error, if any.
