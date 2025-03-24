@@ -113,6 +113,7 @@ func newApp(config *config.Config) (*app, error) {
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
 	}
 	logger := slog.New(loggerHandler)
+	root = sloghttp.Recovery(root)
 	root = sloghttp.New(logger)(root)
 
 	return &app{conn, queries, purgeTicker, root}, nil
