@@ -84,7 +84,9 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	id := uuid.New()
 
@@ -110,7 +112,9 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	id := uuid.New()
 
@@ -146,7 +150,9 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 	if err != nil {
 		return "", err
 	}
-	defer orig.Close()
+	defer func() {
+		_ = orig.Close()
+	}()
 	r = io.TeeReader(r, orig)
 
 	// Fully decode the image.
@@ -183,7 +189,9 @@ func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim uint
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	thumbnail := resize.Thumbnail(maxDim, maxDim, img, resize.Lanczos2)
 	if err := png.Encode(f, thumbnail); err != nil {
