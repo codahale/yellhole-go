@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/codahale/yellhole-go/atom"
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	"github.com/codahale/yellhole-go/markdown"
@@ -116,21 +115,21 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	feed := atom.Feed{
+	feed := atomFeed{
 		Title:    fc.config.Title,
 		Subtitle: fc.config.Description,
 		ID:       fc.config.BaseURL.String(),
-		Author: &atom.Person{
+		Author: &atomPerson{
 			Name: fc.config.Author,
 		},
-		Link: []atom.Link{{
+		Link: []atomLink{{
 			Href: atomURL(fc.config).String(),
 			Rel:  "alternate",
 		}},
 	}
 
 	if len(notes) > 0 {
-		feed.Updated = atom.Time(time.Unix(notes[0].CreatedAt, 0))
+		feed.Updated = atomTime(time.Unix(notes[0].CreatedAt, 0))
 	}
 
 	for _, note := range notes {
@@ -139,24 +138,24 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
-		entry := atom.Entry{
+		entry := atomEntry{
 			ID:    notePageURL(fc.config, note.NoteID).String(),
 			Title: note.NoteID,
-			Content: &atom.Text{
+			Content: &atomText{
 				Type: "html",
 				Body: string(html),
 			},
-			Link: []atom.Link{{
+			Link: []atomLink{{
 				Href: notePageURL(fc.config, note.NoteID).String(),
 				Rel:  "alternate",
 			}},
-			Published: atom.Time(time.Unix(note.CreatedAt, 0)),
-			Updated:   atom.Time(time.Unix(note.CreatedAt, 0)),
+			Published: atomTime(time.Unix(note.CreatedAt, 0)),
+			Updated:   atomTime(time.Unix(note.CreatedAt, 0)),
 		}
 		feed.Entry = append(feed.Entry, &entry)
 	}
 
-	w.Header().Set("content-type", atom.ContentType)
+	w.Header().Set("content-type", atomContentType)
 	if err := xml.NewEncoder(w).Encode(&feed); err != nil {
 		panic(err)
 	}
