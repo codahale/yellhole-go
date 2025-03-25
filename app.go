@@ -122,9 +122,5 @@ func newApp(config *config.Config) (*app, error) {
 func (a *app) close() error {
 	a.purgeTicker.Stop()
 
-	if err := a.conn.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return a.conn.Close()
 }
