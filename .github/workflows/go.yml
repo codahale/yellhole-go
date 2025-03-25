@@ -26,6 +26,9 @@ jobs:
 
     - name: Vet
       run: go vet -v ./...
+
+    - name: Lint
+      uses: morphy2k/revive-action@v2
     
     - name: Security Check
       id: govulncheck
