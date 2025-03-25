@@ -6,8 +6,6 @@ import (
 	"net/url"
 	"os"
 	"testing"
-
-	"github.com/codahale/yellhole-go/config"
 )
 
 func TestMain(m *testing.M) {
@@ -30,7 +28,7 @@ func newTestApp(t *testing.T) *testApp {
 	}
 
 	tempDir := t.TempDir()
-	config := &config.Config{
+	config := &config{
 		Addr:        "localhost:8080",
 		BaseURL:     baseURL,
 		DataDir:     tempDir,

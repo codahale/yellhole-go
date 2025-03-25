@@ -14,8 +14,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/codahale/yellhole-go/config"
 )
 
 type templateSet struct {
@@ -71,11 +69,11 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) erro
 	return t.ExecuteTemplate(w, "base.html", data)
 }
 
-func atomURL(c *config.Config) *url.URL {
+func atomURL(c *config) *url.URL {
 	return c.BaseURL.JoinPath("atom.xml")
 }
 
-func notePageURL(c *config.Config, noteID string) *url.URL {
+func notePageURL(c *config, noteID string) *url.URL {
 	return c.BaseURL.JoinPath("note", noteID)
 }
 
@@ -97,26 +95,26 @@ var (
 			return time.Unix(t64, 0).Local().String()
 		},
 		"atomURL": atomURL,
-		"weekPageURL": func(c *config.Config, startDate string) *url.URL {
+		"weekPageURL": func(c *config, startDate string) *url.URL {
 			return c.BaseURL.JoinPath("notes", startDate)
 		},
 		"notePageURL": notePageURL,
-		"feedImageURL": func(c *config.Config, imageID string) *url.URL {
+		"feedImageURL": func(c *config, imageID string) *url.URL {
 			return c.BaseURL.JoinPath("images", "feed", imageID+".png")
 		},
-		"thumbImageURL": func(c *config.Config, imageID string) *url.URL {
+		"thumbImageURL": func(c *config, imageID string) *url.URL {
 			return c.BaseURL.JoinPath("images", "thumb", imageID+".png")
 		},
-		"newNoteURL": func(c *config.Config) *url.URL {
+		"newNoteURL": func(c *config) *url.URL {
 			return c.BaseURL.JoinPath("admin", "new")
 		},
-		"uploadImageURL": func(c *config.Config) *url.URL {
+		"uploadImageURL": func(c *config) *url.URL {
 			return c.BaseURL.JoinPath("admin", "images", "upload")
 		},
-		"downloadImageURL": func(c *config.Config) *url.URL {
+		"downloadImageURL": func(c *config) *url.URL {
 			return c.BaseURL.JoinPath("admin", "images", "download")
 		},
-		"assetURL": func(c *config.Config, elem ...string) *url.URL {
+		"assetURL": func(c *config, elem ...string) *url.URL {
 			u := c.BaseURL.JoinPath(elem...)
 			q := u.Query()
 			q.Add("", buildTag)

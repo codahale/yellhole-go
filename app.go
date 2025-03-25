@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	sloghttp "github.com/samber/slog-http"
 )
@@ -21,7 +20,7 @@ type app struct {
 	http.Handler
 }
 
-func newApp(config *config.Config) (*app, error) {
+func newApp(config *config) (*app, error) {
 	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.

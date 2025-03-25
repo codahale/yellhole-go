@@ -8,17 +8,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 )
 
 type feedController struct {
-	config    *config.Config
+	config    *config
 	queries   *db.Queries
 	templates *templateSet
 }
 
-func newFeedController(config *config.Config, queries *db.Queries, templates *templateSet) *feedController {
+func newFeedController(config *config, queries *db.Queries, templates *templateSet) *feedController {
 	return &feedController{config, queries, templates}
 }
 
@@ -161,7 +160,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 type feedPage struct {
-	Config *config.Config
+	Config *config
 	Single bool
 	Notes  []db.Note
 	Weeks  []db.Week

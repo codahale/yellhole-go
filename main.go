@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/codahale/yellhole-go/config"
 	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"
 )
@@ -13,7 +12,7 @@ import (
 
 func main() {
 	// Parse the configuration flags and environment variables.
-	config, err := config.Parse()
+	config, err := parseConfig()
 	if err != nil {
 		panic(err)
 	}
