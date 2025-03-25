@@ -27,7 +27,7 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v7
       with:
-        version: "1.64"
+        version: "v1.64"
     
     - name: Security Check
       id: govulncheck
