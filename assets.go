@@ -1,9 +1,13 @@
 package main
 
 import (
+	"embed"
 	"io/fs"
 	"net/http"
 )
+
+//go:embed public
+var public embed.FS
 
 type assetController struct {
 	assets fs.FS

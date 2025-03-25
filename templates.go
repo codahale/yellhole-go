@@ -1,14 +1,18 @@
 package main
 
 import (
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/codahale/yellhole-go/config"
@@ -71,6 +75,7 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) erro
 var (
 	//go:embed templates
 	templatesDir embed.FS
+	assetHashes  = new(sync.Map)
 	funcs        = template.FuncMap{
 		"markdownHTML":   markdown.HTML,
 		"markdownText":   markdown.Text,
@@ -110,6 +115,31 @@ var (
 			q.Add("", buildTag)
 			u.RawQuery = q.Encode()
 			return u
+		},
+		"assetHash": func(elem ...string) (string, error) {
+			assetPath := path.Join("public", path.Join(elem...))
+			hash, ok := assetHashes.Load(assetPath)
+			if ok {
+				return hash.(string), nil
+			}
+
+			f, err := public.Open(assetPath)
+			if err != nil {
+				return "", err
+			}
+			defer func() {
+				_ = f.Close()
+			}()
+
+			h := sha256.New()
+			if _, err := io.Copy(h, f); err != nil {
+				return "", err
+			}
+
+			hash = "sha256:" + hex.EncodeToString(h.Sum(nil))
+			assetHashes.Store(assetPath, hash)
+
+			return hash.(string), nil
 		},
 	}
 )

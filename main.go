@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"log/slog"
 	"net/http"
 
@@ -11,9 +10,6 @@ import (
 )
 
 //go:generate go tool sqlc generate -f db/sqlc.yaml
-
-//go:embed public
-var public embed.FS
 
 func main() {
 	// Parse the configuration flags and environment variables.
