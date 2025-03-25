@@ -1,4 +1,4 @@
-package view
+package main
 
 import (
 	"embed"
@@ -15,11 +15,11 @@ import (
 	"github.com/codahale/yellhole-go/markdown"
 )
 
-type TemplateSet struct {
+type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func NewTemplateSet() (*TemplateSet, error) {
+func newTemplateSet() (*templateSet, error) {
 	templates := make(map[string]*template.Template)
 	if err := fs.WalkDir(templatesDir, "templates", func(tmplPath string, d fs.DirEntry, err error) error {
 		// Ignore directories.
@@ -56,10 +56,10 @@ func NewTemplateSet() (*TemplateSet, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return &TemplateSet{templates}, nil
+	return &templateSet{templates}, nil
 }
 
-func (ts *TemplateSet) Render(w http.ResponseWriter, name string, data any) error {
+func (ts *templateSet) render(w http.ResponseWriter, name string, data any) error {
 	t, ok := ts.templates[name]
 	if !ok {
 		return fmt.Errorf("unknown template %q", name)

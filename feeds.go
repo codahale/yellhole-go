@@ -11,17 +11,16 @@ import (
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
 	"github.com/codahale/yellhole-go/markdown"
-	"github.com/codahale/yellhole-go/view"
 	"github.com/codahale/yellhole-go/view/atom"
 )
 
 type feedController struct {
 	config    *config.Config
 	queries   *db.Queries
-	templates *view.TemplateSet
+	templates *templateSet
 }
 
-func newFeedController(config *config.Config, queries *db.Queries, templates *view.TemplateSet) *feedController {
+func newFeedController(config *config.Config, queries *db.Queries, templates *templateSet) *feedController {
 	return &feedController{config, queries, templates}
 }
 
@@ -41,7 +40,7 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := fc.templates.Render(w, "feed.html", feedPage{
+	if err := fc.templates.render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: false,
 		Notes:  notes,
@@ -76,7 +75,7 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := fc.templates.Render(w, "feed.html", feedPage{
+	if err := fc.templates.render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: false,
 		Notes:  notes,
@@ -101,7 +100,7 @@ func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := fc.templates.Render(w, "feed.html", feedPage{
+	if err := fc.templates.render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: true,
 		Notes:  []db.Note{note},
@@ -125,7 +124,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 			Name: fc.config.Author,
 		},
 		Link: []atom.Link{{
-			Href: view.AtomURL(fc.config).String(),
+			Href: AtomURL(fc.config).String(),
 			Rel:  "alternate",
 		}},
 	}
@@ -141,14 +140,14 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 		}
 
 		entry := atom.Entry{
-			ID:    view.NotePageURL(fc.config, note.NoteID).String(),
+			ID:    NotePageURL(fc.config, note.NoteID).String(),
 			Title: note.NoteID,
 			Content: &atom.Text{
 				Type: "html",
 				Body: string(html),
 			},
 			Link: []atom.Link{{
-				Href: view.NotePageURL(fc.config, note.NoteID).String(),
+				Href: NotePageURL(fc.config, note.NoteID).String(),
 				Rel:  "alternate",
 			}},
 			Published: atom.Time(time.Unix(note.CreatedAt, 0)),

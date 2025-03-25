@@ -11,7 +11,6 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/view"
 	sloghttp "github.com/samber/slog-http"
 )
 
@@ -51,7 +50,7 @@ func newApp(config *config.Config) (*app, error) {
 	assets := newAssetController(public, "public")
 
 	// Create a new template set.
-	templates, err := view.NewTemplateSet()
+	templates, err := newTemplateSet()
 	if err != nil {
 		return nil, err
 	}

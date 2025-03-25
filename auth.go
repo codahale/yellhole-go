@@ -11,7 +11,6 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/view"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 	sloghttp "github.com/samber/slog-http"
@@ -21,10 +20,10 @@ type authController struct {
 	config    *config.Config
 	queries   *db.Queries
 	webauthn  *webauthn.WebAuthn
-	templates *view.TemplateSet
+	templates *templateSet
 }
 
-func newAuthController(config *config.Config, queries *db.Queries, templates *view.TemplateSet) *authController {
+func newAuthController(config *config.Config, queries *db.Queries, templates *templateSet) *authController {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPID:          config.BaseURL.Hostname(),
 		RPDisplayName: config.Title,
@@ -58,7 +57,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := ac.templates.Render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := ac.templates.render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
@@ -171,7 +170,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := ac.templates.Render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := ac.templates.render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
