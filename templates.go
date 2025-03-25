@@ -84,9 +84,11 @@ var (
 		"localTime": func(t64 int64) string {
 			return time.Unix(t64, 0).Local().String()
 		},
-		"atomURL":     AtomURL,
-		"weekPageURL": WeekPageURL,
-		"notePageURL": NotePageURL,
+		"atomURL": atomURL,
+		"weekPageURL": func(c *config.Config, startDate string) *url.URL {
+			return c.BaseURL.JoinPath("notes", startDate)
+		},
+		"notePageURL": notePageURL,
 		"feedImageURL": func(c *config.Config, imageID string) *url.URL {
 			return c.BaseURL.JoinPath("images", "feed", imageID+".png")
 		},
@@ -112,14 +114,10 @@ var (
 	}
 )
 
-func AtomURL(c *config.Config) *url.URL {
+func atomURL(c *config.Config) *url.URL {
 	return c.BaseURL.JoinPath("atom.xml")
 }
 
-func WeekPageURL(c *config.Config, startDate string) *url.URL {
-	return c.BaseURL.JoinPath("notes", startDate)
-}
-
-func NotePageURL(c *config.Config, noteID string) *url.URL {
+func notePageURL(c *config.Config, noteID string) *url.URL {
 	return c.BaseURL.JoinPath("note", noteID)
 }
