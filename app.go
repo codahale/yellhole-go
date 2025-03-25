@@ -11,6 +11,7 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
+	"github.com/codahale/yellhole-go/view"
 	sloghttp "github.com/samber/slog-http"
 )
 
@@ -49,15 +50,21 @@ func newApp(config *config.Config) (*app, error) {
 	// Load the embedded public assets and create an asset controller.
 	assets := newAssetController(public, "public")
 
+	// Create a new template set.
+	templates, err := view.NewTemplateSet()
+	if err != nil {
+		return nil, err
+	}
+
 	// Create the controllers.
 	images, err := newImageController(config, dataRoot, queries)
 	if err != nil {
 		return nil, err
 	}
 
-	feeds := newFeedController(config, queries)
-	admin := newAdminController(config, queries)
-	auth := newAuthController(config, queries)
+	feeds := newFeedController(config, queries, templates)
+	admin := newAdminController(config, queries, templates)
+	auth := newAuthController(config, queries, templates)
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()

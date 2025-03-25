@@ -12,12 +12,13 @@ import (
 )
 
 type adminController struct {
-	config  *config.Config
-	queries *db.Queries
+	config    *config.Config
+	queries   *db.Queries
+	templates *view.TemplateSet
 }
 
-func newAdminController(config *config.Config, queries *db.Queries) *adminController {
-	return &adminController{config, queries}
+func newAdminController(config *config.Config, queries *db.Queries, templates *view.TemplateSet) *adminController {
+	return &adminController{config, queries, templates}
 }
 
 func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := view.Render(w, "new.html", struct {
+	if err := ac.templates.Render(w, "new.html", struct {
 		Config *config.Config
 		Images []db.Image
 	}{
@@ -39,7 +40,7 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 
 func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("preview") == fmt.Sprint(true) {
-		if err := view.Render(w, "preview.html", struct {
+		if err := ac.templates.Render(w, "preview.html", struct {
 			Config *config.Config
 			Body   string
 		}{

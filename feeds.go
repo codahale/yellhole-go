@@ -16,12 +16,13 @@ import (
 )
 
 type feedController struct {
-	config  *config.Config
-	queries *db.Queries
+	config    *config.Config
+	queries   *db.Queries
+	templates *view.TemplateSet
 }
 
-func newFeedController(config *config.Config, queries *db.Queries) *feedController {
-	return &feedController{config, queries}
+func newFeedController(config *config.Config, queries *db.Queries, templates *view.TemplateSet) *feedController {
+	return &feedController{config, queries, templates}
 }
 
 func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +41,7 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := view.Render(w, "feed.html", feedPage{
+	if err := fc.templates.Render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: false,
 		Notes:  notes,
@@ -75,7 +76,7 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := view.Render(w, "feed.html", feedPage{
+	if err := fc.templates.Render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: false,
 		Notes:  notes,
@@ -100,7 +101,7 @@ func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := view.Render(w, "feed.html", feedPage{
+	if err := fc.templates.Render(w, "feed.html", feedPage{
 		Config: fc.config,
 		Single: true,
 		Notes:  []db.Note{note},

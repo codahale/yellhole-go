@@ -18,12 +18,13 @@ import (
 )
 
 type authController struct {
-	config   *config.Config
-	queries  *db.Queries
-	webauthn *webauthn.WebAuthn
+	config    *config.Config
+	queries   *db.Queries
+	webauthn  *webauthn.WebAuthn
+	templates *view.TemplateSet
 }
 
-func newAuthController(config *config.Config, queries *db.Queries) *authController {
+func newAuthController(config *config.Config, queries *db.Queries, templates *view.TemplateSet) *authController {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPID:          config.BaseURL.Hostname(),
 		RPDisplayName: config.Title,
@@ -32,7 +33,7 @@ func newAuthController(config *config.Config, queries *db.Queries) *authControll
 	if err != nil {
 		panic(err)
 	}
-	return &authController{config, queries, webauthn}
+	return &authController{config, queries, webauthn, templates}
 }
 
 func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +58,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := view.Render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := ac.templates.Render(w, "auth/register.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
@@ -170,7 +171,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := view.Render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
+	if err := ac.templates.Render(w, "auth/login.html", struct{ Config *config.Config }{ac.config}); err != nil {
 		panic(err)
 	}
 }
