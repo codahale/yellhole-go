@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/codahale/yellhole-go/config"
-	"github.com/codahale/yellhole-go/markdown"
 )
 
 type templateSet struct {
@@ -85,9 +84,9 @@ var (
 	templatesDir embed.FS
 	assetHashes  = new(sync.Map)
 	funcs        = template.FuncMap{
-		"markdownHTML":   markdown.HTML,
-		"markdownText":   markdown.Text,
-		"markdownImages": markdown.Images,
+		"markdownHTML":   markdownHTML,
+		"markdownText":   markdownText,
+		"markdownImages": markdownImages,
 		"currentYear": func() int {
 			return time.Now().Local().Year()
 		},

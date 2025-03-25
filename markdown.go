@@ -1,4 +1,4 @@
-package markdown
+package main
 
 import (
 	"html/template"
@@ -11,7 +11,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-func Images(s string) ([]*url.URL, error) {
+func markdownImages(s string) ([]*url.URL, error) {
 	var images []*url.URL
 	node := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer())).Parser().Parse(text.NewReader([]byte(s)))
 	if err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -28,7 +28,7 @@ func Images(s string) ([]*url.URL, error) {
 	return images, nil
 }
 
-func Text(s string) (string, error) {
+func markdownText(s string) (string, error) {
 	md := goldmark.New(goldmark.WithExtensions(
 		extension.GFM,
 		extension.NewTypographer(
@@ -70,7 +70,7 @@ func Text(s string) (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
-func HTML(s string) (template.HTML, error) {
+func markdownHTML(s string) (template.HTML, error) {
 	buf := new(strings.Builder)
 	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer()))
 	if err := md.Convert([]byte(s), buf); err != nil {

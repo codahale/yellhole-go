@@ -10,7 +10,6 @@ import (
 
 	"github.com/codahale/yellhole-go/config"
 	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/markdown"
 )
 
 type feedController struct {
@@ -133,7 +132,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, note := range notes {
-		html, err := markdown.HTML(note.Body)
+		html, err := markdownHTML(note.Body)
 		if err != nil {
 			panic(err)
 		}
