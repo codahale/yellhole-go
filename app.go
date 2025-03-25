@@ -22,7 +22,7 @@ type app struct {
 }
 
 func newApp(config *config.Config) (*app, error) {
-	slog.Default().Info("starting", "dataDir", config.DataDir)
+	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.
 	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db"))

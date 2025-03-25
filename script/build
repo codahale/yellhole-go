@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
-
-go build -ldflags "-X github.com/codahale/yellhole-go/view.buildTimestamp=$(date +%s)" -o bin/yellhole .

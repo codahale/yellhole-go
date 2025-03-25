@@ -70,15 +70,11 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) erro
 
 var (
 	//go:embed templates
-	templatesDir   embed.FS
-	buildTimestamp string // injected via ldflags, must be uninitialized
-	funcs          = template.FuncMap{
+	templatesDir embed.FS
+	funcs        = template.FuncMap{
 		"markdownHTML":   markdown.HTML,
 		"markdownText":   markdown.Text,
 		"markdownImages": markdown.Images,
-		"buildTimestamp": func() string {
-			return buildTimestamp
-		},
 		"currentYear": func() int {
 			return time.Now().Local().Year()
 		},
@@ -109,7 +105,7 @@ var (
 		"assetURL": func(c *config.Config, elem ...string) *url.URL {
 			u := c.BaseURL.JoinPath(elem...)
 			q := u.Query()
-			q.Add("", buildTimestamp)
+			q.Add("", buildTag)
 			u.RawQuery = q.Encode()
 			return u
 		},

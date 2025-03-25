@@ -4,4 +4,4 @@ IFS=$'\n\t'
 
 # go install github.com/air-verse/air@latest
 
-air --build.cmd "./script/build" --build.bin "./bin/yellhole" -build.include_ext="go,html,js,css" --build.exclude_dir "data"
+air --build.cmd "go build -o ./bin/yellhole" --build.bin "./bin/yellhole" -build.include_ext="go,html,js,css" --build.exclude_dir "data"
