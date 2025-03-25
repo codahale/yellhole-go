@@ -72,6 +72,14 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) erro
 	return t.ExecuteTemplate(w, "base.html", data)
 }
 
+func atomURL(c *config.Config) *url.URL {
+	return c.BaseURL.JoinPath("atom.xml")
+}
+
+func notePageURL(c *config.Config, noteID string) *url.URL {
+	return c.BaseURL.JoinPath("note", noteID)
+}
+
 var (
 	//go:embed templates
 	templatesDir embed.FS
@@ -143,11 +151,3 @@ var (
 		},
 	}
 )
-
-func atomURL(c *config.Config) *url.URL {
-	return c.BaseURL.JoinPath("atom.xml")
-}
-
-func notePageURL(c *config.Config, noteID string) *url.URL {
-	return c.BaseURL.JoinPath("note", noteID)
-}
