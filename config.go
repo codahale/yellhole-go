@@ -14,7 +14,7 @@ type config struct {
 	Title       string
 	Description string
 	Author      string
-	RequestLog  bool
+	requestLog  bool
 }
 
 func parseConfig() (*config, error) {
@@ -28,7 +28,7 @@ func parseConfig() (*config, error) {
 	cmd.StringVar(&config.Title, "title", "Yellhole", "the title of the yellhole instance")
 	cmd.StringVar(&config.Description, "description", "Obscurantist filth.", "the description of the yellhole instance")
 	cmd.StringVar(&config.Author, "author", "Luther Blissett", "the author of the yellhole instance")
-	cmd.BoolVar(&config.RequestLog, "request_log", true, "enable logging requests to stdout")
+	cmd.BoolVar(&config.requestLog, "request_log", true, "enable logging requests to stdout")
 
 	if s, ok := os.LookupEnv("ADDR"); ok {
 		config.Addr = s

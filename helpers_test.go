@@ -34,7 +34,7 @@ func newTestApp(t *testing.T) *testApp {
 		DataDir:     tempDir,
 		Title:       "Test Yell",
 		Description: "Gotta go fast.",
-		RequestLog:  false,
+		requestLog:  false,
 	}
 	app, err := newApp(config)
 	if err != nil {

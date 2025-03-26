@@ -114,7 +114,7 @@ func newApp(config *config) (*app, error) {
 	}
 
 	loggerHandler := slog.DiscardHandler
-	if config.RequestLog {
+	if config.requestLog {
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
 	}
 	logger := slog.New(loggerHandler)
