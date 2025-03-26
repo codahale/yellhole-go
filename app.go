@@ -46,10 +46,13 @@ func newApp(config *config) (*app, error) {
 	}
 
 	// Load the embedded public assets and create an asset controller.
-	assets := newAssetController(public, "public")
+	assets, err := newAssetController(public, "public")
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a new template set.
-	templates, err := newTemplateSet()
+	templates, err := newTemplateSet(assets)
 	if err != nil {
 		return nil, err
 	}

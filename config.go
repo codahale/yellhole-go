@@ -65,3 +65,43 @@ func parseConfig() (*config, error) {
 	}
 	return &config, nil
 }
+
+func (c *config) AtomURL() *url.URL {
+	return c.BaseURL.JoinPath("atom.xml")
+}
+
+func (c *config) NotePageURL(noteID string) *url.URL {
+	return c.BaseURL.JoinPath("note", noteID)
+}
+
+func (c *config) WeekPageURL(startDate string) *url.URL {
+	return c.BaseURL.JoinPath("notes", startDate)
+}
+
+func (c *config) FeedImageURL(imageID string) *url.URL {
+	return c.BaseURL.JoinPath("images", "feed", imageID+".png")
+}
+
+func (c *config) ThumbImageURL(imageID string) *url.URL {
+	return c.BaseURL.JoinPath("images", "thumb", imageID+".png")
+}
+
+func (c *config) NewNoteURL() *url.URL {
+	return c.BaseURL.JoinPath("admin", "new")
+}
+
+func (c *config) UploadImageURL() *url.URL {
+	return c.BaseURL.JoinPath("admin", "images", "upload")
+}
+
+func (c *config) DownloadImageURL() *url.URL {
+	return c.BaseURL.JoinPath("admin", "images", "download")
+}
+
+func (c *config) AssetURL(elem ...string) *url.URL {
+	u := c.BaseURL.JoinPath(elem...)
+	q := u.Query()
+	q.Add("", buildTag)
+	u.RawQuery = q.Encode()
+	return u
+}

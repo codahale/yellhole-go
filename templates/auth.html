@@ -1,5 +1,5 @@
 {{define "head"}}
-<script src='{{assetURL .Config "js" "simplewebauthn-browser-13.1.0.min.js"}}'
+<script src='{{.Config.AssetURL "js" "simplewebauthn-browser-13.1.0.min.js"}}'
     integrity='{{assetHash "js" "simplewebauthn-browser-13.1.0.min.js"}}'></script>
 {{end}}
 
