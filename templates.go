@@ -39,7 +39,7 @@ func newTemplateSet(assets *assetController) (*templateSet, error) {
 		},
 	}
 
-	if err := fs.WalkDir(templatesDir, "templates", func(tmplPath string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(templatesDir, "templates", func(p string, d fs.DirEntry, err error) error {
 		// Ignore directories.
 		if d.IsDir() {
 			return nil
@@ -53,11 +53,9 @@ func newTemplateSet(assets *assetController) (*templateSet, error) {
 		// Convert templates/a/b/c.html into a template parse pattern of the following:
 		//
 		//   templates/a/b/c.html templates/a/b.html templates/a.html templates/base.html
-		parsePath := []string{tmplPath}
-		dir := path.Dir(tmplPath)
-		for dir != "templates" {
+		parsePath := []string{p}
+		for dir := path.Dir(p); dir != "templates"; dir = path.Dir(dir) {
 			parsePath = append(parsePath, dir+".html")
-			dir = path.Dir(dir)
 		}
 		parsePath = append(parsePath, "templates/base.html")
 
@@ -68,7 +66,7 @@ func newTemplateSet(assets *assetController) (*templateSet, error) {
 		}
 
 		// Add the template using its relative path in the templates directory (e.g. "a/b/c.html").
-		templates[strings.TrimPrefix(tmplPath, "templates/")] = t
+		templates[strings.TrimPrefix(p, "templates/")] = t
 
 		return nil
 	}); err != nil {
