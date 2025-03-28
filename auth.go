@@ -56,9 +56,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := ac.templates.render(w, "auth/register.html", struct{ Config *config }{ac.config}); err != nil {
-		panic(err)
-	}
+	ac.templates.render(w, "auth/register.html", struct{ Config *config }{ac.config})
 }
 
 func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) {
@@ -169,9 +167,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	if err := ac.templates.render(w, "auth/login.html", struct{ Config *config }{ac.config}); err != nil {
-		panic(err)
-	}
+	ac.templates.render(w, "auth/login.html", struct{ Config *config }{ac.config})
 }
 
 func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {

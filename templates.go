@@ -75,11 +75,13 @@ func newTemplateSet(assets *assetController) (*templateSet, error) {
 	return &templateSet{templates}, nil
 }
 
-func (ts *templateSet) render(w http.ResponseWriter, name string, data any) error {
+func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
 	t, ok := ts.templates[name]
 	if !ok {
-		return fmt.Errorf("unknown template %q", name)
+		panic(fmt.Sprintf("unknown template: %q", name))
 	}
 	w.Header().Set("content-type", "text/html")
-	return t.ExecuteTemplate(w, "base.html", data)
+	if err := t.ExecuteTemplate(w, "base.html", data); err != nil {
+		panic(err)
+	}
 }

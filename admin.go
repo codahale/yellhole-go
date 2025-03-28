@@ -25,28 +25,24 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := ac.templates.render(w, "new.html", struct {
+	ac.templates.render(w, "new.html", struct {
 		Config *config
 		Images []db.Image
 	}{
 		ac.config,
 		images,
-	}); err != nil {
-		panic(err)
-	}
+	})
 }
 
 func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("preview") == fmt.Sprint(true) {
-		if err := ac.templates.render(w, "preview.html", struct {
+		ac.templates.render(w, "preview.html", struct {
 			Config *config
 			Body   string
 		}{
 			ac.config,
 			r.FormValue("body"),
-		}); err != nil {
-			panic(err)
-		}
+		})
 		return
 	}
 
