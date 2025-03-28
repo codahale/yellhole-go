@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	_ "image/gif"
@@ -16,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nfnt/resize"
 	_ "golang.org/x/image/webp"
+	"golang.org/x/sync/errgroup"
 )
 
 type imageController struct {
@@ -89,7 +91,7 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 
 	id := uuid.New()
 
-	format, err := ic.processImage(id, resp.Body)
+	format, err := ic.processImage(r.Context(), id, resp.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -112,7 +114,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	id := uuid.New()
 
-	format, err := ic.processImage(id, f)
+	format, err := ic.processImage(r.Context(), id, f)
 	if err != nil {
 		panic(err)
 	}
@@ -124,7 +126,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
-func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, error) {
+func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.Reader) (string, error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
 	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
@@ -152,19 +154,15 @@ func (ic *imageController) processImage(id uuid.UUID, r io.Reader) (string, erro
 	}
 
 	// Generate thumbnails in parallel.
-	done := make(chan error, 2)
-	go func() {
-		done <- generateThumbnail(ic.feedRoot, origImg, id, 600)
-	}()
-	go func() {
-		done <- generateThumbnail(ic.thumbRoot, origImg, id, 100)
-	}()
-
-	// Return the first error, if any.
-	for range len(done) {
-		if err := <-done; err != nil {
-			return "", err
-		}
+	eg, _ := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		return generateThumbnail(ic.feedRoot, origImg, id, 600)
+	})
+	eg.Go(func() error {
+		return generateThumbnail(ic.thumbRoot, origImg, id, 100)
+	})
+	if err := eg.Wait(); err != nil {
+		return "", err
 	}
 
 	// Return the image format.
