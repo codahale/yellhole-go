@@ -112,7 +112,7 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 			Name: fc.config.Author,
 		},
 		Link: []atomLink{{
-			Href: fc.templates.atomURL().String(),
+			Href: fc.config.BaseURL.JoinPath("atom.xml").String(),
 			Rel:  "alternate",
 		}},
 	}
@@ -127,15 +127,16 @@ func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
+		noteURL := fc.config.BaseURL.JoinPath("note", note.NoteID).String()
 		entry := atomEntry{
-			ID:    fc.templates.notePageURL(note.NoteID).String(),
+			ID:    noteURL,
 			Title: note.NoteID,
 			Content: &atomText{
 				Type: "html",
 				Body: string(html),
 			},
 			Link: []atomLink{{
-				Href: fc.templates.notePageURL(note.NoteID).String(),
+				Href: noteURL,
 				Rel:  "alternate",
 			}},
 			Published: atomTime(time.Unix(note.CreatedAt, 0)),

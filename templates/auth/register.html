@@ -17,7 +17,7 @@
     const pMessage = document.getElementById('message');
     btnRegister.addEventListener('click', async () => {
         pMessage.innerHTML = '';
-        const startResp = await fetch('{{registerStartURL}}', { method: 'POST' });
+        const startResp = await fetch('{{url "register" "start"}}', { method: 'POST' });
         const startJSON = await startResp.json();
 
         let finishReq;
@@ -33,7 +33,7 @@
             throw error;
         }
 
-        const finishResp = await fetch('{{registerFinishURL}}', {
+        const finishResp = await fetch('{{url "register" "finish"}}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(finishReq),
@@ -43,7 +43,7 @@
 
         if (finishJSON && finishJSON.verified) {
             window.alert('Passkey successfully registered.')
-            window.location.href = '{{loginURL}}';
+            window.location.href = '{{url "login"}}';
         } else {
             console.log(finishJSON);
             window.alert('Error registering passkey.')

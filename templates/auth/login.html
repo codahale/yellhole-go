@@ -13,7 +13,7 @@
     const pMessage = document.getElementById('message');
     btnLogin.addEventListener('click', async () => {
         pMessage.innerHTML = '';
-        const startResp = await fetch('{{loginStartURL}}', { method: 'POST' });
+        const startResp = await fetch('{{url "login" "start"}}', { method: 'POST' });
         const startJSON = await startResp.json();
 
         let finishReq;
@@ -24,7 +24,7 @@
             throw error;
         }
 
-        const finishResp = await fetch('{{loginFinishURL}}', {
+        const finishResp = await fetch('{{url "login" "finish"}}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(finishReq),
@@ -33,7 +33,7 @@
         const finishJSON = await finishResp.json();
 
         if (finishJSON && finishJSON.verified) {
-            window.location.href = '{{adminURL}}';
+            window.location.href = '{{url "admin"}}';
         } else {
             console.log(finishJSON);
             window.alert('Error logging in with passkey.')
