@@ -63,6 +63,6 @@ func (ac *assetController) AssetPaths() []string {
 	return ac.paths
 }
 
-func (ac *assetController) AssetHash(elem ...string) string {
+func (ac *assetController) assetHash(elem ...string) string {
 	return ac.hashes[path.Join(elem...)]
 }

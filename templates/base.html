@@ -6,11 +6,11 @@
     <title>{{block "title" .}}{{end}}</title>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta charset='utf-8'>
-    <link rel="stylesheet" href='{{.Config.AssetURL "css" "pico-1.5.6.min.css"}}'
+    <link rel="stylesheet" href='{{assetURL "css" "pico-1.5.6.min.css"}}'
         integrity='{{assetHash "css" "pico-1.5.6.min.css"}}'>
-    <link rel="apple-touch-icon" sizes="180x180" href='{{.Config.BaseURL.JoinPath "apple-touch-icon.png"}}'>
-    <link rel="icon" type="image/png" sizes="32x32" href='{{.Config.BaseURL.JoinPath "favicon-32x32.png"}}'>
-    <link rel="icon" type="image/png" sizes="16x16" href='{{.Config.BaseURL.JoinPath "favicon-16x16.png"}}'>
+    <link rel="apple-touch-icon" sizes="180x180" href='{{assetURL "apple-touch-icon.png"}}'>
+    <link rel="icon" type="image/png" sizes="32x32" href='{{assetURL "favicon-32x32.png"}}'>
+    <link rel="icon" type="image/png" sizes="16x16" href='{{assetURL "favicon-16x16.png"}}'>
     {{block "head" .}}{{end}}
     <style type="text/css">
         .content p img {
@@ -49,7 +49,7 @@
                 <li>
                     <hgroup>
                         <h1>
-                            <a href="{{.Config.BaseURL}}">{{template "title" .}}</a>
+                            <a href="{{baseURL}}">{{template "title" .}}</a>
                         </h1>
                         <h2>{{block "description" .}}{{end}}</h2>
                     </hgroup>

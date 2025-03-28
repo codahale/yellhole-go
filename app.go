@@ -52,7 +52,7 @@ func newApp(config *config) (*app, error) {
 	}
 
 	// Create a new template set.
-	templates, err := newTemplateSet(assets)
+	templates, err := newTemplateSet(config, assets)
 	if err != nil {
 		return nil, err
 	}

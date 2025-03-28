@@ -17,7 +17,7 @@
     const pMessage = document.getElementById('message');
     btnRegister.addEventListener('click', async () => {
         pMessage.innerHTML = '';
-        const startResp = await fetch('{{.Config.BaseURL.JoinPath "register" "start"}}', { method: 'POST' });
+        const startResp = await fetch('{{registerStartURL}}', { method: 'POST' });
         const startJSON = await startResp.json();
 
         let finishReq;
@@ -33,7 +33,7 @@
             throw error;
         }
 
-        const finishResp = await fetch('{{.Config.BaseURL.JoinPath "register" "finish"}}', {
+        const finishResp = await fetch('{{registerFinishURL}}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(finishReq),
@@ -43,7 +43,7 @@
 
         if (finishJSON && finishJSON.verified) {
             window.alert('Passkey successfully registered.')
-            window.location.href = '{{.Config.BaseURL.JoinPath "login"}}';
+            window.location.href = '{{loginURL}}';
         } else {
             console.log(finishJSON);
             window.alert('Error registering passkey.')

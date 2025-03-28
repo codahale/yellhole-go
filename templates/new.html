@@ -4,7 +4,7 @@
 {{define "content"}}
 <article>
     <section>
-        <form action="{{.Config.NewNoteURL}}" method="post">
+        <form action="{{newNoteURL}}" method="post">
             <header>
                 <h2>New Note</h2>
             </header>
@@ -19,8 +19,8 @@
                 <ul role="listbox">
                     {{range .Images}}
                     <li>
-                        <a href="#" onclick="insertImage('{{$.Config.FeedImageURL .ImageID}}')">
-                            <img src="{{$.Config.ThumbImageURL .ImageID}}" title="{{.Filename}} / {{.Format}}">
+                        <a href="#" onclick="insertImage('{{feedImageURL .ImageID}}')">
+                            <img src="{{thumbImageURL .ImageID}}" title="{{.Filename}} / {{.Format}}">
                         </a>
                     </li>
                     {{end}}
@@ -31,7 +31,7 @@
 </article>
 <article>
     <section>
-        <form action="{{.Config.UploadImageURL}}" enctype="multipart/form-data" method="post">
+        <form action="{{uploadImageURL}}" enctype="multipart/form-data" method="post">
             <header>
                 <h2>Upload Images</h2>
             </header>
@@ -45,7 +45,7 @@
 </article>
 <article>
     <section>
-        <form action="{{.Config.DownloadImageURL}}" method="post">
+        <form action="{{downloadImageURL}}" method="post">
             <header>
                 <h2>Download Image</h2>
             </header>
