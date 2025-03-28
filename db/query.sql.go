@@ -43,19 +43,12 @@ insert into image (image_id, filename, format, created_at)
 values (?, ?, ?, ?)
 `
 
-type CreateImageParams struct {
-	ImageID   string
-	Filename  string
-	Format    string
-	CreatedAt int64
-}
-
-func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) error {
+func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, format string, createdAt int64) error {
 	_, err := q.db.ExecContext(ctx, createImage,
-		arg.ImageID,
-		arg.Filename,
-		arg.Format,
-		arg.CreatedAt,
+		imageID,
+		filename,
+		format,
+		createdAt,
 	)
 	return err
 }
@@ -64,14 +57,8 @@ const createNote = `-- name: CreateNote :exec
 insert into note (note_id, body, created_at) values (?, ?, ?)
 `
 
-type CreateNoteParams struct {
-	NoteID    string
-	Body      string
-	CreatedAt int64
-}
-
-func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) error {
-	_, err := q.db.ExecContext(ctx, createNote, arg.NoteID, arg.Body, arg.CreatedAt)
+func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, createdAt int64) error {
+	_, err := q.db.ExecContext(ctx, createNote, noteID, body, createdAt)
 	return err
 }
 
@@ -80,13 +67,8 @@ insert into session (session_id, created_at)
 values (?, ?)
 `
 
-type CreateSessionParams struct {
-	SessionID string
-	CreatedAt int64
-}
-
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
-	_, err := q.db.ExecContext(ctx, createSession, arg.SessionID, arg.CreatedAt)
+func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt int64) error {
+	_, err := q.db.ExecContext(ctx, createSession, sessionID, createdAt)
 	return err
 }
 
@@ -94,13 +76,8 @@ const createWebauthnCredential = `-- name: CreateWebauthnCredential :exec
 insert into webauthn_credential (credential_data, created_at) values (?, ?)
 `
 
-type CreateWebauthnCredentialParams struct {
-	CredentialData *JSONCredential
-	CreatedAt      int64
-}
-
-func (q *Queries) CreateWebauthnCredential(ctx context.Context, arg CreateWebauthnCredentialParams) error {
-	_, err := q.db.ExecContext(ctx, createWebauthnCredential, arg.CredentialData, arg.CreatedAt)
+func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *JSONCredential, createdAt int64) error {
+	_, err := q.db.ExecContext(ctx, createWebauthnCredential, credentialData, createdAt)
 	return err
 }
 
@@ -108,14 +85,8 @@ const createWebauthnSession = `-- name: CreateWebauthnSession :exec
 insert into webauthn_session (webauthn_session_id, session_data, created_at) values (?, ?, ?)
 `
 
-type CreateWebauthnSessionParams struct {
-	WebauthnSessionID string
-	SessionData       *JSONSessionData
-	CreatedAt         int64
-}
-
-func (q *Queries) CreateWebauthnSession(ctx context.Context, arg CreateWebauthnSessionParams) error {
-	_, err := q.db.ExecContext(ctx, createWebauthnSession, arg.WebauthnSessionID, arg.SessionData, arg.CreatedAt)
+func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID string, sessionData *JSONSessionData, createdAt int64) error {
+	_, err := q.db.ExecContext(ctx, createWebauthnSession, webauthnSessionID, sessionData, createdAt)
 	return err
 }
 
@@ -125,13 +96,8 @@ where webauthn_session_id = ? and created_at > ?
 returning session_data
 `
 
-type DeleteWebauthnSessionParams struct {
-	WebauthnSessionID string
-	CreatedAt         int64
-}
-
-func (q *Queries) DeleteWebauthnSession(ctx context.Context, arg DeleteWebauthnSessionParams) (*JSONSessionData, error) {
-	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, arg.WebauthnSessionID, arg.CreatedAt)
+func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, createdAt int64) (*JSONSessionData, error) {
+	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, webauthnSessionID, createdAt)
 	var session_data *JSONSessionData
 	err := row.Scan(&session_data)
 	return session_data, err
@@ -168,13 +134,8 @@ where created_at >= ?1 and created_at < ?2
 order by created_at desc
 `
 
-type NotesByDateParams struct {
-	Start int64
-	End   int64
-}
-
-func (q *Queries) NotesByDate(ctx context.Context, arg NotesByDateParams) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, notesByDate, arg.Start, arg.End)
+func (q *Queries) NotesByDate(ctx context.Context, start int64, end int64) ([]Note, error) {
+	rows, err := q.db.QueryContext(ctx, notesByDate, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -283,13 +244,8 @@ from session
 where session_id = ? and created_at > ?
 `
 
-type SessionExistsParams struct {
-	SessionID string
-	CreatedAt int64
-}
-
-func (q *Queries) SessionExists(ctx context.Context, arg SessionExistsParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, sessionExists, arg.SessionID, arg.CreatedAt)
+func (q *Queries) SessionExists(ctx context.Context, sessionID string, createdAt int64) (bool, error) {
+	row := q.db.QueryRowContext(ctx, sessionExists, sessionID, createdAt)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err

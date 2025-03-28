@@ -8,6 +8,7 @@ sql:
         package: "db"
         out: "."
         initialisms: ["id", "spki"]
+        query_parameter_limit: 10
         overrides:
           - column: "webauthn_credential.credential_data"
             go_type:

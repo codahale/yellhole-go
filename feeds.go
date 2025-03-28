@@ -52,10 +52,7 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notes, err := fc.queries.NotesByDate(r.Context(), db.NotesByDateParams{
-		Start: start.Unix(),
-		End:   start.AddDate(0, 0, 7).Unix(),
-	})
+	notes, err := fc.queries.NotesByDate(r.Context(), start.Unix(), start.AddDate(0, 0, 7).Unix())
 	if err != nil {
 		panic(err)
 	}

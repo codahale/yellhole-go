@@ -74,11 +74,11 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 
 	// Store the webauthn session data in the DB.
 	registrationSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
-		WebauthnSessionID: registrationSessionID,
-		SessionData:       &db.JSONSessionData{Data: *session},
-		CreatedAt:         time.Now().Unix(),
-	}); err != nil {
+	if err := ac.queries.CreateWebauthnSession(r.Context(),
+		registrationSessionID,
+		&db.JSONSessionData{Data: *session},
+		time.Now().Unix(),
+	); err != nil {
 		panic(err)
 	}
 
@@ -100,10 +100,10 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Read, delete, and decode the webauthn session data.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), db.DeleteWebauthnSessionParams{
-		WebauthnSessionID: registrationSessionID.Value,
-		CreatedAt:         time.Now().Add(-1 * time.Minute).Unix(),
-	})
+	session, err := ac.queries.DeleteWebauthnSession(r.Context(),
+		registrationSessionID.Value,
+		time.Now().Add(-1*time.Minute).Unix(),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -127,10 +127,10 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Store the new credential in the database.
-	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.CreateWebauthnCredentialParams{
-		CredentialData: &db.JSONCredential{Data: cred},
-		CreatedAt:      time.Now().Unix(),
-	}); err != nil {
+	if err := ac.queries.CreateWebauthnCredential(r.Context(),
+		&db.JSONCredential{Data: cred},
+		time.Now().Unix(),
+	); err != nil {
 		panic(err)
 	}
 
@@ -199,11 +199,11 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 
 	// Store the challenge in the database.
 	loginSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), db.CreateWebauthnSessionParams{
-		WebauthnSessionID: loginSessionID,
-		SessionData:       &db.JSONSessionData{Data: *session},
-		CreatedAt:         time.Now().Unix(),
-	}); err != nil {
+	if err := ac.queries.CreateWebauthnSession(r.Context(),
+		loginSessionID,
+		&db.JSONSessionData{Data: *session},
+		time.Now().Unix(),
+	); err != nil {
 		panic(err)
 	}
 
@@ -242,10 +242,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find and delete it from the database.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), db.DeleteWebauthnSessionParams{
-		WebauthnSessionID: loginSessionID.Value,
-		CreatedAt:         time.Now().Add(-1 * time.Minute).Unix(),
-	})
+	session, err := ac.queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute).Unix())
 	if err != nil {
 		panic(err)
 	}
@@ -271,10 +268,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new web session and assign a session cookie.
 	sessionID := uuid.NewString()
-	if err := ac.queries.CreateSession(r.Context(), db.CreateSessionParams{
-		SessionID: sessionID,
-		CreatedAt: time.Now().Unix(),
-	}); err != nil {
+	if err := ac.queries.CreateSession(r.Context(), sessionID, time.Now().Unix()); err != nil {
 		panic(err)
 	}
 	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
@@ -311,10 +305,7 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 		return false, nil
 	}
 
-	auth, err := queries.SessionExists(r.Context(), db.SessionExistsParams{
-		SessionID: cookie.Value,
-		CreatedAt: time.Now().AddDate(0, 0, -7).Unix(),
-	})
+	auth, err := queries.SessionExists(r.Context(), cookie.Value, time.Now().AddDate(0, 0, -7).Unix())
 	if err != nil {
 		panic(err)
 	}
