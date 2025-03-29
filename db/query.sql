@@ -14,7 +14,8 @@ limit ?;
 
 -- name: AllNoteTimestamps :many
 select created_at
-from note;
+from note
+order by created_at desc;
 
 -- name: NotesByDate :many
 select note_id, body, created_at

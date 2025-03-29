@@ -13,6 +13,7 @@ import (
 const allNoteTimestamps = `-- name: AllNoteTimestamps :many
 select created_at
 from note
+order by created_at desc
 `
 
 func (q *Queries) AllNoteTimestamps(ctx context.Context) ([]int64, error) {
