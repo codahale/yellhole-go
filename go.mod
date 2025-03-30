@@ -10,8 +10,8 @@ require (
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/image v0.25.0
 	golang.org/x/sync v0.12.0
-	modernc.org/libc v1.61.13
-	modernc.org/sqlite v1.36.2
+	modernc.org/libc v1.62.1
+	modernc.org/sqlite v1.37.0
 )
 
 require (
@@ -28,8 +28,11 @@ require (
 	github.com/go-sql-driver/mysql v1.9.1 // indirect
 	github.com/go-webauthn/x v0.1.19 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
+	github.com/golang-migrate/migrate/v4 v4.18.2 // indirect
 	github.com/google/cel-go v0.24.1 // indirect
 	github.com/google/go-tpm v0.9.3 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

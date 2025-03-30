@@ -1,4 +1,3 @@
--- migrate:up
 create table note (
     note_id text primary key not null,
     body text not null,
@@ -31,5 +30,3 @@ create table webauthn_session (
     session_data blob not null,
     created_at integer not null
 );
-
--- migrate:down
