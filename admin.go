@@ -45,5 +45,5 @@ func (ac *adminController) newNote(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	http.Redirect(w, r, "../note/"+id, http.StatusSeeOther)
+	http.Redirect(w, r, ac.config.BaseURL.JoinPath("note", id).String(), http.StatusSeeOther)
 }
