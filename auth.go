@@ -62,10 +62,7 @@ func (ac *authController) registerPage(w http.ResponseWriter, r *http.Request) {
 func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) {
 	// Create a new webauthn attestation challenge.
 	creation, session, err := ac.webauthn.BeginRegistration(
-		webauthnUser{
-			name:        ac.config.Author,
-			credentials: []*db.JSONCredential{},
-		},
+		webauthnUser{ac.config.Author, []*db.JSONCredential{}},
 		webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
 	)
 	if err != nil {
@@ -73,17 +70,13 @@ func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Store the webauthn session data in the DB.
-	registrationSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(),
-		registrationSessionID,
-		&db.JSONSessionData{Data: *session},
-		time.Now().Unix(),
-	); err != nil {
+	regSessionID := uuid.NewString()
+	if err := ac.queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now().Unix()); err != nil {
 		panic(err)
 	}
 
 	// Set a registration session ID cookie.
-	http.SetCookie(w, ac.secureCookie("registrationSessionID", registrationSessionID, 60))
+	http.SetCookie(w, ac.secureCookie("registrationSessionID", regSessionID, 60))
 
 	// Respond with the attestation challenge.
 	w.Header().Set("content-type", "application/json")
@@ -94,24 +87,19 @@ func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) 
 
 func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request) {
 	// Find the webauthn session ID.
-	registrationSessionID, err := r.Cookie("registrationSessionID")
+	regSessionID, err := r.Cookie("registrationSessionID")
 	if err != nil {
 		panic(err)
 	}
 
 	// Read, delete, and decode the webauthn session data.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(),
-		registrationSessionID.Value,
-		time.Now().Add(-1*time.Minute).Unix(),
-	)
+	session, err := ac.queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute).Unix())
 	if err != nil {
 		panic(err)
 	}
 
 	// Validate the attestation response.
-	cred, err := ac.webauthn.FinishRegistration(webauthnUser{name: ac.config.Author, credentials: []*db.JSONCredential{}},
-		session.Data,
-		r)
+	cred, err := ac.webauthn.FinishRegistration(webauthnUser{ac.config.Author, []*db.JSONCredential{}}, session.Data, r)
 	if err != nil {
 		// If the attestation is invalid, respond with verified=false.
 		slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
@@ -123,10 +111,7 @@ func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Store the new credential in the database.
-	if err := ac.queries.CreateWebauthnCredential(r.Context(),
-		&db.JSONCredential{Data: cred},
-		time.Now().Unix(),
-	); err != nil {
+	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now().Unix()); err != nil {
 		panic(err)
 	}
 
@@ -185,18 +170,14 @@ func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a webauthn login challenge.
-	assertion, session, err := ac.webauthn.BeginLogin(webauthnUser{name: ac.config.Author, credentials: credentials})
+	assertion, session, err := ac.webauthn.BeginLogin(webauthnUser{ac.config.Author, credentials})
 	if err != nil {
 		panic(err)
 	}
 
 	// Store the challenge in the database.
 	loginSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(),
-		loginSessionID,
-		&db.JSONSessionData{Data: *session},
-		time.Now().Unix(),
-	); err != nil {
+	if err := ac.queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now().Unix()); err != nil {
 		panic(err)
 	}
 
@@ -241,7 +222,7 @@ func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the webauthn challenge.
-	_, err = ac.webauthn.FinishLogin(webauthnUser{name: ac.config.Author, credentials: credentials}, session.Data, r)
+	_, err = ac.webauthn.FinishLogin(webauthnUser{ac.config.Author, credentials}, session.Data, r)
 	if err != nil {
 		// Respond with verified=false if the challenge response was invalid.
 		slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))

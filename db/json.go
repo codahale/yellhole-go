@@ -32,3 +32,7 @@ var (
 	_ sql.Scanner   = &JSONColumn[string]{Data: ""}
 	_ driver.Valuer = &JSONColumn[string]{Data: ""}
 )
+
+func JSON[T any](data T) *JSONColumn[T] {
+	return &JSONColumn[T]{Data: data}
+}
