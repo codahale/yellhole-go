@@ -281,6 +281,24 @@ func (ac *authController) secureCookie(name, value string, maxAge int) *http.Coo
 	}
 }
 
+func (ac *authController) requireAuthentication(h http.Handler, prefix string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.RequestURI, prefix) {
+			auth, err := isAuthenticated(r, ac.queries)
+			if err != nil {
+				panic(err)
+			}
+
+			if !auth {
+				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
+				http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
 func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	cookie, err := r.Cookie("sessionID")
 	if err != nil && !errors.Is(err, http.ErrNoCookie) {

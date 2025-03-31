@@ -95,27 +95,15 @@ func newApp(config *config) (*app, error) {
 	}
 
 	// Require authentication for all /admin requests.
-	var root http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RequestURI, "/admin") {
-			auth, err := isAuthenticated(r, queries)
-			if err != nil {
-				panic(err)
-			}
+	root := auth.requireAuthentication(mux, "/admin")
 
-			if !auth {
-				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
-				http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
-				return
-			}
-		}
-		mux.ServeHTTP(w, r)
-	})
-
+	// Serve the root from the base URL path.
 	if config.BaseURL.Path != "/" {
 		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
 		root = http.StripPrefix(nestedPrefix, mux)
 	}
 
+	// Add logging.
 	loggerHandler := slog.DiscardHandler
 	if config.requestLog {
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
