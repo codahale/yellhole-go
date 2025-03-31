@@ -70,27 +70,27 @@ func newApp(config *config) (*app, error) {
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /{$}", http.HandlerFunc(feeds.HomePage))
-	mux.Handle("GET /atom.xml", http.HandlerFunc(feeds.AtomFeed))
-	mux.Handle("GET /notes/{start}", http.HandlerFunc(feeds.WeekPage))
-	mux.Handle("GET /note/{id}", http.HandlerFunc(feeds.NotePage))
+	mux.Handle("GET /{$}", http.HandlerFunc(feeds.homePage))
+	mux.Handle("GET /atom.xml", http.HandlerFunc(feeds.atomFeed))
+	mux.Handle("GET /notes/{start}", http.HandlerFunc(feeds.weekPage))
+	mux.Handle("GET /note/{id}", http.HandlerFunc(feeds.notePage))
 
-	mux.Handle("GET /admin", http.HandlerFunc(admin.AdminPage))
-	mux.Handle("POST /admin/new", http.HandlerFunc(admin.NewNote))
-	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.DownloadImage))
-	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.UploadImage))
+	mux.Handle("GET /admin", http.HandlerFunc(admin.adminPage))
+	mux.Handle("POST /admin/new", http.HandlerFunc(admin.newNote))
+	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.downloadImage))
+	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.uploadImage))
 
-	mux.Handle("GET /register", http.HandlerFunc(auth.RegisterPage))
-	mux.Handle("POST /register/start", http.HandlerFunc(auth.RegisterStart))
-	mux.Handle("POST /register/finish", http.HandlerFunc(auth.RegisterFinish))
-	mux.Handle("GET /login", http.HandlerFunc(auth.LoginPage))
-	mux.Handle("POST /login/start", http.HandlerFunc(auth.LoginStart))
-	mux.Handle("POST /login/finish", http.HandlerFunc(auth.LoginFinish))
+	mux.Handle("GET /register", http.HandlerFunc(auth.registerPage))
+	mux.Handle("POST /register/start", http.HandlerFunc(auth.registerStart))
+	mux.Handle("POST /register/finish", http.HandlerFunc(auth.registerFinish))
+	mux.Handle("GET /login", http.HandlerFunc(auth.loginPage))
+	mux.Handle("POST /login/start", http.HandlerFunc(auth.loginStart))
+	mux.Handle("POST /login/finish", http.HandlerFunc(auth.loginFinish))
 
-	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.ServeFeedImage)))
-	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.ServeThumbImage)))
+	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.feedImage)))
+	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.thumbImage)))
 
-	for _, path := range assets.AssetPaths() {
+	for _, path := range assets.assetPaths() {
 		mux.Handle("GET /"+path, assets)
 	}
 

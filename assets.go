@@ -59,7 +59,7 @@ func newAssetController(root fs.FS, dir string) (*assetController, error) {
 	return controller, nil
 }
 
-func (ac *assetController) AssetPaths() []string {
+func (ac *assetController) assetPaths() []string {
 	return ac.paths
 }
 

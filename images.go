@@ -71,15 +71,15 @@ func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) 
 	}, nil
 }
 
-func (ic *imageController) ServeFeedImage(w http.ResponseWriter, r *http.Request) {
+func (ic *imageController) feedImage(w http.ResponseWriter, r *http.Request) {
 	ic.feedImageHandler.ServeHTTP(w, r)
 }
 
-func (ic *imageController) ServeThumbImage(w http.ResponseWriter, r *http.Request) {
+func (ic *imageController) thumbImage(w http.ResponseWriter, r *http.Request) {
 	ic.thumbImageHandler.ServeHTTP(w, r)
 }
 
-func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request) {
+func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request) {
 	url := r.FormValue("url")
 	resp, err := http.Get(url)
 	if err != nil {
@@ -103,7 +103,7 @@ func (ic *imageController) DownloadImage(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
-func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
+func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 	f, h, err := r.FormFile("image")
 	if err != nil {
 		panic(err)

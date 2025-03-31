@@ -21,7 +21,7 @@ func newFeedController(config *config, queries *db.Queries, templates *templateS
 	return &feedController{config, queries, templates}
 }
 
-func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
+func (fc *feedController) homePage(w http.ResponseWriter, r *http.Request) {
 	n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 	if err != nil {
 		n = 10
@@ -45,7 +45,7 @@ func (fc *feedController) HomePage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
+func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
 	start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 	if err != nil {
 		http.NotFound(w, r)
@@ -76,7 +76,7 @@ func (fc *feedController) WeekPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
+func (fc *feedController) notePage(w http.ResponseWriter, r *http.Request) {
 	note, err := fc.queries.NoteByID(r.Context(), r.PathValue("id"))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -99,7 +99,7 @@ func (fc *feedController) NotePage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (fc *feedController) AtomFeed(w http.ResponseWriter, r *http.Request) {
+func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
 	notes, err := fc.queries.RecentNotes(r.Context(), 20)
 	if err != nil {
 		panic(err)

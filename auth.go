@@ -34,7 +34,7 @@ func newAuthController(config *config, queries *db.Queries, templates *templateS
 	return &authController{config, queries, webauthn, templates}
 }
 
-func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) registerPage(w http.ResponseWriter, r *http.Request) {
 	// Ensure we only register one passkey.
 	registered, err := ac.queries.HasWebauthnCredential(r.Context())
 	if err != nil {
@@ -59,7 +59,7 @@ func (ac *authController) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	ac.templates.render(w, "auth/register.html", struct{ Config *config }{ac.config})
 }
 
-func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) {
 	// Create a new webauthn attestation challenge.
 	creation, session, err := ac.webauthn.BeginRegistration(
 		webauthnUser{
@@ -92,7 +92,7 @@ func (ac *authController) RegisterStart(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request) {
 	// Find the webauthn session ID.
 	registrationSessionID, err := r.Cookie("registrationSessionID")
 	if err != nil {
@@ -140,7 +140,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) loginPage(w http.ResponseWriter, r *http.Request) {
 	// Redirect to registration if no credentials exist.
 	registered, err := ac.queries.HasWebauthnCredential(r.Context())
 	if err != nil {
@@ -166,7 +166,7 @@ func (ac *authController) LoginPage(w http.ResponseWriter, r *http.Request) {
 	ac.templates.render(w, "auth/login.html", struct{ Config *config }{ac.config})
 }
 
-func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {
 	// Ensure request isn't already authenticated.
 	auth, err := isAuthenticated(r, ac.queries)
 	if err != nil {
@@ -210,7 +210,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
+func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 	// Ensure request isn't already authenticated.
 	auth, err := isAuthenticated(r, ac.queries)
 	if err != nil {

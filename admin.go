@@ -19,7 +19,7 @@ func newAdminController(config *config, queries *db.Queries, templates *template
 	return &adminController{config, queries, templates}
 }
 
-func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
+func (ac *adminController) adminPage(w http.ResponseWriter, r *http.Request) {
 	images, err := ac.queries.RecentImages(r.Context(), 10)
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func (ac *adminController) AdminPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ac *adminController) NewNote(w http.ResponseWriter, r *http.Request) {
+func (ac *adminController) newNote(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("preview") == fmt.Sprint(true) {
 		ac.templates.render(w, "preview.html", struct {
 			Config *config
