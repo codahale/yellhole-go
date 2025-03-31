@@ -28,10 +28,7 @@ func (ac *adminController) adminPage(w http.ResponseWriter, r *http.Request) {
 	ac.templates.render(w, "new.html", struct {
 		Config *config
 		Images []db.Image
-	}{
-		ac.config,
-		images,
-	})
+	}{ac.config, images})
 }
 
 func (ac *adminController) newNote(w http.ResponseWriter, r *http.Request) {
@@ -39,10 +36,7 @@ func (ac *adminController) newNote(w http.ResponseWriter, r *http.Request) {
 		ac.templates.render(w, "preview.html", struct {
 			Config *config
 			Body   string
-		}{
-			ac.config,
-			r.FormValue("body"),
-		})
+		}{ac.config, r.FormValue("body")})
 		return
 	}
 
