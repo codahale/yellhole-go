@@ -109,11 +109,7 @@ func (ac *authController) RegisterFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Validate the attestation response.
-	cred, err := ac.webauthn.FinishRegistration(
-		webauthnUser{
-			name:        ac.config.Author,
-			credentials: []*db.JSONCredential{},
-		},
+	cred, err := ac.webauthn.FinishRegistration(webauthnUser{name: ac.config.Author, credentials: []*db.JSONCredential{}},
 		session.Data,
 		r)
 	if err != nil {
@@ -189,10 +185,7 @@ func (ac *authController) LoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a webauthn login challenge.
-	assertion, session, err := ac.webauthn.BeginLogin(webauthnUser{
-		name:        ac.config.Author,
-		credentials: credentials,
-	})
+	assertion, session, err := ac.webauthn.BeginLogin(webauthnUser{name: ac.config.Author, credentials: credentials})
 	if err != nil {
 		panic(err)
 	}
@@ -248,14 +241,7 @@ func (ac *authController) LoginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the webauthn challenge.
-	_, err = ac.webauthn.FinishLogin(
-		webauthnUser{
-			name:        ac.config.Author,
-			credentials: credentials,
-		},
-		session.Data,
-		r,
-	)
+	_, err = ac.webauthn.FinishLogin(webauthnUser{name: ac.config.Author, credentials: credentials}, session.Data, r)
 	if err != nil {
 		// Respond with verified=false if the challenge response was invalid.
 		slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
