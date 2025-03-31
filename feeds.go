@@ -37,12 +37,7 @@ func (fc *feedController) homePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{
-		Config: fc.config,
-		Single: false,
-		Notes:  notes,
-		Weeks:  weeks,
-	})
+	fc.templates.render(w, "feed.html", feedPage{fc.config, false, notes, weeks})
 }
 
 func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +63,7 @@ func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{
-		Config: fc.config,
-		Single: false,
-		Notes:  notes,
-		Weeks:  weeks,
-	})
+	fc.templates.render(w, "feed.html", feedPage{fc.config, false, notes, weeks})
 }
 
 func (fc *feedController) notePage(w http.ResponseWriter, r *http.Request) {
@@ -91,12 +81,7 @@ func (fc *feedController) notePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{
-		Config: fc.config,
-		Single: true,
-		Notes:  []db.Note{note},
-		Weeks:  weeks,
-	})
+	fc.templates.render(w, "feed.html", feedPage{fc.config, true, []db.Note{note}, weeks})
 }
 
 func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
