@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -100,6 +101,20 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
 	}
 
 	w.Header().Set("content-type", "text/html")
+	if _, err := w.Write(b.B); err != nil {
+		panic(err)
+	}
+}
+
+func jsonResponse(w http.ResponseWriter, v any) {
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	if err := json.NewEncoder(b).Encode(v); err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("content-type", "application/json")
 	if _, err := w.Write(b.B); err != nil {
 		panic(err)
 	}

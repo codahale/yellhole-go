@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -79,10 +78,7 @@ func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) 
 	http.SetCookie(w, ac.secureCookie("registrationSessionID", regSessionID, 60))
 
 	// Respond with the attestation challenge.
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(creation); err != nil {
-		panic(err)
-	}
+	jsonResponse(w, creation)
 }
 
 func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request) {
@@ -103,10 +99,7 @@ func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		// If the attestation is invalid, respond with verified=false.
 		slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
-		w.Header().Set("content-type", "application/json")
-		if err := json.NewEncoder(w).Encode(map[string]bool{"verified": false}); err != nil {
-			panic(err)
-		}
+		jsonResponse(w, map[string]bool{"verified": false})
 		return
 	}
 
@@ -119,10 +112,7 @@ func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request)
 	http.SetCookie(w, ac.secureCookie("registrationSessionID", "", -1))
 
 	// Respond with verified=true.
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
-		panic(err)
-	}
+	jsonResponse(w, map[string]bool{"verified": true})
 }
 
 func (ac *authController) loginPage(w http.ResponseWriter, r *http.Request) {
@@ -185,10 +175,7 @@ func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, ac.secureCookie("loginSessionID", loginSessionID, 60))
 
 	// Respond with the login challenge.
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(assertion); err != nil {
-		panic(err)
-	}
+	jsonResponse(w, assertion)
 }
 
 func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
@@ -226,10 +213,7 @@ func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Respond with verified=false if the challenge response was invalid.
 		slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
-		w.Header().Set("content-type", "application/json")
-		if err := json.NewEncoder(w).Encode(map[string]bool{"verified": false}); err != nil {
-			panic(err)
-		}
+		jsonResponse(w, map[string]bool{"verified": false})
 		return
 	}
 
@@ -244,10 +228,7 @@ func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, ac.secureCookie("loginSessionID", "", -1))
 
 	// Respond with verified=true.
-	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]bool{"verified": true}); err != nil {
-		panic(err)
-	}
+	jsonResponse(w, map[string]bool{"verified": true})
 }
 
 func (ac *authController) secureCookie(name, value string, maxAge int) *http.Cookie {
