@@ -9,6 +9,7 @@ import (
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/gorilla/feeds"
+	"github.com/valyala/bytebufferpool"
 )
 
 type feedController struct {
@@ -117,12 +118,15 @@ func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("content-type", "application/atom+xml")
-	atom, err := feed.ToAtom()
-	if err != nil {
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	if err := feeds.WriteXML(&feeds.Atom{Feed: &feed}, b); err != nil {
 		panic(err)
 	}
-	if _, err := w.Write([]byte(atom)); err != nil {
+
+	w.Header().Set("content-type", "application/atom+xml")
+	if _, err := w.Write(b.B); err != nil {
 		panic(err)
 	}
 }
