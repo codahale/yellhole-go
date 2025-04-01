@@ -10,6 +10,8 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/valyala/bytebufferpool"
 )
 
 //go:embed templates
@@ -89,8 +91,16 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
 	if !ok {
 		panic(fmt.Sprintf("unknown template: %q", name))
 	}
+
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	if err := t.ExecuteTemplate(b, "base.html", data); err != nil {
+		panic(err)
+	}
+
 	w.Header().Set("content-type", "text/html")
-	if err := t.ExecuteTemplate(w, "base.html", data); err != nil {
+	if _, err := w.Write(b.B); err != nil {
 		panic(err)
 	}
 }
