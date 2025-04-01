@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"embed"
-	"encoding/hex"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"path"
@@ -40,16 +40,13 @@ func newAssetController(root fs.FS, dir string) (*assetController, error) {
 			return nil
 		}
 
-		controller.paths = append(controller.paths, p)
-
-		b, err := public.ReadFile(path.Join("public", p))
+		b, err := fs.ReadFile(assets, p)
 		if err != nil {
 			return err
 		}
 
-		h := sha256.New()
-		h.Write(b)
-		controller.hashes[p] = "sha256:" + hex.EncodeToString(h.Sum(nil))
+		controller.paths = append(controller.paths, p)
+		controller.hashes[p] = fmt.Sprintf("sha256:%x", sha256.Sum256(b))
 
 		return nil
 	}); err != nil {
