@@ -59,16 +59,7 @@ func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) 
 	feedImageHandler := http.FileServerFS(feedRoot.FS())
 	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
 
-	return &imageController{
-		config,
-		queries,
-		root,
-		feedRoot,
-		origRoot,
-		thumbRoot,
-		feedImageHandler,
-		thumbImageHandler,
-	}, nil
+	return &imageController{config, queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
 }
 
 func (ic *imageController) feedImage(w http.ResponseWriter, r *http.Request) {

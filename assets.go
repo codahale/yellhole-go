@@ -25,11 +25,7 @@ func newAssetController(root fs.FS, dir string) (*assetController, error) {
 		return nil, err
 	}
 
-	controller := &assetController{
-		assets:  assets,
-		hashes:  make(map[string]string),
-		Handler: http.FileServerFS(assets),
-	}
+	controller := &assetController{assets, nil, make(map[string]string), http.FileServerFS(assets)}
 
 	if err := fs.WalkDir(assets, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
