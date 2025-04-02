@@ -70,7 +70,7 @@ func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) 
 
 	// Store the webauthn session data in the DB.
 	regSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now().Unix()); err != nil {
+	if err := ac.queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now()); err != nil {
 		panic(err)
 	}
 
@@ -89,7 +89,7 @@ func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Read, delete, and decode the webauthn session data.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute).Unix())
+	session, err := ac.queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute))
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +104,7 @@ func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Store the new credential in the database.
-	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now().Unix()); err != nil {
+	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now()); err != nil {
 		panic(err)
 	}
 
@@ -167,7 +167,7 @@ func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {
 
 	// Store the challenge in the database.
 	loginSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now().Unix()); err != nil {
+	if err := ac.queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now()); err != nil {
 		panic(err)
 	}
 
@@ -203,7 +203,7 @@ func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find and delete it from the database.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute).Unix())
+	session, err := ac.queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute))
 	if err != nil {
 		panic(err)
 	}
@@ -219,7 +219,7 @@ func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new web session and assign a session cookie.
 	sessionID := uuid.NewString()
-	if err := ac.queries.CreateSession(r.Context(), sessionID, time.Now().Unix()); err != nil {
+	if err := ac.queries.CreateSession(r.Context(), sessionID, time.Now()); err != nil {
 		panic(err)
 	}
 	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
@@ -271,7 +271,7 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 		return false, nil
 	}
 
-	auth, err := queries.SessionExists(r.Context(), cookie.Value, time.Now().AddDate(0, 0, -7).Unix())
+	auth, err := queries.SessionExists(r.Context(), cookie.Value, time.Now().AddDate(0, 0, -7))
 	if err != nil {
 		panic(err)
 	}
@@ -287,7 +287,7 @@ func purgeOldRows(queries *db.Queries, ticker *time.Ticker) {
 }
 
 func purgeOldSessions(queries *db.Queries) {
-	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7).Unix())
+	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7))
 	if err != nil {
 		slog.Error("error purging old sessions", "err", err)
 		return
@@ -302,7 +302,7 @@ func purgeOldSessions(queries *db.Queries) {
 }
 
 func purgeOldWebauthnSessions(queries *db.Queries) {
-	res, err := queries.PurgeWebauthnSessions(context.Background(), time.Now().Add(-5*time.Minute).Unix())
+	res, err := queries.PurgeWebauthnSessions(context.Background(), time.Now().Add(-5*time.Minute))
 	if err != nil {
 		slog.Error("error purging old challenge", "err", err)
 		return

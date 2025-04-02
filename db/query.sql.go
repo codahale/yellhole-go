@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const allNoteTimestamps = `-- name: AllNoteTimestamps :many
@@ -16,15 +17,15 @@ from note
 order by created_at desc
 `
 
-func (q *Queries) AllNoteTimestamps(ctx context.Context) ([]int64, error) {
+func (q *Queries) AllNoteTimestamps(ctx context.Context) ([]time.Time, error) {
 	rows, err := q.db.QueryContext(ctx, allNoteTimestamps)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int64
+	var items []time.Time
 	for rows.Next() {
-		var created_at int64
+		var created_at time.Time
 		if err := rows.Scan(&created_at); err != nil {
 			return nil, err
 		}
@@ -44,7 +45,7 @@ insert into image (image_id, filename, format, created_at)
 values (?, ?, ?, ?)
 `
 
-func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, format string, createdAt int64) error {
+func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, format string, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createImage,
 		imageID,
 		filename,
@@ -58,7 +59,7 @@ const createNote = `-- name: CreateNote :exec
 insert into note (note_id, body, created_at) values (?, ?, ?)
 `
 
-func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, createdAt int64) error {
+func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createNote, noteID, body, createdAt)
 	return err
 }
@@ -68,7 +69,7 @@ insert into session (session_id, created_at)
 values (?, ?)
 `
 
-func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt int64) error {
+func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createSession, sessionID, createdAt)
 	return err
 }
@@ -77,7 +78,7 @@ const createWebauthnCredential = `-- name: CreateWebauthnCredential :exec
 insert into webauthn_credential (credential_data, created_at) values (?, ?)
 `
 
-func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *JSONCredential, createdAt int64) error {
+func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *JSONCredential, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createWebauthnCredential, credentialData, createdAt)
 	return err
 }
@@ -86,7 +87,7 @@ const createWebauthnSession = `-- name: CreateWebauthnSession :exec
 insert into webauthn_session (webauthn_session_id, session_data, created_at) values (?, ?, ?)
 `
 
-func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID string, sessionData *JSONSessionData, createdAt int64) error {
+func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID string, sessionData *JSONSessionData, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createWebauthnSession, webauthnSessionID, sessionData, createdAt)
 	return err
 }
@@ -97,7 +98,7 @@ where webauthn_session_id = ? and created_at > ?
 returning session_data
 `
 
-func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, createdAt int64) (*JSONSessionData, error) {
+func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, createdAt time.Time) (*JSONSessionData, error) {
 	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, webauthnSessionID, createdAt)
 	var session_data *JSONSessionData
 	err := row.Scan(&session_data)
@@ -135,7 +136,7 @@ where created_at >= ?1 and created_at < ?2
 order by created_at desc
 `
 
-func (q *Queries) NotesByDate(ctx context.Context, start int64, end int64) ([]Note, error) {
+func (q *Queries) NotesByDate(ctx context.Context, start time.Time, end time.Time) ([]Note, error) {
 	rows, err := q.db.QueryContext(ctx, notesByDate, start, end)
 	if err != nil {
 		return nil, err
@@ -162,7 +163,7 @@ const purgeSessions = `-- name: PurgeSessions :execresult
 delete from session where created_at < ?
 `
 
-func (q *Queries) PurgeSessions(ctx context.Context, createdAt int64) (sql.Result, error) {
+func (q *Queries) PurgeSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
 	return q.db.ExecContext(ctx, purgeSessions, createdAt)
 }
 
@@ -170,7 +171,7 @@ const purgeWebauthnSessions = `-- name: PurgeWebauthnSessions :execresult
 delete from webauthn_session where created_at < ?
 `
 
-func (q *Queries) PurgeWebauthnSessions(ctx context.Context, createdAt int64) (sql.Result, error) {
+func (q *Queries) PurgeWebauthnSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
 	return q.db.ExecContext(ctx, purgeWebauthnSessions, createdAt)
 }
 
@@ -245,7 +246,7 @@ from session
 where session_id = ? and created_at > ?
 `
 
-func (q *Queries) SessionExists(ctx context.Context, sessionID string, createdAt int64) (bool, error) {
+func (q *Queries) SessionExists(ctx context.Context, sessionID string, createdAt time.Time) (bool, error) {
 	row := q.db.QueryRowContext(ctx, sessionExists, sessionID, createdAt)
 	var column_1 bool
 	err := row.Scan(&column_1)
@@ -269,6 +270,42 @@ func (q *Queries) WebauthnCredentials(ctx context.Context) ([]*JSONCredential, e
 			return nil, err
 		}
 		items = append(items, credential_data)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const weeksWithNotes = `-- name: WeeksWithNotes :many
+select
+  cast(date(datetime(created_at, 'weekday 0', '-7 days')) as text) as start_date,
+  cast(date(datetime(created_at, 'weekday 0', '-1 day')) as text) as end_date 
+from note
+group by 1 order by 1 desc
+`
+
+type WeeksWithNotesRow struct {
+	StartDate string
+	EndDate   string
+}
+
+func (q *Queries) WeeksWithNotes(ctx context.Context) ([]WeeksWithNotesRow, error) {
+	rows, err := q.db.QueryContext(ctx, weeksWithNotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []WeeksWithNotesRow
+	for rows.Next() {
+		var i WeeksWithNotesRow
+		if err := rows.Scan(&i.StartDate, &i.EndDate); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

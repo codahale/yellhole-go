@@ -24,7 +24,7 @@ func newApp(config *config) (*app, error) {
 	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.
-	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db"))
+	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db")+"?_time_format=sqlite")
 	if err != nil {
 		return nil, err
 	}

@@ -49,7 +49,7 @@ func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
 	}
 	end := start.AddDate(0, 0, 7)
 
-	notes, err := fc.queries.NotesByDate(r.Context(), start.Unix(), end.Unix())
+	notes, err := fc.queries.NotesByDate(r.Context(), start, end)
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +99,7 @@ func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(notes) > 0 {
-		feed.Updated = time.Unix(notes[0].CreatedAt, 0)
+		feed.Updated = notes[0].CreatedAt
 	}
 
 	for _, note := range notes {
@@ -114,7 +114,7 @@ func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
 			Title:   note.NoteID,
 			Link:    &feeds.Link{Href: noteURL},
 			Content: string(html),
-			Created: time.Unix(note.CreatedAt, 0),
+			Created: note.CreatedAt,
 		})
 	}
 
@@ -135,5 +135,5 @@ type feedPage struct {
 	Config *config
 	Single bool
 	Notes  []db.Note
-	Weeks  []db.Week
+	Weeks  []db.WeeksWithNotesRow
 }

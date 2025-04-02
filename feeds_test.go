@@ -29,7 +29,7 @@ func TestFeedsHomePageEmpty(t *testing.T) {
 func TestFeedsHomePageNote(t *testing.T) {
 	app := newTestApp(t)
 
-	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now().Unix()); err != nil {
+	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,12 +54,12 @@ func TestFeedsWeeksPage(t *testing.T) {
 	app := newTestApp(t)
 
 	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "This one's in March.",
-		time.Date(2025, 3, 10, 10, 2, 0, 0, time.Local).Unix()); err != nil {
+		time.Date(2025, 3, 10, 10, 2, 0, 0, time.Local)); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "This one's in April.",
-		time.Date(2025, 4, 10, 10, 2, 0, 0, time.Local).Unix(),
+		time.Date(2025, 4, 10, 10, 2, 0, 0, time.Local),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestFeedsNotePage(t *testing.T) {
 	app := newTestApp(t)
 
 	noteID := uuid.NewString()
-	if err := app.app.queries.CreateNote(t.Context(), noteID, "An example.", time.Now().Unix()); err != nil {
+	if err := app.app.queries.CreateNote(t.Context(), noteID, "An example.", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -141,7 +141,7 @@ func TestFeedsNotePage404(t *testing.T) {
 func TestFeedsAtomFeed(t *testing.T) {
 	app := newTestApp(t)
 
-	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now().Unix()); err != nil {
+	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 

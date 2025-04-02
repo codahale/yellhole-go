@@ -41,7 +41,7 @@ func (ac *adminController) newNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := uuid.New().String()
-	if err := ac.queries.CreateNote(r.Context(), id, r.FormValue("body"), time.Now().Unix()); err != nil {
+	if err := ac.queries.CreateNote(r.Context(), id, r.FormValue("body"), time.Now()); err != nil {
 		panic(err)
 	}
 

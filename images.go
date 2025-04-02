@@ -87,7 +87,7 @@ func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
-	if err := ic.queries.CreateImage(r.Context(), id.String(), url, format, time.Now().Unix()); err != nil {
+	if err := ic.queries.CreateImage(r.Context(), id.String(), url, format, time.Now()); err != nil {
 		panic(err)
 	}
 
@@ -110,7 +110,7 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := ic.queries.CreateImage(r.Context(), id.String(), h.Filename, format, time.Now().Unix()); err != nil {
+	if err := ic.queries.CreateImage(r.Context(), id.String(), h.Filename, format, time.Now()); err != nil {
 		panic(err)
 	}
 
