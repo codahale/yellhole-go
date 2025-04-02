@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -15,15 +14,12 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
-//go:embed templates
-var templatesDir embed.FS
-
 type templateSet struct {
 	config    *config
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *config, assets *assetController) (*templateSet, error) {
+func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*templateSet, error) {
 	ts := &templateSet{
 		config:    config,
 		templates: make(map[string]*template.Template),
@@ -51,7 +47,7 @@ func newTemplateSet(config *config, assets *assetController) (*templateSet, erro
 		},
 	}
 
-	if err := fs.WalkDir(templatesDir, "templates", func(p string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(templates, "templates", func(p string, d fs.DirEntry, err error) error {
 		// Ignore directories.
 		if d.IsDir() {
 			return nil

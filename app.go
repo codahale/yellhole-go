@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"embed"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,6 +12,15 @@ import (
 
 	"github.com/codahale/yellhole-go/db"
 	sloghttp "github.com/samber/slog-http"
+)
+
+var (
+	//go:embed public
+	publicDir embed.FS
+	//go:embed templates
+	templatesDir embed.FS
+	//go:embed db/migrations/*.sql
+	migrationsDir embed.FS
 )
 
 type app struct {
@@ -31,7 +41,7 @@ func newApp(config *config) (*app, error) {
 	queries := db.New(conn)
 
 	// Run migrations, if any,.
-	if err := db.RunMigrations(conn); err != nil {
+	if err := db.RunMigrations(conn, migrationsDir, "db/migrations"); err != nil {
 		return nil, err
 	}
 
@@ -46,13 +56,13 @@ func newApp(config *config) (*app, error) {
 	}
 
 	// Load the embedded public assets and create an asset controller.
-	assets, err := newAssetController(public, "public")
+	assets, err := newAssetController(publicDir, "public")
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a new template set.
-	templates, err := newTemplateSet(config, assets)
+	templates, err := newTemplateSet(config, templatesDir, assets)
 	if err != nil {
 		return nil, err
 	}

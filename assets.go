@@ -2,15 +2,11 @@ package main
 
 import (
 	"crypto/sha256"
-	"embed"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"path"
 )
-
-//go:embed public
-var public embed.FS
 
 type assetController struct {
 	assets fs.FS

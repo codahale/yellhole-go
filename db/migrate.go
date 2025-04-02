@@ -2,9 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -12,11 +12,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-//go:embed migrations/*.sql
-var migrations embed.FS
-
-func RunMigrations(db *sql.DB) error {
-	source, err := iofs.New(migrations, "migrations")
+func RunMigrations(db *sql.DB, migrations fs.FS, path string) error {
+	source, err := iofs.New(migrations, path)
 	if err != nil {
 		return err
 	}
