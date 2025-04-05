@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/ory/graceful"
 	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"
 )
@@ -29,7 +30,11 @@ func main() {
 
 	// Listen for HTTP requests.
 	slog.Info("listening for connections", "baseURL", config.BaseURL)
-	if err := http.ListenAndServe(config.Addr, app); err != nil {
+	server := graceful.WithDefaults(&http.Server{
+		Addr:    config.Addr,
+		Handler: app,
+	})
+	if err := graceful.Graceful(server.ListenAndServe, server.Shutdown); err != nil {
 		panic(err)
 	}
 }

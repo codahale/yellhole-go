@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/ory/graceful v0.1.3
 	github.com/samber/slog-http v1.6.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/yuin/goldmark v1.7.8
@@ -47,6 +48,7 @@ require (
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
 	github.com/pingcap/log v1.1.0 // indirect
 	github.com/pingcap/tidb/pkg/parser v0.0.0-20250403110330-d9fb3a533761 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/riza-io/grpc-go v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
