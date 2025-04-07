@@ -22,37 +22,13 @@ func parseConfig() (*config, error) {
 
 	var baseURL string
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
-	cmd.StringVar(&config.Addr, "addr", "127.0.0.1:3000", "the address on which to listen")
-	cmd.StringVar(&baseURL, "base_url", "http://localhost:3000", "the base URL of the server")
-	cmd.StringVar(&config.DataDir, "data_dir", "./data", "the directory in which all persistent data is stored")
-	cmd.StringVar(&config.Title, "title", "Yellhole", "the title of the yellhole instance")
-	cmd.StringVar(&config.Description, "description", "Obscurantist filth.", "the description of the yellhole instance")
-	cmd.StringVar(&config.Author, "author", "Luther Blissett", "the author of the yellhole instance")
+	cmd.StringVar(&config.Addr, "addr", env("ADDR", "127.0.0.1:3000"), "the address on which to listen")
+	cmd.StringVar(&baseURL, "base_url", env("BASE_URL", "http://localhost:3000"), "the base URL of the server")
+	cmd.StringVar(&config.DataDir, "data_dir", env("DATA_DIR", "./data"), "the directory in which all persistent data is stored")
+	cmd.StringVar(&config.Title, "title", env("TITLE", "Yellhole"), "the title of the yellhole instance")
+	cmd.StringVar(&config.Description, "description", env("DESCRIPTION", "Obscurantist filth."), "the description of the yellhole instance")
+	cmd.StringVar(&config.Author, "author", env("AUTHOR", "Luther Blissett"), "the author of the yellhole instance")
 	cmd.BoolVar(&config.requestLog, "request_log", true, "enable logging requests to stdout")
-
-	if s, ok := os.LookupEnv("ADDR"); ok {
-		config.Addr = s
-	}
-
-	if s, ok := os.LookupEnv("BASE_URL"); ok {
-		baseURL = s
-	}
-
-	if s, ok := os.LookupEnv("DATA_DIR"); ok {
-		config.DataDir = s
-	}
-
-	if s, ok := os.LookupEnv("TITLE"); ok {
-		config.Title = s
-	}
-
-	if s, ok := os.LookupEnv("DESCRIPTION"); ok {
-		config.Description = s
-	}
-
-	if s, ok := os.LookupEnv("AUTHOR"); ok {
-		config.Author = s
-	}
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
@@ -64,4 +40,12 @@ func parseConfig() (*config, error) {
 		return nil, err
 	}
 	return &config, nil
+}
+
+func env(key, defaultValue string) string {
+	s, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+	return s
 }
