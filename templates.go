@@ -15,17 +15,18 @@ import (
 )
 
 type templateSet struct {
-	config    *config
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*templateSet, error) {
+func newTemplateSet(config *Config, templates fs.FS, assets *assetController) (*templateSet, error) {
 	ts := &templateSet{
-		config:    config,
 		templates: make(map[string]*template.Template),
 	}
 
 	funcs := template.FuncMap{
+		"config": func() *Config {
+			return config
+		},
 		"markdownHTML":   markdownHTML,
 		"markdownText":   markdownText,
 		"markdownImages": markdownImages,
@@ -43,7 +44,7 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 			return buildTag
 		},
 		"url": func(elem ...string) *url.URL {
-			return ts.config.BaseURL.JoinPath(elem...)
+			return config.BaseURL.JoinPath(elem...)
 		},
 	}
 

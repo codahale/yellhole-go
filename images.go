@@ -21,7 +21,6 @@ import (
 )
 
 type imageController struct {
-	config            *config
 	queries           *db.Queries
 	root              *os.Root
 	feedRoot          *os.Root
@@ -31,7 +30,7 @@ type imageController struct {
 	thumbImageHandler http.Handler
 }
 
-func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
+func newImageController(config *Config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
@@ -59,7 +58,7 @@ func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) 
 	feedImageHandler := http.FileServerFS(feedRoot.FS())
 	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
 
-	return &imageController{config, queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
+	return &imageController{queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
 }
 
 func (ic *imageController) feedImage(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type config struct {
+type Config struct {
 	Addr        string
 	BaseURL     *url.URL
 	DataDir     string
@@ -17,8 +17,8 @@ type config struct {
 	requestLog  bool
 }
 
-func parseConfig() (*config, error) {
-	var config config
+func parseConfig() (*Config, error) {
+	var config Config
 
 	var baseURL string
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)

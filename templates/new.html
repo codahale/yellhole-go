@@ -17,7 +17,7 @@
                     Recent Images
                 </summary>
                 <ul role="listbox">
-                    {{range .Images}}
+                    {{range .}}
                     <li>
                         {{$feedImageURL := url "images" "feed" .ImageID}}
                         <a href="#" onclick="insertImage('{{$feedImageURL}}.png')">

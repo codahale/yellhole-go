@@ -15,13 +15,13 @@ import (
 )
 
 type authController struct {
-	config    *config
+	config    *Config
 	queries   *db.Queries
 	webauthn  *webauthn.WebAuthn
 	templates *templateSet
 }
 
-func newAuthController(config *config, queries *db.Queries, templates *templateSet) *authController {
+func newAuthController(config *Config, queries *db.Queries, templates *templateSet) *authController {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPID:          config.BaseURL.Hostname(),
 		RPDisplayName: config.Title,
@@ -54,8 +54,8 @@ func (ac *authController) registerPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with the login page.
-	ac.templates.render(w, "auth/register.html", struct{ Config *config }{ac.config})
+	// Respond with the register page.
+	ac.templates.render(w, "auth/register.html", nil)
 }
 
 func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func (ac *authController) loginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with the login page.
-	ac.templates.render(w, "auth/login.html", struct{ Config *config }{ac.config})
+	ac.templates.render(w, "auth/login.html", nil)
 }
 
 func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {

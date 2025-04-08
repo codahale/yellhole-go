@@ -1,5 +1,5 @@
-{{define "title"}}{{.Config.Title}}{{end}}
-{{define "description"}}{{.Config.Description}}{{end}}
+{{define "title"}}{{config.Title}}{{end}}
+{{define "description"}}{{config.Description}}{{end}}
 
 {{define "head"}}
 <link href='{{url "atom.xml"}}' rel="alternate" title="Atom" type="application/atom+xml" />
@@ -10,12 +10,12 @@
 <meta property="og:url" content='{{url "note" .NoteID}}'>
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="{{$.Config.Title}}">
+<meta property="og:title" content="{{config.Title}}">
 <meta property="og:description" content="{{$desc}}">
 
-<meta property="twitter:domain" content="{{$.Config.BaseURL.Host}}">
+<meta property="twitter:domain" content="{{config.BaseURL.Host}}">
 <meta property="twitter:url" content='{{url "note" .NoteID}}'>
-<meta name="twitter:title" content="{{$.Config.Title}}">
+<meta name="twitter:title" content="{{config.Title}}">
 <meta name="twitter:description" content="{{$desc}}">
 
 {{$images := .Body | markdownImages}}
@@ -87,6 +87,6 @@
 
 {{define "footer"}}
 <p>
-    <small>Copyright &copy; {{currentYear}} {{.Config.Author}}</small>
+    <small>Copyright &copy; {{currentYear}} {{config.Author}}</small>
 </p>
 {{end}}

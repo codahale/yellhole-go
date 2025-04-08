@@ -13,12 +13,12 @@ import (
 )
 
 type feedController struct {
-	config    *config
+	config    *Config
 	queries   *db.Queries
 	templates *templateSet
 }
 
-func newFeedController(config *config, queries *db.Queries, templates *templateSet) *feedController {
+func newFeedController(config *Config, queries *db.Queries, templates *templateSet) *feedController {
 	return &feedController{config, queries, templates}
 }
 
@@ -38,7 +38,7 @@ func (fc *feedController) homePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{fc.config, false, notes, weeks})
+	fc.templates.render(w, "feed.html", feedPage{false, notes, weeks})
 }
 
 func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (fc *feedController) weekPage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{fc.config, false, notes, weeks})
+	fc.templates.render(w, "feed.html", feedPage{false, notes, weeks})
 }
 
 func (fc *feedController) notePage(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func (fc *feedController) notePage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fc.templates.render(w, "feed.html", feedPage{fc.config, true, []db.Note{note}, weeks})
+	fc.templates.render(w, "feed.html", feedPage{true, []db.Note{note}, weeks})
 }
 
 func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,6 @@ func (fc *feedController) atomFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 type feedPage struct {
-	Config *config
 	Single bool
 	Notes  []db.Note
 	Weeks  []db.WeeksWithNotesRow
