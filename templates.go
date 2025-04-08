@@ -48,13 +48,7 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 	}
 
 	if err := fs.WalkDir(templates, "templates", func(p string, d fs.DirEntry, err error) error {
-		// Ignore directories.
-		if d.IsDir() {
-			return nil
-		}
-
-		// Propagate errors.
-		if err != nil {
+		if d.IsDir() || err != nil {
 			return err
 		}
 

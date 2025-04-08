@@ -24,12 +24,8 @@ func newAssetController(root fs.FS, dir string) (*assetController, error) {
 	controller := &assetController{assets, nil, make(map[string]string), http.FileServerFS(assets)}
 
 	if err := fs.WalkDir(assets, ".", func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
+		if d.IsDir() || err != nil {
 			return err
-		}
-
-		if d.IsDir() {
-			return nil
 		}
 
 		b, err := fs.ReadFile(assets, p)
