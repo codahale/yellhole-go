@@ -1,17 +1,10 @@
 package main
 
 import (
-	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	slog.SetDefault(slog.New(slog.DiscardHandler))
-	os.Exit(m.Run())
-}
 
 type testApp struct {
 	app     *app
