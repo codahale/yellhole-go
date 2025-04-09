@@ -7,6 +7,7 @@ import (
 
 	"github.com/valyala/bytebufferpool"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/text"
@@ -77,7 +78,11 @@ func markdownHTML(s string) (template.HTML, error) {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 
-	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer()))
+	md := goldmark.New(goldmark.WithExtensions(
+		extension.GFM,
+		highlighting.NewHighlighting(highlighting.WithStyle("monokai")),
+		extension.NewTypographer()),
+	)
 	if err := md.Convert([]byte(s), b); err != nil {
 		return "", err
 	}
