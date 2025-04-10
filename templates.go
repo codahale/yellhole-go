@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
-	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -43,8 +42,8 @@ func newTemplateSet(config *Config, templates fs.FS, assets *assetController) (*
 		"buildTag": func() string {
 			return buildTag
 		},
-		"url": func(elem ...string) *url.URL {
-			return config.BaseURL.JoinPath(elem...)
+		"url": func(elem ...string) template.URL {
+			return template.URL(config.BaseURL.JoinPath(elem...).String())
 		},
 	}
 
