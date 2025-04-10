@@ -38,10 +38,12 @@
 
 {{define "nav"}}
 <ul>
-    <li>
-        <details role="list">
-            <summary aria-haspopup="listbox" role="link">Archives</summary>
-            <ul role="listbox">
+    <li class="secondary">
+        <details class="dropdown">
+            <summary>
+                Archives
+            </summary>
+            <ul>
                 {{range .Weeks}}
                 <li>
                     <a href='{{url "notes" .StartDate}}'>

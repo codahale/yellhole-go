@@ -3,15 +3,14 @@
 
 {{define "content"}}
 <section>
-    <button id="register" data-passkey-only="true" disabled>
-        Register Passkey
-    </button>
+    <h2>Register</h2>
+    <button id="register" data-passkey-only="true" disabled>Register Passkey</button>
     <p id="message"></p>
 </section>
 {{end}}
 
 {{define "auth-tail"}}
-<script>
+<script type="text/javascript">
     const { startRegistration } = SimpleWebAuthnBrowser;
     const btnRegister = document.getElementById('register');
     const pMessage = document.getElementById('message');

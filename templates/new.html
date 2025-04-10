@@ -12,11 +12,11 @@
                 oninput="updatePost()"></textarea>
             <button id="post" type="submit" name="preview" value="false" disabled>Post</button>
             <button id="preview" type="submit" name="preview" value="true" disabled>Preview</button>
-            <details role="list" id="images">
-                <summary aria-haspopup="listbox" role="button" class="secondary">
+            <details id="images" class="dropdown">
+                <summary role="button" class="secondary">
                     Recent Images
                 </summary>
-                <ul role="listbox">
+                <ul>
                     {{range .}}
                     <li>
                         {{$feedImageURL := url "images" "feed" .ImageID}}
