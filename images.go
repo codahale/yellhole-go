@@ -9,13 +9,14 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/google/uuid"
-	"github.com/nfnt/resize"
+	"golang.org/x/image/draw"
 	_ "golang.org/x/image/webp"
 	"golang.org/x/sync/errgroup"
 )
@@ -159,7 +160,7 @@ func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.
 	return format, nil
 }
 
-func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim uint) error {
+func generateThumbnail(root *os.Root, src image.Image, id uuid.UUID, maxWidth int) error {
 	f, err := root.Create(fmt.Sprintf("%s.png", id))
 	if err != nil {
 		return err
@@ -168,8 +169,17 @@ func generateThumbnail(root *os.Root, img image.Image, id uuid.UUID, maxDim uint
 		_ = f.Close()
 	}()
 
-	thumbnail := resize.Thumbnail(maxDim, maxDim, img, resize.Lanczos2)
-	if err := png.Encode(f, thumbnail); err != nil {
+	dst := src
+	if src.Bounds().Max.X > maxWidth {
+		ratio := (float64)(src.Bounds().Max.Y) / (float64)(src.Bounds().Max.X)
+		height := int(math.Round(float64(maxWidth) * ratio))
+
+		thumbnail := image.NewRGBA(image.Rect(0, 0, maxWidth, height))
+		draw.CatmullRom.Scale(thumbnail, thumbnail.Rect, src, src.Bounds(), draw.Over, nil)
+		dst = thumbnail
+	}
+
+	if err := png.Encode(f, dst); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", id, err)
 	}
 
