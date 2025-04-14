@@ -3,7 +3,7 @@ module github.com/codahale/yellhole-go
 go 1.24.1
 
 require (
-	github.com/go-webauthn/webauthn v0.12.2
+	github.com/go-webauthn/webauthn v0.12.3
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
@@ -27,9 +27,9 @@ require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.2 // indirect
-	github.com/go-webauthn/x v0.1.19 // indirect
+	github.com/go-webauthn/x v0.1.20 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/cel-go v0.24.1 // indirect
 	github.com/google/go-tpm v0.9.3 // indirect
