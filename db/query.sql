@@ -66,9 +66,15 @@ limit
 
 -- name: CreateImage :exec
 insert into
-    image (image_id, filename, format, created_at)
+    image (
+        image_id,
+        filename,
+        original_filename,
+        format,
+        created_at
+    )
 values
-    (?, ?, ?, ?);
+    (?, ?, ?, ?, ?);
 
 -- name: CreateSession :exec
 insert into

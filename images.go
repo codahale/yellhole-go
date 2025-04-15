@@ -82,12 +82,12 @@ func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request)
 
 	id := uuid.New()
 
-	format, err := ic.processImage(r.Context(), id, resp.Body)
+	filename, format, err := ic.processImage(r.Context(), id, resp.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := ic.queries.CreateImage(r.Context(), id.String(), url, format, time.Now()); err != nil {
+	if err := ic.queries.CreateImage(r.Context(), id.String(), filename, url, format, time.Now()); err != nil {
 		panic(err)
 	}
 
@@ -105,24 +105,24 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 
 	id := uuid.New()
 
-	format, err := ic.processImage(r.Context(), id, f)
+	filename, format, err := ic.processImage(r.Context(), id, f)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := ic.queries.CreateImage(r.Context(), id.String(), h.Filename, format, time.Now()); err != nil {
+	if err := ic.queries.CreateImage(r.Context(), id.String(), filename, h.Filename, format, time.Now()); err != nil {
 		panic(err)
 	}
 
 	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
-func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.Reader) (string, error) {
+func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.Reader) (string, string, error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
 	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Reassemble the image reader using the buffer.
@@ -131,37 +131,40 @@ func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.
 	// Copy the original image data to disk.
 	orig, err := ic.origRoot.Create(fmt.Sprintf("%s.%s", id, format))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer func() {
 		_ = orig.Close()
 	}()
 	r = io.TeeReader(r, orig)
 
+	// Assign a filename.
+	filename := id.String() + ".png"
+
 	// Fully decode the image.
 	origImg, _, err := image.Decode(r)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return generateThumbnail(ic.feedRoot, origImg, id, 600)
+		return generateThumbnail(ic.feedRoot, origImg, filename, 600)
 	})
 	eg.Go(func() error {
-		return generateThumbnail(ic.thumbRoot, origImg, id, 100)
+		return generateThumbnail(ic.thumbRoot, origImg, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	// Return the image format.
-	return format, nil
+	// Return the image filename and format.
+	return filename, format, nil
 }
 
-func generateThumbnail(root *os.Root, src image.Image, id uuid.UUID, maxWidth int) error {
-	f, err := root.Create(fmt.Sprintf("%s.png", id))
+func generateThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
+	f, err := root.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -180,7 +183,7 @@ func generateThumbnail(root *os.Root, src image.Image, id uuid.UUID, maxWidth in
 	}
 
 	if err := png.Encode(f, dst); err != nil {
-		return fmt.Errorf("error encoding image %s: %w", id, err)
+		return fmt.Errorf("error encoding image %s: %w", filename, err)
 	}
 
 	return nil

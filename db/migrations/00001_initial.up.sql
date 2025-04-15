@@ -11,6 +11,7 @@ create table
     image (
         image_id text primary key not null,
         filename text not null,
+        original_filename text not null,
         format text not null,
         created_at datetime not null
     );

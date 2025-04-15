@@ -13,15 +13,22 @@ import (
 
 const createImage = `-- name: CreateImage :exec
 insert into
-    image (image_id, filename, format, created_at)
+    image (
+        image_id,
+        filename,
+        original_filename,
+        format,
+        created_at
+    )
 values
-    (?, ?, ?, ?)
+    (?, ?, ?, ?, ?)
 `
 
-func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, format string, createdAt time.Time) error {
+func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, originalFilename string, format string, createdAt time.Time) error {
 	_, err := q.db.ExecContext(ctx, createImage,
 		imageID,
 		filename,
+		originalFilename,
 		format,
 		createdAt,
 	)
@@ -181,7 +188,7 @@ func (q *Queries) PurgeWebauthnSessions(ctx context.Context, createdAt time.Time
 
 const recentImages = `-- name: RecentImages :many
 select
-    image_id, filename, format, created_at
+    image_id, filename, original_filename, format, created_at
 from
     image
 order by
@@ -202,6 +209,7 @@ func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]Image, error
 		if err := rows.Scan(
 			&i.ImageID,
 			&i.Filename,
+			&i.OriginalFilename,
 			&i.Format,
 			&i.CreatedAt,
 		); err != nil {

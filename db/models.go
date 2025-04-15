@@ -9,10 +9,11 @@ import (
 )
 
 type Image struct {
-	ImageID   string
-	Filename  string
-	Format    string
-	CreatedAt time.Time
+	ImageID          string
+	Filename         string
+	OriginalFilename string
+	Format           string
+	CreatedAt        time.Time
 }
 
 type Note struct {

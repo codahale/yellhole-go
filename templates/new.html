@@ -19,9 +19,9 @@
                 <ul>
                     {{range .}}
                     <li>
-                        {{$feedImageURL := url "images" "feed" .ImageID}}
-                        <a href="#" onclick="insertImage('{{$feedImageURL}}.png')">
-                            <img src='{{url "images" "thumb" .ImageID}}.png' title="{{.Filename}} / {{.Format}}">
+                        {{$feedImageURL := url "images" "feed" .Filename}}
+                        <a href="#" onclick="insertImage('{{$feedImageURL}}')">
+                            <img src='{{url "images" "thumb" .Filename}}' title="{{.OriginalFilename}} / {{.Format}}">
                         </a>
                     </li>
                     {{end}}
