@@ -5,7 +5,8 @@ import (
 	"context"
 	"fmt"
 	"image"
-	_ "image/gif"
+	"image/color"
+	"image/gif"
 	_ "image/jpeg"
 	"image/png"
 	"io"
@@ -82,7 +83,7 @@ func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request)
 
 	id := uuid.New()
 
-	filename, format, err := ic.processImage(r.Context(), id, resp.Body)
+	filename, format, err := ic.processStream(r.Context(), id, resp.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +106,7 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 
 	id := uuid.New()
 
-	filename, format, err := ic.processImage(r.Context(), id, f)
+	filename, format, err := ic.processStream(r.Context(), id, f)
 	if err != nil {
 		panic(err)
 	}
@@ -117,7 +118,7 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "..", http.StatusSeeOther)
 }
 
-func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.Reader) (string, string, error) {
+func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (string, string, error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
 	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
@@ -128,7 +129,7 @@ func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.
 	// Reassemble the image reader using the buffer.
 	r = io.MultiReader(bytes.NewReader(buf.Bytes()), r)
 
-	// Copy the original image data to disk.
+	// Copy the original image data to disk as it's decoded.
 	orig, err := ic.origRoot.Create(fmt.Sprintf("%s.%s", id, format))
 	if err != nil {
 		return "", "", err
@@ -138,8 +139,11 @@ func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.
 	}()
 	r = io.TeeReader(r, orig)
 
-	// Assign a filename.
-	filename := id.String() + ".png"
+	// If the image is a GIF, decode it as such. Animated GIFs need to be special-cased.
+	if format == "gif" {
+		filename, err := ic.processGIF(ctx, id, r)
+		return filename, format, err
+	}
 
 	// Fully decode the image.
 	origImg, _, err := image.Decode(r)
@@ -147,23 +151,60 @@ func (ic *imageController) processImage(ctx context.Context, id uuid.UUID, r io.
 		return "", "", err
 	}
 
+	// Generate thumbnails.
+	filename, err := ic.processPNG(ctx, id, origImg)
+	return filename, format, err
+}
+
+func (ic *imageController) processGIF(ctx context.Context, id uuid.UUID, r io.Reader) (string, error) {
+	// Decode all frames.
+	img, err := gif.DecodeAll(r)
+	if err != nil {
+		return "", err
+	}
+
+	// If there's only one frame, treat it as a static image.
+	if len(img.Image) == 1 {
+		return ic.processPNG(ctx, id, img.Image[0])
+	}
+
+	// Otherwise, resize all frames and keep it as a GIF.
+	filename := id.String() + ".gif"
+
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return generateThumbnail(ic.feedRoot, origImg, filename, 600)
+		return generateGIFThumbnail(ic.feedRoot, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return generateThumbnail(ic.thumbRoot, origImg, filename, 100)
+		return generateGIFThumbnail(ic.thumbRoot, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	// Return the image filename and format.
-	return filename, format, nil
+	return filename, nil
 }
 
-func generateThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
+func (ic *imageController) processPNG(ctx context.Context, id uuid.UUID, img image.Image) (string, error) {
+	filename := id.String() + ".png"
+
+	// Generate thumbnails in parallel.
+	eg, _ := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		return generatePNGThumbnail(ic.feedRoot, img, filename, 600)
+	})
+	eg.Go(func() error {
+		return generatePNGThumbnail(ic.thumbRoot, img, filename, 100)
+	})
+	if err := eg.Wait(); err != nil {
+		return "", err
+	}
+
+	return filename, nil
+}
+
+func generatePNGThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
 		return err
@@ -172,19 +213,80 @@ func generateThumbnail(root *os.Root, src image.Image, filename string, maxWidth
 		_ = f.Close()
 	}()
 
-	dst := src
-	if src.Bounds().Max.X > maxWidth {
-		ratio := (float64)(src.Bounds().Max.Y) / (float64)(src.Bounds().Max.X)
-		height := int(math.Round(float64(maxWidth) * ratio))
+	thumbnail := resize(src, maxWidth)
 
-		thumbnail := image.NewRGBA(image.Rect(0, 0, maxWidth, height))
-		draw.CatmullRom.Scale(thumbnail, thumbnail.Rect, src, src.Bounds(), draw.Over, nil)
-		dst = thumbnail
-	}
-
-	if err := png.Encode(f, dst); err != nil {
+	if err := png.Encode(f, thumbnail); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", filename, err)
 	}
 
 	return nil
+}
+
+func generateGIFThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidth int) error {
+	f, err := root.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	// Copy the image metadata.
+	thumbnail := *src
+	thumbnail.Image = make([]*image.Paletted, len(src.Image))
+
+	// Create a new RGBA image to hold the incremental frames.
+	firstFrame := src.Image[0].Bounds()
+	b := image.Rect(0, 0, firstFrame.Dx(), firstFrame.Dy())
+	img := image.NewRGBA(b)
+
+	// Resize each frame.
+	for i := range src.Image {
+		frame := src.Image[i]
+		bounds := frame.Bounds()
+		previous := img
+		draw.Draw(img, bounds, frame, bounds.Min, draw.Over)
+		thumbnail.Image[i] = imageToPaletted(resize(img, maxWidth), frame.Palette)
+
+		switch src.Disposal[i] {
+		case gif.DisposalBackground:
+			// I'm just assuming that the gif package will apply the appropriate
+			// background here, since there doesn't seem to be an easy way to
+			// access the global color table.
+			img = image.NewRGBA(b)
+		case gif.DisposalPrevious:
+			img = previous
+		}
+	}
+
+	// Set image.Config to new height and width.
+	thumbnail.Config.Width = thumbnail.Image[0].Bounds().Max.X
+	thumbnail.Config.Height = thumbnail.Image[0].Bounds().Max.Y
+
+	if err := gif.EncodeAll(f, &thumbnail); err != nil {
+		return fmt.Errorf("error encoding image %s: %w", filename, err)
+	}
+
+	return nil
+
+}
+
+func imageToPaletted(img image.Image, p color.Palette) *image.Paletted {
+	b := img.Bounds()
+	pm := image.NewPaletted(b, p)
+	draw.FloydSteinberg.Draw(pm, b, img, image.Point{})
+	return pm
+}
+
+func resize(img image.Image, maxWidth int) image.Image {
+	if img.Bounds().Max.X <= maxWidth {
+		return img
+	}
+
+	ratio := (float64)(img.Bounds().Max.Y) / (float64)(img.Bounds().Max.X)
+	height := int(math.Round(float64(maxWidth) * ratio))
+
+	thumbnail := image.NewRGBA(image.Rect(0, 0, maxWidth, height))
+	draw.CatmullRom.Scale(thumbnail, thumbnail.Rect, img, img.Bounds(), draw.Over, nil)
+	return thumbnail
 }
