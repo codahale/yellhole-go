@@ -8,17 +8,17 @@ import (
 	"image/color"
 	"image/gif"
 	_ "image/jpeg"
-	"image/png"
+	_ "image/png"
 	"io"
 	"math"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/HugoSmits86/nativewebp"
 	"github.com/codahale/yellhole-go/db"
 	"github.com/google/uuid"
 	"golang.org/x/image/draw"
-	_ "golang.org/x/image/webp"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -152,7 +152,7 @@ func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io
 	}
 
 	// Generate thumbnails.
-	filename, err := ic.processPNG(ctx, id, origImg)
+	filename, err := ic.processWEBP(ctx, id, origImg)
 	return filename, format, err
 }
 
@@ -165,7 +165,7 @@ func (ic *imageController) processGIF(ctx context.Context, id uuid.UUID, r io.Re
 
 	// If there's only one frame, treat it as a static image.
 	if len(img.Image) == 1 {
-		return ic.processPNG(ctx, id, img.Image[0])
+		return ic.processWEBP(ctx, id, img.Image[0])
 	}
 
 	// Otherwise, resize all frames and keep it as a GIF.
@@ -186,16 +186,16 @@ func (ic *imageController) processGIF(ctx context.Context, id uuid.UUID, r io.Re
 	return filename, nil
 }
 
-func (ic *imageController) processPNG(ctx context.Context, id uuid.UUID, img image.Image) (string, error) {
-	filename := id.String() + ".png"
+func (ic *imageController) processWEBP(ctx context.Context, id uuid.UUID, img image.Image) (string, error) {
+	filename := id.String() + ".webp"
 
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return generatePNGThumbnail(ic.feedRoot, img, filename, 600)
+		return generateWEBPThumbnail(ic.feedRoot, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return generatePNGThumbnail(ic.thumbRoot, img, filename, 100)
+		return generateWEBPThumbnail(ic.thumbRoot, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
 		return "", err
@@ -204,7 +204,7 @@ func (ic *imageController) processPNG(ctx context.Context, id uuid.UUID, img ima
 	return filename, nil
 }
 
-func generatePNGThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
+func generateWEBPThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
 		return err
@@ -215,7 +215,7 @@ func generatePNGThumbnail(root *os.Root, src image.Image, filename string, maxWi
 
 	thumbnail := resize(src, maxWidth)
 
-	if err := png.Encode(f, thumbnail); err != nil {
+	if err := nativewebp.Encode(f, thumbnail, nil); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", filename, err)
 	}
 
