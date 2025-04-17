@@ -13,6 +13,8 @@ import (
 )
 
 func TestFeedsHomePageEmpty(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/", nil)
@@ -27,6 +29,8 @@ func TestFeedsHomePageEmpty(t *testing.T) {
 }
 
 func TestFeedsHomePageNote(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now()); err != nil {
@@ -50,6 +54,8 @@ func TestFeedsHomePageNote(t *testing.T) {
 }
 
 func TestFeedsWeeksPage(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "This one's in March.",
@@ -84,6 +90,8 @@ func TestFeedsWeeksPage(t *testing.T) {
 }
 
 func TestFeedsWeeksPage404(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
@@ -98,6 +106,8 @@ func TestFeedsWeeksPage404(t *testing.T) {
 }
 
 func TestFeedsNotePage(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	noteID := uuid.NewString()
@@ -122,6 +132,8 @@ func TestFeedsNotePage(t *testing.T) {
 }
 
 func TestFeedsNotePage404(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	noteID := uuid.NewString()
@@ -138,6 +150,8 @@ func TestFeedsNotePage404(t *testing.T) {
 }
 
 func TestFeedsAtomFeed(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	if err := app.app.queries.CreateNote(t.Context(), uuid.NewString(), "It's a *test*.", time.Now()); err != nil {

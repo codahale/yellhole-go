@@ -8,6 +8,8 @@ import (
 )
 
 func TestMarkdownHTML(t *testing.T) {
+	t.Parallel()
+
 	html, err := markdownHTML("It's ~~not~~ _electric_!")
 	if err != nil {
 		t.Fatal(err)
@@ -19,6 +21,8 @@ func TestMarkdownHTML(t *testing.T) {
 }
 
 func TestMarkdownText(t *testing.T) {
+	t.Parallel()
+
 	text, err := markdownText("It's _electric_!\n\nBoogie woogie woogie.")
 	if err != nil {
 		t.Fatal(err)
@@ -30,6 +34,8 @@ func TestMarkdownText(t *testing.T) {
 }
 
 func TestMarkdownImages(t *testing.T) {
+	t.Parallel()
+
 	a, _ := url.Parse("/doink.png")
 	b, _ := url.Parse("http://example.com/cool.bmp")
 

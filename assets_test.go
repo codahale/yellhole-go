@@ -8,6 +8,8 @@ import (
 )
 
 func TestAssetsPublic(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	req := httptest.NewRequest("GET", "http://example.com/favicon.ico", nil)

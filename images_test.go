@@ -10,6 +10,8 @@ import (
 )
 
 func TestServeFeedImage(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	imageFilename := "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"
@@ -35,6 +37,8 @@ func TestServeFeedImage(t *testing.T) {
 }
 
 func TestServeThumbImage(t *testing.T) {
+	t.Parallel()
+
 	app := newTestApp(t)
 
 	imageFilename := "b5621adf-c26c-4a3d-9793-5bb492afdab6.png"
