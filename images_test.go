@@ -26,11 +26,11 @@ func TestServeFeedImage(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 
 	if got, want := resp.StatusCode, http.StatusOK; got != want {
-		t.Errorf("status=%d, want=%d", got, want)
+		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
 	if got, want := string(body), "feed"; got != want {
-		t.Errorf("status=%q, want=%q", got, want)
+		t.Errorf("body = %q, want = %q", got, want)
 	}
 }
 
@@ -51,10 +51,10 @@ func TestServeThumbImage(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 
 	if got, want := resp.StatusCode, http.StatusOK; got != want {
-		t.Errorf("status=%d, want=%d", got, want)
+		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
 	if got, want := string(body), "thumb"; got != want {
-		t.Errorf("status=%q, want=%q", got, want)
+		t.Errorf("body = %q, want = %q", got, want)
 	}
 }

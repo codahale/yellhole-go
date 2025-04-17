@@ -17,11 +17,11 @@ func TestAssetsPublic(t *testing.T) {
 	resp := w.Result()
 	body, _ := io.ReadAll(resp.Body)
 
-	if got, want := http.StatusOK, resp.StatusCode; got != want {
-		t.Errorf("status=%d, want=%d", got, want)
+	if got, want := resp.StatusCode, http.StatusOK; got != want {
+		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
 	if got, want := len(body), 15406; got != want {
-		t.Errorf("body length=%d, want=%d", got, want)
+		t.Errorf("len(body) = %d, want = %d", got, want)
 	}
 }
