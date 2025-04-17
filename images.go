@@ -23,6 +23,7 @@ import (
 )
 
 type imageController struct {
+	config            *Config
 	queries           *db.Queries
 	root              *os.Root
 	feedRoot          *os.Root
@@ -60,7 +61,7 @@ func newImageController(config *Config, dataRoot *os.Root, queries *db.Queries) 
 	feedImageHandler := http.FileServerFS(feedRoot.FS())
 	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
 
-	return &imageController{queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
+	return &imageController{config, queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
 }
 
 func (ic *imageController) feedImage(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +93,7 @@ func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
-	http.Redirect(w, r, "..", http.StatusSeeOther)
+	http.Redirect(w, r, ic.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 }
 
 func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +116,7 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	http.Redirect(w, r, "..", http.StatusSeeOther)
+	http.Redirect(w, r, ic.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 }
 
 func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (string, string, error) {
