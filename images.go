@@ -10,6 +10,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log/slog"
 	"math"
 	"net/http"
 	"os"
@@ -81,6 +82,12 @@ func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request)
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
+	if resp.StatusCode != http.StatusOK {
+		slog.Error("unable to download image", "url", url, "statusCode", resp.StatusCode)
+		http.Error(w, "unable to download image", http.StatusInternalServerError)
+		return
+	}
 
 	id := uuid.New()
 
