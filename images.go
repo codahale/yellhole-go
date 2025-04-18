@@ -75,7 +75,13 @@ func (ic *imageController) thumbImage(w http.ResponseWriter, r *http.Request) {
 
 func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request) {
 	url := r.FormValue("url")
-	resp, err := http.Get(url)
+
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
