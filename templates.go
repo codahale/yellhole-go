@@ -62,7 +62,7 @@ func newTemplateSet(config *Config, templates fs.FS, assets *assetController) (*
 		parsePath = append(parsePath, "templates/base.html")
 
 		// Parse the template in its inheritance path.
-		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templatesDir, parsePath...)
+		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templates, parsePath...)
 		if err != nil {
 			return err
 		}
