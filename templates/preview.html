@@ -4,7 +4,9 @@
         {{. | markdownHTML}}
     </div>
     <footer>
-        <a href="#">etc</a>
+        <a href="#">
+            <time datetime="{{now.UTC}}">{{now.Local}}</time>
+        </a>
     </footer>
 </article>
 {{end}}

@@ -23,15 +23,12 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 	}
 
 	funcs := template.FuncMap{
-		"buildTag": func() string {
-			return buildTag
-		},
 		"assetHash": assets.assetHash,
 		"author": func() string {
 			return config.Author
 		},
-		"currentYear": func() int {
-			return time.Now().Local().Year()
+		"buildTag": func() string {
+			return buildTag
 		},
 		"description": func() string {
 			return config.Description
@@ -39,14 +36,11 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 		"host": func() string {
 			return config.BaseURL.Host
 		},
-		"localTime": func(t time.Time) string {
-			return t.Local().String()
-		},
 		"markdownHTML":   markdownHTML,
 		"markdownText":   markdownText,
 		"markdownImages": markdownImages,
-		"rfc3339": func(t time.Time) string {
-			return t.UTC().Format(time.RFC3339)
+		"now": func() time.Time {
+			return time.Now()
 		},
 		"title": func() string {
 			return config.Title

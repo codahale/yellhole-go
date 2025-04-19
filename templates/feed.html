@@ -74,9 +74,7 @@
     </div>
     <footer>
         <a href='{{url "note" .NoteID}}'>
-            <time datetime="{{.CreatedAt | rfc3339}}">
-                {{.CreatedAt | localTime}}
-            </time>
+            <time datetime="{{.CreatedAt.UTC}}">{{.CreatedAt.Local}}</time>
         </a>
     </footer>
 </article>
@@ -89,6 +87,6 @@
 
 {{define "footer"}}
 <p>
-    <small>Copyright &copy; {{currentYear}} {{author}}</small>
+    <small>Copyright &copy; {{now.Local.Year}} {{author}}</small>
 </p>
 {{end}}
