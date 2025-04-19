@@ -11,12 +11,12 @@ import (
 )
 
 type adminController struct {
-	config    *Config
+	config    *config
 	queries   *db.Queries
 	templates *templateSet
 }
 
-func newAdminController(config *Config, queries *db.Queries, templates *templateSet) *adminController {
+func newAdminController(config *config, queries *db.Queries, templates *templateSet) *adminController {
 	return &adminController{config, queries, templates}
 }
 

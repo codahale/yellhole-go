@@ -15,13 +15,13 @@ import (
 )
 
 type authController struct {
-	config    *Config
+	config    *config
 	queries   *db.Queries
 	webauthn  *webauthn.WebAuthn
 	templates *templateSet
 }
 
-func newAuthController(config *Config, queries *db.Queries, templates *templateSet) *authController {
+func newAuthController(config *config, queries *db.Queries, templates *templateSet) *authController {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPID:          config.BaseURL.Hostname(),
 		RPDisplayName: config.Title,

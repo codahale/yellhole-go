@@ -17,30 +17,39 @@ type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *Config, templates fs.FS, assets *assetController) (*templateSet, error) {
+func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*templateSet, error) {
 	ts := &templateSet{
 		templates: make(map[string]*template.Template),
 	}
 
 	funcs := template.FuncMap{
-		"config": func() *Config {
-			return config
+		"buildTag": func() string {
+			return buildTag
 		},
-		"markdownHTML":   markdownHTML,
-		"markdownText":   markdownText,
-		"markdownImages": markdownImages,
+		"assetHash": assets.assetHash,
+		"author": func() string {
+			return config.Author
+		},
 		"currentYear": func() int {
 			return time.Now().Local().Year()
 		},
-		"rfc3339": func(t time.Time) string {
-			return t.UTC().Format(time.RFC3339)
+		"description": func() string {
+			return config.Description
+		},
+		"host": func() string {
+			return config.BaseURL.Host
 		},
 		"localTime": func(t time.Time) string {
 			return t.Local().String()
 		},
-		"assetHash": assets.assetHash,
-		"buildTag": func() string {
-			return buildTag
+		"markdownHTML":   markdownHTML,
+		"markdownText":   markdownText,
+		"markdownImages": markdownImages,
+		"rfc3339": func(t time.Time) string {
+			return t.UTC().Format(time.RFC3339)
+		},
+		"title": func() string {
+			return config.Title
 		},
 		"url": func(elem ...string) template.URL {
 			return template.URL(config.BaseURL.JoinPath(elem...).String())

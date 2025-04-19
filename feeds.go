@@ -13,12 +13,12 @@ import (
 )
 
 type feedController struct {
-	config    *Config
+	config    *config
 	queries   *db.Queries
 	templates *templateSet
 }
 
-func newFeedController(config *Config, queries *db.Queries, templates *templateSet) *feedController {
+func newFeedController(config *config, queries *db.Queries, templates *templateSet) *feedController {
 	return &feedController{config, queries, templates}
 }
 

@@ -31,7 +31,7 @@ type app struct {
 	http.Handler
 }
 
-func newApp(config *Config) (*app, error) {
+func newApp(config *config) (*app, error) {
 	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.

@@ -21,7 +21,7 @@ func newTestApp(t *testing.T) *testApp {
 	}
 
 	tempDir := t.TempDir()
-	config := &Config{
+	config := &config{
 		Addr:        "localhost:8080",
 		BaseURL:     baseURL,
 		DataDir:     tempDir,

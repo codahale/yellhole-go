@@ -24,7 +24,7 @@ import (
 )
 
 type imageController struct {
-	config            *Config
+	config            *config
 	queries           *db.Queries
 	root              *os.Root
 	feedRoot          *os.Root
@@ -34,7 +34,7 @@ type imageController struct {
 	thumbImageHandler http.Handler
 }
 
-func newImageController(config *Config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
+func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
