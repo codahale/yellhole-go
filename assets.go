@@ -15,12 +15,7 @@ type assetController struct {
 	http.Handler
 }
 
-func newAssetController(root fs.FS, dir string) (*assetController, error) {
-	assets, err := fs.Sub(root, dir)
-	if err != nil {
-		return nil, err
-	}
-
+func newAssetController(assets fs.FS) (*assetController, error) {
 	controller := &assetController{assets, nil, make(map[string]string), http.FileServerFS(assets)}
 
 	if err := fs.WalkDir(assets, ".", func(p string, d fs.DirEntry, err error) error {

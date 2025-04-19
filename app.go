@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"embed"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -56,7 +57,12 @@ func newApp(config *Config) (*app, error) {
 	}
 
 	// Load the embedded public assets and create an asset controller.
-	assets, err := newAssetController(publicDir, "public")
+	assetsDir, err := fs.Sub(publicDir, "public")
+	if err != nil {
+		return nil, err
+	}
+
+	assets, err := newAssetController(assetsDir)
 	if err != nil {
 		return nil, err
 	}
