@@ -12,8 +12,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
-func RunMigrations(db *sql.DB, migrations fs.FS, path string) error {
-	source, err := iofs.New(migrations, path)
+func RunMigrations(db *sql.DB, migrationsFS fs.FS, path string) error {
+	source, err := iofs.New(migrationsFS, path)
 	if err != nil {
 		return err
 	}

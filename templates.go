@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"net/http"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/valyala/bytebufferpool"
@@ -17,7 +16,7 @@ type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*templateSet, error) {
+func newTemplateSet(config *config, templatesDir fs.FS, assets *assetController) (*templateSet, error) {
 	ts := &templateSet{
 		templates: make(map[string]*template.Template),
 	}
@@ -50,7 +49,7 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 		},
 	}
 
-	if err := fs.WalkDir(templates, "templates", func(p string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(templatesDir, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
@@ -59,19 +58,19 @@ func newTemplateSet(config *config, templates fs.FS, assets *assetController) (*
 		//
 		//   templates/a/b/c.html templates/a/b.html templates/a.html templates/base.html
 		parsePath := []string{p}
-		for dir := path.Dir(p); dir != "templates"; dir = path.Dir(dir) {
+		for dir := path.Dir(p); dir != "."; dir = path.Dir(dir) {
 			parsePath = append(parsePath, dir+".html")
 		}
-		parsePath = append(parsePath, "templates/base.html")
+		parsePath = append(parsePath, "base.html")
 
 		// Parse the template in its inheritance path.
-		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templates, parsePath...)
+		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templatesDir, parsePath...)
 		if err != nil {
 			return err
 		}
 
 		// Add the template using its relative path in the templates directory (e.g. "a/b/c.html").
-		ts.templates[strings.TrimPrefix(p, "templates/")] = t
+		ts.templates[p] = t
 
 		return nil
 	}); err != nil {

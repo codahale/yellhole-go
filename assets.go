@@ -15,15 +15,15 @@ type assetController struct {
 	http.Handler
 }
 
-func newAssetController(assets fs.FS) (*assetController, error) {
-	controller := &assetController{assets, nil, make(map[string]string), http.FileServerFS(assets)}
+func newAssetController(assetsDir fs.FS) (*assetController, error) {
+	controller := &assetController{assetsDir, nil, make(map[string]string), http.FileServerFS(assetsDir)}
 
-	if err := fs.WalkDir(assets, ".", func(p string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(assetsDir, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
 
-		b, err := fs.ReadFile(assets, p)
+		b, err := fs.ReadFile(assetsDir, p)
 		if err != nil {
 			return err
 		}

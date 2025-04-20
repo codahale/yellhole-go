@@ -16,12 +16,12 @@ import (
 )
 
 var (
-	//go:embed public
-	publicDir embed.FS
+	//go:embed assets
+	assetsFS embed.FS
 	//go:embed templates
-	templatesDir embed.FS
+	templatesFS embed.FS
 	//go:embed db/migrations/*.sql
-	migrationsDir embed.FS
+	migrationsFS embed.FS
 )
 
 type app struct {
@@ -42,7 +42,7 @@ func newApp(config *config) (*app, error) {
 	queries := db.New(conn)
 
 	// Run migrations, if any,.
-	if err := db.RunMigrations(conn, migrationsDir, "db/migrations"); err != nil {
+	if err := db.RunMigrations(conn, migrationsFS, "db/migrations"); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func newApp(config *config) (*app, error) {
 	}
 
 	// Load the embedded public assets and create an asset controller.
-	assetsDir, err := fs.Sub(publicDir, "public")
+	assetsDir, err := fs.Sub(assetsFS, "assets")
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,12 @@ func newApp(config *config) (*app, error) {
 		return nil, err
 	}
 
-	// Create a new template set.
+	// Load the embedded templates and create a new template set.
+	templatesDir, err := fs.Sub(templatesFS, "templates")
+	if err != nil {
+		return nil, err
+	}
+
 	templates, err := newTemplateSet(config, templatesDir, assets)
 	if err != nil {
 		return nil, err
