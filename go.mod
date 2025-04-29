@@ -11,7 +11,7 @@ require (
 	github.com/ory/graceful v0.1.3
 	github.com/samber/slog-http v1.6.0
 	github.com/valyala/bytebufferpool v1.0.0
-	github.com/yuin/goldmark v1.7.8
+	github.com/yuin/goldmark v1.7.11
 	golang.org/x/image v0.26.0
 	golang.org/x/sync v0.13.0
 	modernc.org/libc v1.62.1
