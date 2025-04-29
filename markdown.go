@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	_ "github.com/alecthomas/chroma/v2"
 	"github.com/valyala/bytebufferpool"
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"

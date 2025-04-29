@@ -3,6 +3,7 @@ module github.com/codahale/yellhole-go
 go 1.24.1
 
 require (
+	github.com/alecthomas/chroma/v2 v2.16.0
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/go-webauthn/webauthn v0.12.3
 	github.com/golang-migrate/migrate/v4 v4.18.3
@@ -21,7 +22,6 @@ require (
 require (
 	cel.dev/expr v0.23.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.16.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cubicdaiya/gonp v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
