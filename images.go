@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/color"
 	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -268,7 +267,7 @@ func generateAnimThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidt
 		bounds := frame.Bounds()
 		previous := img
 		draw.Draw(img, bounds, frame, bounds.Min, draw.Over)
-		thumbnail.Images[i] = imageToPaletted(resize(img, maxWidth), frame.Palette)
+		thumbnail.Images[i] = resize(img, maxWidth)
 
 		switch src.Disposal[i] {
 		case gif.DisposalBackground:
@@ -285,13 +284,6 @@ func generateAnimThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidt
 
 	return nil
 
-}
-
-func imageToPaletted(img image.Image, p color.Palette) *image.Paletted {
-	b := img.Bounds()
-	pm := image.NewPaletted(b, p)
-	draw.FloydSteinberg.Draw(pm, b, img, image.Point{})
-	return pm
 }
 
 func resize(img image.Image, maxWidth int) image.Image {
