@@ -132,10 +132,10 @@ func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, ic.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
 }
 
-func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (string, string, error) {
+func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (filename string, format string, err error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
-	_, format, err := image.DecodeConfig(io.TeeReader(r, buf))
+	_, format, err = image.DecodeConfig(io.TeeReader(r, buf))
 	if err != nil {
 		return "", "", err
 	}
@@ -153,10 +153,12 @@ func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io
 	}()
 	r = io.TeeReader(r, orig)
 
+	filename = id.String() + ".webp"
+
 	// If the image is a GIF, decode it as such. Animated GIFs need to be special-cased.
 	if format == "gif" {
-		filename, err := ic.processGIF(ctx, id, r)
-		return filename, format, err
+		err = ic.processAnim(ctx, r, filename)
+		return
 	}
 
 	// Fully decode the image.
@@ -166,59 +168,50 @@ func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io
 	}
 
 	// Generate thumbnails.
-	filename, err := ic.processWEBP(ctx, id, origImg)
-	return filename, format, err
+	err = ic.processStatic(ctx, origImg, filename)
+	return
 }
 
-func (ic *imageController) processGIF(ctx context.Context, id uuid.UUID, r io.Reader) (string, error) {
+func (ic *imageController) processAnim(ctx context.Context, r io.Reader, filename string) error {
 	// Decode all frames.
 	img, err := gif.DecodeAll(r)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// If there's only one frame, treat it as a static image.
 	if len(img.Image) == 1 {
-		return ic.processWEBP(ctx, id, img.Image[0])
+		return ic.processStatic(ctx, img.Image[0], filename)
 	}
-
-	// Otherwise, resize all frames and keep it as a GIF.
-	filename := id.String() + ".gif"
 
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return generateGIFThumbnail(ic.feedRoot, img, filename, 600)
+		return generateAnimThumbnail(ic.feedRoot, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return generateGIFThumbnail(ic.thumbRoot, img, filename, 100)
+		return generateAnimThumbnail(ic.thumbRoot, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
-		return "", err
+		return err
 	}
 
-	return filename, nil
+	return nil
 }
 
-func (ic *imageController) processWEBP(ctx context.Context, id uuid.UUID, img image.Image) (string, error) {
-	filename := id.String() + ".webp"
-
+func (ic *imageController) processStatic(ctx context.Context, img image.Image, filename string) error {
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return generateWEBPThumbnail(ic.feedRoot, img, filename, 600)
+		return generateStaticThumbnail(ic.feedRoot, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return generateWEBPThumbnail(ic.thumbRoot, img, filename, 100)
+		return generateStaticThumbnail(ic.thumbRoot, img, filename, 100)
 	})
-	if err := eg.Wait(); err != nil {
-		return "", err
-	}
-
-	return filename, nil
+	return eg.Wait()
 }
 
-func generateWEBPThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
+func generateStaticThumbnail(root *os.Root, src image.Image, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
 		return err
@@ -236,7 +229,7 @@ func generateWEBPThumbnail(root *os.Root, src image.Image, filename string, maxW
 	return nil
 }
 
-func generateGIFThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidth int) error {
+func generateAnimThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
 		return err
@@ -245,9 +238,25 @@ func generateGIFThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidth
 		_ = f.Close()
 	}()
 
-	// Copy the image metadata.
-	thumbnail := *src
-	thumbnail.Image = make([]*image.Paletted, len(src.Image))
+	thumbnail := nativewebp.Animation{
+		Disposals: make([]uint, len(src.Disposal)),
+		Durations: make([]uint, len(src.Delay)),
+		Images:    make([]image.Image, len(src.Image)),
+		LoopCount: uint16(src.LoopCount),
+	}
+
+	for i, d := range src.Disposal {
+		switch d {
+		case gif.DisposalNone, gif.DisposalPrevious:
+			thumbnail.Disposals[i] = 0
+		case gif.DisposalBackground:
+			thumbnail.Disposals[i] = 1
+		}
+	}
+
+	for i, v := range src.Delay {
+		thumbnail.Durations[i] = uint(v)
+	}
 
 	// Create a new RGBA image to hold the incremental frames.
 	firstFrame := src.Image[0].Bounds()
@@ -255,29 +264,22 @@ func generateGIFThumbnail(root *os.Root, src *gif.GIF, filename string, maxWidth
 	img := image.NewRGBA(b)
 
 	// Resize each frame.
-	for i := range src.Image {
-		frame := src.Image[i]
+	for i, frame := range src.Image {
 		bounds := frame.Bounds()
 		previous := img
 		draw.Draw(img, bounds, frame, bounds.Min, draw.Over)
-		thumbnail.Image[i] = imageToPaletted(resize(img, maxWidth), frame.Palette)
+		thumbnail.Images[i] = imageToPaletted(resize(img, maxWidth), frame.Palette)
 
 		switch src.Disposal[i] {
 		case gif.DisposalBackground:
-			// I'm just assuming that the gif package will apply the appropriate
-			// background here, since there doesn't seem to be an easy way to
-			// access the global color table.
+			// https://github.com/golang/go/issues/20694
 			img = image.NewRGBA(b)
 		case gif.DisposalPrevious:
 			img = previous
 		}
 	}
 
-	// Set image.Config to new height and width.
-	thumbnail.Config.Width = thumbnail.Image[0].Bounds().Max.X
-	thumbnail.Config.Height = thumbnail.Image[0].Bounds().Max.Y
-
-	if err := gif.EncodeAll(f, &thumbnail); err != nil {
+	if err := nativewebp.EncodeAll(f, &thumbnail, nil); err != nil {
 		return fmt.Errorf("error encoding image %s: %w", filename, err)
 	}
 

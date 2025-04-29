@@ -3,7 +3,7 @@ module github.com/codahale/yellhole-go
 go 1.24.1
 
 require (
-	github.com/HugoSmits86/nativewebp v1.1.4
+	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/go-webauthn/webauthn v0.12.3
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
