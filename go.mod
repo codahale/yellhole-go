@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/go-webauthn/webauthn v0.12.3
-	github.com/golang-migrate/migrate/v4 v4.18.2
+	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/ory/graceful v0.1.3
