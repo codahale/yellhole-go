@@ -29,7 +29,7 @@ func newTestApp(t *testing.T) *testApp {
 		Description: "Gotta go fast.",
 		requestLog:  false,
 	}
-	app, err := newApp(config)
+	app, err := newApp(t.Context(), config)
 	if err != nil {
 		t.Fatal(err)
 	}

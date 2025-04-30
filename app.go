@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"io/fs"
@@ -13,6 +14,8 @@ import (
 
 	"github.com/codahale/yellhole-go/db"
 	sloghttp "github.com/samber/slog-http"
+	_ "modernc.org/libc"
+	_ "modernc.org/sqlite"
 )
 
 var (
@@ -31,7 +34,7 @@ type app struct {
 	http.Handler
 }
 
-func newApp(config *config) (*app, error) {
+func newApp(ctx context.Context, config *config) (*app, error) {
 	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.
@@ -48,7 +51,7 @@ func newApp(config *config) (*app, error) {
 
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
-	go purgeOldRows(queries, purgeTicker)
+	go purgeOldRows(ctx, queries, purgeTicker)
 
 	// Open the data directory as a file system root.
 	dataRoot, err := os.OpenRoot(config.DataDir)

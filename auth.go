@@ -279,15 +279,20 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	return auth, err
 }
 
-func purgeOldRows(queries *db.Queries, ticker *time.Ticker) {
-	for range ticker.C {
-		purgeOldSessions(queries)
-		purgeOldWebauthnSessions(queries)
+func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			purgeOldSessions(ctx, queries)
+			purgeOldWebauthnSessions(ctx, queries)
+		}
 	}
 }
 
-func purgeOldSessions(queries *db.Queries) {
-	res, err := queries.PurgeSessions(context.Background(), time.Now().AddDate(0, 0, -7))
+func purgeOldSessions(ctx context.Context, queries *db.Queries) {
+	res, err := queries.PurgeSessions(ctx, time.Now().AddDate(0, 0, -7))
 	if err != nil {
 		slog.Error("error purging old sessions", "err", err)
 		return
@@ -301,8 +306,8 @@ func purgeOldSessions(queries *db.Queries) {
 	slog.Info("purged old sessions", "count", n)
 }
 
-func purgeOldWebauthnSessions(queries *db.Queries) {
-	res, err := queries.PurgeWebauthnSessions(context.Background(), time.Now().Add(-5*time.Minute))
+func purgeOldWebauthnSessions(ctx context.Context, queries *db.Queries) {
+	res, err := queries.PurgeWebauthnSessions(ctx, time.Now().Add(-5*time.Minute))
 	if err != nil {
 		slog.Error("error purging old challenge", "err", err)
 		return
