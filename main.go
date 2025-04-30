@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os/signal"
 	"runtime"
@@ -49,6 +50,9 @@ func main() {
 		Addr:    config.Addr,
 		Handler: app,
 
+		BaseContext: func(l net.Listener) context.Context {
+			return ctx
+		},
 		IdleTimeout:       120 * time.Second,
 		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
