@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net"
 	"net/http"
@@ -62,7 +63,7 @@ func main() {
 	// Listen for connections in a separate goroutine.
 	slog.Info("listening for connections", "baseURL", config.BaseURL)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("error listening for requests", "err", err)
 		}
 	}()
