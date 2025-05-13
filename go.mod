@@ -12,7 +12,7 @@ require (
 	github.com/samber/slog-http v1.7.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/yuin/goldmark v1.7.11
-	golang.org/x/image v0.26.0
+	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
 	modernc.org/libc v1.62.1
 	modernc.org/sqlite v1.37.0
