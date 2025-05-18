@@ -35,7 +35,7 @@ type app struct {
 }
 
 func newApp(ctx context.Context, config *config) (*app, error) {
-	slog.Default().Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
+	slog.Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
 
 	// Connect to the database.
 	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db")+"?_time_format=sqlite")
