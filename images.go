@@ -94,14 +94,13 @@ func handleUploadImage(config *config, queries *db.Queries, images *imageStore) 
 }
 
 type imageStore struct {
-	config    *config
 	root      *os.Root
 	feedRoot  *os.Root
 	origRoot  *os.Root
 	thumbRoot *os.Root
 }
 
-func newImageStore(config *config, dataRoot *os.Root) (*imageStore, error) {
+func newImageStore(dataRoot *os.Root) (*imageStore, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
@@ -126,7 +125,7 @@ func newImageStore(config *config, dataRoot *os.Root) (*imageStore, error) {
 		return nil, err
 	}
 
-	return &imageStore{config, root, feedRoot, origRoot, thumbRoot}, nil
+	return &imageStore{root, feedRoot, origRoot, thumbRoot}, nil
 }
 
 func (ic *imageStore) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (filename string, format string, err error) {

@@ -88,7 +88,7 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 	}
 
 	// Create an image store.
-	images, err := newImageStore(config, dataRoot)
+	images, err := newImageStore(dataRoot)
 	if err != nil {
 		return nil, err
 	}
