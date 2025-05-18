@@ -14,251 +14,252 @@ import (
 	sloghttp "github.com/samber/slog-http"
 )
 
-type authController struct {
-	config    *config
-	queries   *db.Queries
-	webauthn  *webauthn.WebAuthn
-	templates *templateSet
-}
-
-func newAuthController(config *config, queries *db.Queries, templates *templateSet) *authController {
-	webauthn, err := webauthn.New(&webauthn.Config{
+func newWebauthn(config *config) (*webauthn.WebAuthn, error) {
+	return webauthn.New(&webauthn.Config{
 		RPID:          config.BaseURL.Hostname(),
 		RPDisplayName: config.Title,
 		RPOrigins:     []string{strings.TrimRight(config.BaseURL.String(), "/")},
 	})
-	if err != nil {
-		panic(err)
-	}
-	return &authController{config, queries, webauthn, templates}
 }
 
-func (ac *authController) registerPage(w http.ResponseWriter, r *http.Request) {
-	// Ensure we only register one passkey.
-	registered, err := ac.queries.HasWebauthnCredential(r.Context())
-	if err != nil {
-		panic(err)
-	}
-	if registered {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
-		return
-	}
+func handleRegisterPage(config *config, queries *db.Queries, templates *templateSet) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Ensure we only register one passkey.
+		registered, err := queries.HasWebauthnCredential(r.Context())
+		if err != nil {
+			panic(err)
+		}
+		if registered {
+			http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Ensure session isn't authenticated.
-	auth, err := isAuthenticated(r, ac.queries)
-	if err != nil {
-		panic(err)
-	}
-	if auth {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-		return
-	}
+		// Ensure session isn't authenticated.
+		auth, err := isAuthenticated(r, queries)
+		if err != nil {
+			panic(err)
+		}
+		if auth {
+			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Respond with the register page.
-	ac.templates.render(w, "auth/register.html", nil)
+		// Respond with the register page.
+		templates.render(w, "auth/register.html", nil)
+	})
 }
 
-func (ac *authController) registerStart(w http.ResponseWriter, r *http.Request) {
-	// Create a new webauthn attestation challenge.
-	creation, session, err := ac.webauthn.BeginRegistration(
-		webauthnUser{ac.config.Author, []*db.JSONCredential{}},
-		webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
-	)
-	if err != nil {
-		panic(err)
-	}
+func handleRegisterStart(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Create a new webauthn attestation challenge.
+		creation, session, err := webAuthn.BeginRegistration(
+			webauthnUser{config.Author, []*db.JSONCredential{}},
+			webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
+		)
+		if err != nil {
+			panic(err)
+		}
 
-	// Store the webauthn session data in the DB.
-	regSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now()); err != nil {
-		panic(err)
-	}
+		// Store the webauthn session data in the DB.
+		regSessionID := uuid.NewString()
+		if err := queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now()); err != nil {
+			panic(err)
+		}
 
-	// Set a registration session ID cookie.
-	http.SetCookie(w, ac.secureCookie("registrationSessionID", regSessionID, 60))
+		// Set a registration session ID cookie.
+		http.SetCookie(w, secureCookie(config, "registrationSessionID", regSessionID, 60))
 
-	// Respond with the attestation challenge.
-	jsonResponse(w, creation)
+		// Respond with the attestation challenge.
+		jsonResponse(w, creation)
+	})
 }
 
-func (ac *authController) registerFinish(w http.ResponseWriter, r *http.Request) {
-	// Find the webauthn session ID.
-	regSessionID, err := r.Cookie("registrationSessionID")
-	if err != nil {
-		panic(err)
-	}
+func handleRegisterFinish(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Find the webauthn session ID.
+		regSessionID, err := r.Cookie("registrationSessionID")
+		if err != nil {
+			panic(err)
+		}
 
-	// Read, delete, and decode the webauthn session data.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute))
-	if err != nil {
-		panic(err)
-	}
+		// Read, delete, and decode the webauthn session data.
+		session, err := queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute))
+		if err != nil {
+			panic(err)
+		}
 
-	// Validate the attestation response.
-	cred, err := ac.webauthn.FinishRegistration(webauthnUser{ac.config.Author, []*db.JSONCredential{}}, session.Data, r)
-	if err != nil {
-		// If the attestation is invalid, respond with verified=false.
-		slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
-		jsonResponse(w, map[string]bool{"verified": false})
-		return
-	}
+		// Validate the attestation response.
+		cred, err := webAuthn.FinishRegistration(webauthnUser{config.Author, []*db.JSONCredential{}}, session.Data, r)
+		if err != nil {
+			// If the attestation is invalid, respond with verified=false.
+			slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
+			jsonResponse(w, map[string]bool{"verified": false})
+			return
+		}
 
-	// Store the new credential in the database.
-	if err := ac.queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now()); err != nil {
-		panic(err)
-	}
+		// Store the new credential in the database.
+		if err := queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now()); err != nil {
+			panic(err)
+		}
 
-	// Delete the registration session ID cookie.
-	http.SetCookie(w, ac.secureCookie("registrationSessionID", "", -1))
+		// Delete the registration session ID cookie.
+		http.SetCookie(w, secureCookie(config, "registrationSessionID", "", -1))
 
-	// Respond with verified=true.
-	jsonResponse(w, map[string]bool{"verified": true})
+		// Respond with verified=true.
+		jsonResponse(w, map[string]bool{"verified": true})
+	})
 }
 
-func (ac *authController) loginPage(w http.ResponseWriter, r *http.Request) {
-	// Redirect to registration if no credentials exist.
-	registered, err := ac.queries.HasWebauthnCredential(r.Context())
-	if err != nil {
-		panic(err)
-	}
-	if !registered {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("register").String(), http.StatusSeeOther)
-		return
-	}
+func handleLoginPage(config *config, queries *db.Queries, templates *templateSet) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Redirect to registration if no credentials exist.
+		registered, err := queries.HasWebauthnCredential(r.Context())
+		if err != nil {
+			panic(err)
+		}
+		if !registered {
+			http.Redirect(w, r, config.BaseURL.JoinPath("register").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Ensure session isn't authenticated.
-	auth, err := isAuthenticated(r, ac.queries)
-	if err != nil {
-		panic(err)
-	}
+		// Ensure session isn't authenticated.
+		auth, err := isAuthenticated(r, queries)
+		if err != nil {
+			panic(err)
+		}
 
-	if auth {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-		return
-	}
+		if auth {
+			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Respond with the login page.
-	ac.templates.render(w, "auth/login.html", nil)
+		// Respond with the login page.
+		templates.render(w, "auth/login.html", nil)
+	})
 }
 
-func (ac *authController) loginStart(w http.ResponseWriter, r *http.Request) {
-	// Ensure request isn't already authenticated.
-	auth, err := isAuthenticated(r, ac.queries)
-	if err != nil {
-		panic(err)
-	}
+func handleLoginStart(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Ensure request isn't already authenticated.
+		auth, err := isAuthenticated(r, queries)
+		if err != nil {
+			panic(err)
+		}
 
-	if auth {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-		return
-	}
+		if auth {
+			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Fetch all credentials from the database.
-	credentials, err := ac.queries.WebauthnCredentials(r.Context())
-	if err != nil {
-		panic(err)
-	}
+		// Fetch all credentials from the database.
+		credentials, err := queries.WebauthnCredentials(r.Context())
+		if err != nil {
+			panic(err)
+		}
 
-	// Create a webauthn login challenge.
-	assertion, session, err := ac.webauthn.BeginLogin(webauthnUser{ac.config.Author, credentials})
-	if err != nil {
-		panic(err)
-	}
+		// Create a webauthn login challenge.
+		assertion, session, err := webAuthn.BeginLogin(webauthnUser{config.Author, credentials})
+		if err != nil {
+			panic(err)
+		}
 
-	// Store the challenge in the database.
-	loginSessionID := uuid.NewString()
-	if err := ac.queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now()); err != nil {
-		panic(err)
-	}
+		// Store the challenge in the database.
+		loginSessionID := uuid.NewString()
+		if err := queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now()); err != nil {
+			panic(err)
+		}
 
-	// Assign a login session ID cookie.
-	http.SetCookie(w, ac.secureCookie("loginSessionID", loginSessionID, 60))
+		// Assign a login session ID cookie.
+		http.SetCookie(w, secureCookie(config, "loginSessionID", loginSessionID, 60))
 
-	// Respond with the login challenge.
-	jsonResponse(w, assertion)
+		// Respond with the login challenge.
+		jsonResponse(w, assertion)
+	})
 }
 
-func (ac *authController) loginFinish(w http.ResponseWriter, r *http.Request) {
-	// Ensure request isn't already authenticated.
-	auth, err := isAuthenticated(r, ac.queries)
-	if err != nil {
-		panic(err)
-	}
+func handleLoginFinish(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Ensure request isn't already authenticated.
+		auth, err := isAuthenticated(r, queries)
+		if err != nil {
+			panic(err)
+		}
 
-	if auth {
-		http.Redirect(w, r, ac.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-		return
-	}
+		if auth {
+			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			return
+		}
 
-	// Fetch all credentials from the database.
-	credentials, err := ac.queries.WebauthnCredentials(r.Context())
-	if err != nil {
-		panic(err)
-	}
+		// Fetch all credentials from the database.
+		credentials, err := queries.WebauthnCredentials(r.Context())
+		if err != nil {
+			panic(err)
+		}
 
-	// Get the ID of the login session.
-	loginSessionID, err := r.Cookie("loginSessionID")
-	if err != nil {
-		panic(err)
-	}
+		// Get the ID of the login session.
+		loginSessionID, err := r.Cookie("loginSessionID")
+		if err != nil {
+			panic(err)
+		}
 
-	// Find and delete it from the database.
-	session, err := ac.queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute))
-	if err != nil {
-		panic(err)
-	}
+		// Find and delete it from the database.
+		session, err := queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute))
+		if err != nil {
+			panic(err)
+		}
 
-	// Validate the webauthn challenge.
-	_, err = ac.webauthn.FinishLogin(webauthnUser{ac.config.Author, credentials}, session.Data, r)
-	if err != nil {
-		// Respond with verified=false if the challenge response was invalid.
-		slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
-		jsonResponse(w, map[string]bool{"verified": false})
-		return
-	}
+		// Validate the webauthn challenge.
+		_, err = webAuthn.FinishLogin(webauthnUser{config.Author, credentials}, session.Data, r)
+		if err != nil {
+			// Respond with verified=false if the challenge response was invalid.
+			slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
+			jsonResponse(w, map[string]bool{"verified": false})
+			return
+		}
 
-	// Create a new web session and assign a session cookie.
-	sessionID := uuid.NewString()
-	if err := ac.queries.CreateSession(r.Context(), sessionID, time.Now()); err != nil {
-		panic(err)
-	}
-	http.SetCookie(w, ac.secureCookie("sessionID", sessionID, 60*60*24*7))
+		// Create a new web session and assign a session cookie.
+		sessionID := uuid.NewString()
+		if err := queries.CreateSession(r.Context(), sessionID, time.Now()); err != nil {
+			panic(err)
+		}
+		http.SetCookie(w, secureCookie(config, "sessionID", sessionID, 60*60*24*7))
 
-	// Delete the login session ID cookie.
-	http.SetCookie(w, ac.secureCookie("loginSessionID", "", -1))
+		// Delete the login session ID cookie.
+		http.SetCookie(w, secureCookie(config, "loginSessionID", "", -1))
 
-	// Respond with verified=true.
-	jsonResponse(w, map[string]bool{"verified": true})
+		// Respond with verified=true.
+		jsonResponse(w, map[string]bool{"verified": true})
+	})
 }
 
-func (ac *authController) secureCookie(name, value string, maxAge int) *http.Cookie {
-	return &http.Cookie{
-		Name:     name,
-		Value:    value,
-		Path:     ac.config.BaseURL.Path,
-		HttpOnly: true,
-		Secure:   ac.config.BaseURL.Scheme == "https",
-		SameSite: http.SameSiteStrictMode,
-		MaxAge:   maxAge,
-	}
-}
-
-func (ac *authController) requireAuthentication(h http.Handler, prefix string) http.Handler {
+func requireAuthentication(config *config, queries *db.Queries, h http.Handler, prefix string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, prefix) {
-			auth, err := isAuthenticated(r, ac.queries)
+			auth, err := isAuthenticated(r, queries)
 			if err != nil {
 				panic(err)
 			}
 
 			if !auth {
 				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
-				http.Redirect(w, r, ac.config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+				http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
 				return
 			}
 		}
 		h.ServeHTTP(w, r)
 	})
+}
+
+func secureCookie(config *config, name, value string, maxAge int) *http.Cookie {
+	return &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     config.BaseURL.Path,
+		HttpOnly: true,
+		Secure:   config.BaseURL.Scheme == "https",
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   maxAge,
+	}
 }
 
 func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {

@@ -16,13 +16,21 @@ type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *config, templatesDir fs.FS, assets *assetController) (*templateSet, error) {
+func newTemplateSet(config *config, templatesDir fs.FS, assetHashes map[string]string) (*templateSet, error) {
 	ts := &templateSet{
 		templates: make(map[string]*template.Template),
 	}
 
 	funcs := template.FuncMap{
-		"assetHash": assets.assetHash,
+		"assetHash": func(elem ...string) (string, error) {
+			p := path.Join(elem...)
+			hash, ok := assetHashes[p]
+			if !ok {
+				return "", fmt.Errorf("unknown asset: %q", p)
+			}
+			return hash, nil
+
+		},
 		"author": func() string {
 			return config.Author
 		},

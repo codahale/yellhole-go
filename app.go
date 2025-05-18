@@ -59,13 +59,13 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 		return nil, err
 	}
 
-	// Load the embedded public assets and create an asset controller.
+	// Load the embedded public assets.
 	assetsDir, err := fs.Sub(assetsFS, "assets")
 	if err != nil {
 		return nil, err
 	}
 
-	assets, err := newAssetController(assetsDir)
+	assetPaths, assetHashes, assets, err := loadAssets(assetsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -76,55 +76,34 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 		return nil, err
 	}
 
-	templates, err := newTemplateSet(config, templatesDir, assets)
+	templates, err := newTemplateSet(config, templatesDir, assetHashes)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create the controllers.
-	images, err := newImageController(config, dataRoot, queries)
+	// Configure Webauthn.
+	webAuthn, err := newWebauthn(config)
 	if err != nil {
 		return nil, err
 	}
 
-	feeds := newFeedController(config, queries, templates)
-	admin := newAdminController(config, queries, templates)
-	auth := newAuthController(config, queries, templates)
+	// Create an image store.
+	images, err := newImageStore(config, dataRoot)
+	if err != nil {
+		return nil, err
+	}
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
-
-	mux.Handle("GET /{$}", http.HandlerFunc(feeds.homePage))
-	mux.Handle("GET /atom.xml", http.HandlerFunc(feeds.atomFeed))
-	mux.Handle("GET /notes/{start}", http.HandlerFunc(feeds.weekPage))
-	mux.Handle("GET /note/{id}", http.HandlerFunc(feeds.notePage))
-
-	mux.Handle("GET /admin", http.HandlerFunc(admin.adminPage))
-	mux.Handle("POST /admin/new", http.HandlerFunc(admin.newNote))
-	mux.Handle("POST /admin/images/download", http.HandlerFunc(images.downloadImage))
-	mux.Handle("POST /admin/images/upload", http.HandlerFunc(images.uploadImage))
-
-	mux.Handle("GET /register", http.HandlerFunc(auth.registerPage))
-	mux.Handle("POST /register/start", http.HandlerFunc(auth.registerStart))
-	mux.Handle("POST /register/finish", http.HandlerFunc(auth.registerFinish))
-	mux.Handle("GET /login", http.HandlerFunc(auth.loginPage))
-	mux.Handle("POST /login/start", http.HandlerFunc(auth.loginStart))
-	mux.Handle("POST /login/finish", http.HandlerFunc(auth.loginFinish))
-
-	mux.Handle("GET /images/feed/", http.StripPrefix("/images/feed/", http.HandlerFunc(images.feedImage)))
-	mux.Handle("GET /images/thumb/", http.StripPrefix("/images/thumb/", http.HandlerFunc(images.thumbImage)))
-
-	for _, path := range assets.assetPaths() {
-		mux.Handle("GET /"+path, assets)
-	}
+	addRoutes(mux, config, queries, templates, images, webAuthn, assets, assetPaths)
 
 	// Require authentication for all /admin requests.
-	root := auth.requireAuthentication(mux, "/admin")
+	handler := requireAuthentication(config, queries, mux, "/admin")
 
 	// Serve the root from the base URL path.
 	if config.BaseURL.Path != "/" {
 		nestedPrefix := strings.TrimRight(config.BaseURL.Path, "/")
-		root = http.StripPrefix(nestedPrefix, mux)
+		handler = http.StripPrefix(nestedPrefix, mux)
 	}
 
 	// Add logging.
@@ -133,10 +112,10 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
 	}
 	logger := slog.New(loggerHandler)
-	root = sloghttp.Recovery(root)
-	root = sloghttp.New(logger)(root)
+	handler = sloghttp.Recovery(handler)
+	handler = sloghttp.New(logger)(handler)
 
-	return &app{conn, queries, purgeTicker, root}, nil
+	return &app{conn, queries, purgeTicker, handler}, nil
 }
 
 func (a *app) close() error {

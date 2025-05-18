@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
@@ -16,7 +18,7 @@ import (
 
 //go:generate go tool sqlc generate -f db/sqlc.yaml
 
-func main() {
+func run() error {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -25,20 +27,20 @@ func main() {
 	undo, err := maxprocs.Set()
 	defer undo()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	slog.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
 	// Parse the configuration flags and environment variables.
 	config, err := parseConfig()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Create a new app.
 	app, err := newApp(ctx, config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() {
 		if err := app.close(); err != nil {
@@ -84,4 +86,13 @@ func main() {
 	}
 
 	slog.Info("exiting")
+
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }

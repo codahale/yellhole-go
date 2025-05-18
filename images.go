@@ -22,18 +22,86 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type imageController struct {
-	config            *config
-	queries           *db.Queries
-	root              *os.Root
-	feedRoot          *os.Root
-	origRoot          *os.Root
-	thumbRoot         *os.Root
-	feedImageHandler  http.Handler
-	thumbImageHandler http.Handler
+func handleFeedImage(images *imageStore) http.Handler {
+	return http.FileServerFS(images.feedRoot.FS())
 }
 
-func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) (*imageController, error) {
+func handleThumbImage(images *imageStore) http.Handler {
+	return http.FileServerFS(images.thumbRoot.FS())
+}
+
+func handleDownloadImage(config *config, queries *db.Queries, images *imageStore) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		url := r.FormValue("url")
+
+		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+
+		if resp.StatusCode != http.StatusOK {
+			slog.Error("unable to download image", "url", url, "statusCode", resp.StatusCode)
+			http.Error(w, "unable to download image", http.StatusInternalServerError)
+			return
+		}
+
+		id := uuid.New()
+
+		filename, format, err := images.processStream(r.Context(), id, resp.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := queries.CreateImage(r.Context(), id.String(), filename, url, format, time.Now()); err != nil {
+			panic(err)
+		}
+
+		http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+	})
+}
+
+func handleUploadImage(config *config, queries *db.Queries, images *imageStore) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f, h, err := r.FormFile("image")
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			_ = f.Close()
+		}()
+
+		id := uuid.New()
+
+		filename, format, err := images.processStream(r.Context(), id, f)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := queries.CreateImage(r.Context(), id.String(), filename, h.Filename, format, time.Now()); err != nil {
+			panic(err)
+		}
+
+		http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+	})
+}
+
+type imageStore struct {
+	config    *config
+	root      *os.Root
+	feedRoot  *os.Root
+	origRoot  *os.Root
+	thumbRoot *os.Root
+}
+
+func newImageStore(config *config, dataRoot *os.Root) (*imageStore, error) {
 	_ = dataRoot.Mkdir("images", 0755)
 	root, err := dataRoot.OpenRoot("images")
 	if err != nil {
@@ -58,80 +126,10 @@ func newImageController(config *config, dataRoot *os.Root, queries *db.Queries) 
 		return nil, err
 	}
 
-	feedImageHandler := http.FileServerFS(feedRoot.FS())
-	thumbImageHandler := http.FileServerFS(thumbRoot.FS())
-
-	return &imageController{config, queries, root, feedRoot, origRoot, thumbRoot, feedImageHandler, thumbImageHandler}, nil
+	return &imageStore{config, root, feedRoot, origRoot, thumbRoot}, nil
 }
 
-func (ic *imageController) feedImage(w http.ResponseWriter, r *http.Request) {
-	ic.feedImageHandler.ServeHTTP(w, r)
-}
-
-func (ic *imageController) thumbImage(w http.ResponseWriter, r *http.Request) {
-	ic.thumbImageHandler.ServeHTTP(w, r)
-}
-
-func (ic *imageController) downloadImage(w http.ResponseWriter, r *http.Request) {
-	url := r.FormValue("url")
-
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("unable to download image", "url", url, "statusCode", resp.StatusCode)
-		http.Error(w, "unable to download image", http.StatusInternalServerError)
-		return
-	}
-
-	id := uuid.New()
-
-	filename, format, err := ic.processStream(r.Context(), id, resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := ic.queries.CreateImage(r.Context(), id.String(), filename, url, format, time.Now()); err != nil {
-		panic(err)
-	}
-
-	http.Redirect(w, r, ic.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-}
-
-func (ic *imageController) uploadImage(w http.ResponseWriter, r *http.Request) {
-	f, h, err := r.FormFile("image")
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-
-	id := uuid.New()
-
-	filename, format, err := ic.processStream(r.Context(), id, f)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := ic.queries.CreateImage(r.Context(), id.String(), filename, h.Filename, format, time.Now()); err != nil {
-		panic(err)
-	}
-
-	http.Redirect(w, r, ic.config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
-}
-
-func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (filename string, format string, err error) {
+func (ic *imageStore) processStream(ctx context.Context, id uuid.UUID, r io.Reader) (filename string, format string, err error) {
 	// Decode the image config, preserving the read part of the image in a buffer.
 	buf := new(bytes.Buffer)
 	_, format, err = image.DecodeConfig(io.TeeReader(r, buf))
@@ -171,7 +169,7 @@ func (ic *imageController) processStream(ctx context.Context, id uuid.UUID, r io
 	return
 }
 
-func (ic *imageController) processAnim(ctx context.Context, r io.Reader, filename string) error {
+func (ic *imageStore) processAnim(ctx context.Context, r io.Reader, filename string) error {
 	// Decode all frames.
 	img, err := gif.DecodeAll(r)
 	if err != nil {
@@ -198,7 +196,7 @@ func (ic *imageController) processAnim(ctx context.Context, r io.Reader, filenam
 	return nil
 }
 
-func (ic *imageController) processStatic(ctx context.Context, img image.Image, filename string) error {
+func (ic *imageStore) processStatic(ctx context.Context, img image.Image, filename string) error {
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
