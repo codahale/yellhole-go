@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
 
+	"github.com/codahale/yellhole-go/db"
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
@@ -37,16 +39,24 @@ func run() error {
 		return err
 	}
 
-	// Create a new app.
-	app, err := newApp(ctx, config)
+	slog.Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
+
+	// Connect to the database.
+	queries, err := db.NewWithMigrations(ctx, filepath.Join(config.DataDir, "yellhole.db"))
 	if err != nil {
 		return err
 	}
 	defer func() {
-		if err := app.close(); err != nil {
-			slog.Error("error shutting down", "err", err)
+		if err := queries.Close(); err != nil {
+			slog.Error("error closing database", "err", err)
 		}
 	}()
+
+	// Create a new app.
+	app, err := newApp(ctx, config, queries)
+	if err != nil {
+		return err
+	}
 
 	// Configure an HTTP server with good defaults.
 	server := &http.Server{

@@ -2,13 +2,9 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"embed"
-	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -18,37 +14,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-var (
-	//go:embed assets
-	assetsFS embed.FS
-	//go:embed templates
-	templatesFS embed.FS
-	//go:embed db/migrations/*.sql
-	migrationsFS embed.FS
-)
-
-type app struct {
-	conn        *sql.DB
-	queries     *db.Queries
-	purgeTicker *time.Ticker
-	http.Handler
-}
-
-func newApp(ctx context.Context, config *config) (*app, error) {
-	slog.Info("starting", "dataDir", config.DataDir, "buildTag", buildTag)
-
-	// Connect to the database.
-	conn, err := sql.Open("sqlite", filepath.Join(config.DataDir, "yellhole.db")+"?_time_format=sqlite")
-	if err != nil {
-		return nil, err
-	}
-	queries := db.New(conn)
-
-	// Run migrations, if any,.
-	if err := db.RunMigrations(conn, migrationsFS, "db/migrations"); err != nil {
-		return nil, err
-	}
-
+func newApp(ctx context.Context, config *config, queries *db.Queries) (http.Handler, error) {
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
 	go purgeOldRows(ctx, queries, purgeTicker)
@@ -60,23 +26,13 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 	}
 
 	// Load the embedded public assets.
-	assetsDir, err := fs.Sub(assetsFS, "assets")
-	if err != nil {
-		return nil, err
-	}
-
-	assetPaths, assetHashes, assets, err := loadAssets(assetsDir)
+	assetPaths, assetHashes, assets, err := loadAssets()
 	if err != nil {
 		return nil, err
 	}
 
 	// Load the embedded templates and create a new template set.
-	templatesDir, err := fs.Sub(templatesFS, "templates")
-	if err != nil {
-		return nil, err
-	}
-
-	templates, err := newTemplateSet(config, templatesDir, assetHashes)
+	templates, err := newTemplateSet(config, assetHashes)
 	if err != nil {
 		return nil, err
 	}
@@ -114,12 +70,5 @@ func newApp(ctx context.Context, config *config) (*app, error) {
 	logger := slog.New(loggerHandler)
 	handler = sloghttp.Recovery(handler)
 	handler = sloghttp.New(logger)(handler)
-
-	return &app{conn, queries, purgeTicker, handler}, nil
-}
-
-func (a *app) close() error {
-	a.purgeTicker.Stop()
-
-	return a.conn.Close()
+	return handler, nil
 }

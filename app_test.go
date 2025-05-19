@@ -3,11 +3,15 @@ package main
 import (
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"testing"
+
+	"github.com/codahale/yellhole-go/db"
 )
 
 type testApp struct {
-	app     *app
+	app     http.Handler
+	queries *db.Queries
 	tempDir string
 	t       *testing.T
 }
@@ -29,18 +33,16 @@ func newTestApp(t *testing.T) *testApp {
 		Description: "Gotta go fast.",
 		requestLog:  false,
 	}
-	app, err := newApp(t.Context(), config)
+	queries, err := db.NewWithMigrations(t.Context(), filepath.Join(config.DataDir, "yellhole.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	app, err := newApp(t.Context(), config, queries)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Cleanup(func() {
-		if err := app.close(); err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	return &testApp{app, tempDir, t}
+	return &testApp{app, queries, tempDir, t}
 }
 
 func (e *testApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {

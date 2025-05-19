@@ -284,6 +284,7 @@ func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker)
 	for {
 		select {
 		case <-ctx.Done():
+			ticker.Stop()
 			return
 		case <-ticker.C:
 			purgeOldSessions(ctx, queries)

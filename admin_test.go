@@ -19,7 +19,7 @@ func TestAdminPage(t *testing.T) {
 	app := newTestApp(t)
 
 	sessionID := uuid.NewString()
-	if err := app.app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
+	if err := app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -48,7 +48,7 @@ func TestAdminNotePreview(t *testing.T) {
 	app := newTestApp(t)
 
 	sessionID := uuid.NewString()
-	if err := app.app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
+	if err := app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -90,7 +90,7 @@ func TestAdminNoteCreate(t *testing.T) {
 	app := newTestApp(t)
 
 	sessionID := uuid.NewString()
-	if err := app.app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
+	if err := app.queries.CreateSession(t.Context(), sessionID, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
@@ -117,7 +117,7 @@ func TestAdminNoteCreate(t *testing.T) {
 		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
-	notes, err := app.app.queries.RecentNotes(t.Context(), 10)
+	notes, err := app.queries.RecentNotes(t.Context(), 10)
 	if err != nil {
 		t.Fatal(err)
 	}
