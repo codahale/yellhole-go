@@ -21,7 +21,7 @@
                     <li>
                         {{$feedImageURL := url "images" "feed" .Filename}}
                         <a href="#" onclick="insertImage('{{$feedImageURL}}')">
-                            <img src='{{url "images" "thumb" .Filename}}' title="{{.OriginalFilename}} / {{.Format}}">
+                            <img src='{{url "images" "thumb" .Filename}}' title="{{.OriginalFilename}} / {{.Format}}" alt="">
                         </a>
                     </li>
                     {{end}}
@@ -51,7 +51,7 @@
                 <h2>Download Image</h2>
             </header>
             <label for="url">URL:</label>
-            <input type="input" id="url" name="url" placeholder="https://trashbat.co.uk/gonkbot.gif" size="40"
+            <input type="text" id="url" name="url" placeholder="https://trashbat.co.uk/gonkbot.gif" size="40"
                 oninput="updateDownload()">
             <button id="download" type="submit" disabled>Download</button>
         </form>
@@ -65,19 +65,19 @@
         const el = document.getElementById('body');
         const btn1 = document.getElementById('post');
         const btn2 = document.getElementById('preview');
-        btn1.disabled = btn2.disabled = el.value.length == 0;
+        btn1.disabled = btn2.disabled = el.value.length === 0;
     }
 
     function updateUpload() {
         const el = document.getElementById('image');
         const btn = document.getElementById('upload');
-        btn.disabled = el.value.length == 0;
+        btn.disabled = el.value.length === 0;
     }
 
     function updateDownload() {
         const el = document.getElementById('url');
         const btn = document.getElementById('download');
-        btn.disabled = el.value.length == 0;
+        btn.disabled = el.value.length === 0;
     }
 
     function insertImage(imageSrc) {
