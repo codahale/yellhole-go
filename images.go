@@ -33,9 +33,9 @@ func handleThumbImage(images *imageStore) http.Handler {
 
 func handleDownloadImage(queries *db.Queries, images *imageStore, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		url := r.FormValue("url")
+		imageURL := r.FormValue("url")
 
-		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
+		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, imageURL, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -49,7 +49,7 @@ func handleDownloadImage(queries *db.Queries, images *imageStore, baseURL *url.U
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			slog.Error("unable to download image", "url", url, "statusCode", resp.StatusCode)
+			slog.Error("unable to download image", "imageURL", imageURL, "statusCode", resp.StatusCode)
 			http.Error(w, "unable to download image", http.StatusInternalServerError)
 			return
 		}
@@ -61,7 +61,7 @@ func handleDownloadImage(queries *db.Queries, images *imageStore, baseURL *url.U
 			panic(err)
 		}
 
-		if err := queries.CreateImage(r.Context(), id.String(), filename, url, format, time.Now()); err != nil {
+		if err := queries.CreateImage(r.Context(), id.String(), filename, imageURL, format, time.Now()); err != nil {
 			panic(err)
 		}
 
