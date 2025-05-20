@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"filippo.io/csrf"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -50,6 +51,9 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 
 	// Require authentication for all /admin requests.
 	handler := requireAuthentication(queries, mux, baseURL, "/admin")
+
+	// Protect from CSRF attacks.
+	handler = csrf.New().Handler(handler)
 
 	// Serve the root from the base URL path.
 	if baseURL.Path != "/" {

@@ -18,6 +18,8 @@ require (
 	modernc.org/sqlite v1.37.0
 )
 
+require filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
+
 require (
 	cel.dev/expr v0.24.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

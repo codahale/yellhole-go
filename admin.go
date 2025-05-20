@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -26,12 +25,6 @@ func handleNewNote(queries *db.Queries, templates *templateSet, baseURL *url.URL
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("preview") == fmt.Sprint(true) {
 			templates.render(w, "preview.html", r.FormValue("body"))
-			return
-		}
-
-		if v := r.Header.Get("sec-fetch-site"); v != "same-origin" && v != "none" {
-			slog.Error("invalid sec-fetch-site value", "sec-fetch-site", v)
-			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
 
