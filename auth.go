@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -14,15 +15,15 @@ import (
 	sloghttp "github.com/samber/slog-http"
 )
 
-func newWebauthn(config *config) (*webauthn.WebAuthn, error) {
+func newWebauthn(title string, baseURL *url.URL) (*webauthn.WebAuthn, error) {
 	return webauthn.New(&webauthn.Config{
-		RPID:          config.BaseURL.Hostname(),
-		RPDisplayName: config.Title,
-		RPOrigins:     []string{strings.TrimRight(config.BaseURL.String(), "/")},
+		RPID:          baseURL.Hostname(),
+		RPDisplayName: title,
+		RPOrigins:     []string{strings.TrimRight(baseURL.String(), "/")},
 	})
 }
 
-func handleRegisterPage(config *config, queries *db.Queries, templates *templateSet) http.Handler {
+func handleRegisterPage(queries *db.Queries, templates *templateSet, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Ensure we only register one passkey.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -30,7 +31,7 @@ func handleRegisterPage(config *config, queries *db.Queries, templates *template
 			panic(err)
 		}
 		if registered {
-			http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("login").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -40,7 +41,7 @@ func handleRegisterPage(config *config, queries *db.Queries, templates *template
 			panic(err)
 		}
 		if auth {
-			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -49,11 +50,16 @@ func handleRegisterPage(config *config, queries *db.Queries, templates *template
 	})
 }
 
-func handleRegisterStart(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url.URL) http.Handler {
+	webAuthn, err := newWebauthn(title, baseURL)
+	if err != nil {
+		panic(err)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Create a new webauthn attestation challenge.
 		creation, session, err := webAuthn.BeginRegistration(
-			webauthnUser{config.Author, []*db.JSONCredential{}},
+			webauthnUser{author, []*db.JSONCredential{}},
 			webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
 		)
 		if err != nil {
@@ -67,14 +73,19 @@ func handleRegisterStart(config *config, queries *db.Queries, webAuthn *webauthn
 		}
 
 		// Set a registration session ID cookie.
-		http.SetCookie(w, secureCookie(config, "registrationSessionID", regSessionID, 60))
+		http.SetCookie(w, secureCookie(baseURL, "registrationSessionID", regSessionID, 60))
 
 		// Respond with the attestation challenge.
 		jsonResponse(w, creation)
 	})
 }
 
-func handleRegisterFinish(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *url.URL) http.Handler {
+	webAuthn, err := newWebauthn(title, baseURL)
+	if err != nil {
+		panic(err)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Find the webauthn session ID.
 		regSessionID, err := r.Cookie("registrationSessionID")
@@ -89,7 +100,7 @@ func handleRegisterFinish(config *config, queries *db.Queries, webAuthn *webauth
 		}
 
 		// Validate the attestation response.
-		cred, err := webAuthn.FinishRegistration(webauthnUser{config.Author, []*db.JSONCredential{}}, session.Data, r)
+		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
 		if err != nil {
 			// If the attestation is invalid, respond with verified=false.
 			slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
@@ -103,14 +114,14 @@ func handleRegisterFinish(config *config, queries *db.Queries, webAuthn *webauth
 		}
 
 		// Delete the registration session ID cookie.
-		http.SetCookie(w, secureCookie(config, "registrationSessionID", "", -1))
+		http.SetCookie(w, secureCookie(baseURL, "registrationSessionID", "", -1))
 
 		// Respond with verified=true.
 		jsonResponse(w, map[string]bool{"verified": true})
 	})
 }
 
-func handleLoginPage(config *config, queries *db.Queries, templates *templateSet) http.Handler {
+func handleLoginPage(queries *db.Queries, templates *templateSet, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Redirect to registration if no credentials exist.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -118,7 +129,7 @@ func handleLoginPage(config *config, queries *db.Queries, templates *templateSet
 			panic(err)
 		}
 		if !registered {
-			http.Redirect(w, r, config.BaseURL.JoinPath("register").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("register").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -129,7 +140,7 @@ func handleLoginPage(config *config, queries *db.Queries, templates *templateSet
 		}
 
 		if auth {
-			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -138,7 +149,12 @@ func handleLoginPage(config *config, queries *db.Queries, templates *templateSet
 	})
 }
 
-func handleLoginStart(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.URL) http.Handler {
+	webAuthn, err := newWebauthn(title, baseURL)
+	if err != nil {
+		panic(err)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Ensure request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
@@ -147,7 +163,7 @@ func handleLoginStart(config *config, queries *db.Queries, webAuthn *webauthn.We
 		}
 
 		if auth {
-			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -158,7 +174,7 @@ func handleLoginStart(config *config, queries *db.Queries, webAuthn *webauthn.We
 		}
 
 		// Create a webauthn login challenge.
-		assertion, session, err := webAuthn.BeginLogin(webauthnUser{config.Author, credentials})
+		assertion, session, err := webAuthn.BeginLogin(webauthnUser{author, credentials})
 		if err != nil {
 			panic(err)
 		}
@@ -170,14 +186,19 @@ func handleLoginStart(config *config, queries *db.Queries, webAuthn *webauthn.We
 		}
 
 		// Assign a login session ID cookie.
-		http.SetCookie(w, secureCookie(config, "loginSessionID", loginSessionID, 60))
+		http.SetCookie(w, secureCookie(baseURL, "loginSessionID", loginSessionID, 60))
 
 		// Respond with the login challenge.
 		jsonResponse(w, assertion)
 	})
 }
 
-func handleLoginFinish(config *config, queries *db.Queries, webAuthn *webauthn.WebAuthn) http.Handler {
+func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.URL) http.Handler {
+	webAuthn, err := newWebauthn(title, baseURL)
+	if err != nil {
+		panic(err)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Ensure request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
@@ -186,7 +207,7 @@ func handleLoginFinish(config *config, queries *db.Queries, webAuthn *webauthn.W
 		}
 
 		if auth {
-			http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+			http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 			return
 		}
 
@@ -209,7 +230,7 @@ func handleLoginFinish(config *config, queries *db.Queries, webAuthn *webauthn.W
 		}
 
 		// Validate the webauthn challenge.
-		_, err = webAuthn.FinishLogin(webauthnUser{config.Author, credentials}, session.Data, r)
+		_, err = webAuthn.FinishLogin(webauthnUser{author, credentials}, session.Data, r)
 		if err != nil {
 			// Respond with verified=false if the challenge response was invalid.
 			slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
@@ -222,17 +243,17 @@ func handleLoginFinish(config *config, queries *db.Queries, webAuthn *webauthn.W
 		if err := queries.CreateSession(r.Context(), sessionID, time.Now()); err != nil {
 			panic(err)
 		}
-		http.SetCookie(w, secureCookie(config, "sessionID", sessionID, 60*60*24*7))
+		http.SetCookie(w, secureCookie(baseURL, "sessionID", sessionID, 60*60*24*7))
 
 		// Delete the login session ID cookie.
-		http.SetCookie(w, secureCookie(config, "loginSessionID", "", -1))
+		http.SetCookie(w, secureCookie(baseURL, "loginSessionID", "", -1))
 
 		// Respond with verified=true.
 		jsonResponse(w, map[string]bool{"verified": true})
 	})
 }
 
-func requireAuthentication(config *config, queries *db.Queries, h http.Handler, prefix string) http.Handler {
+func requireAuthentication(queries *db.Queries, h http.Handler, baseURL *url.URL, prefix string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, prefix) {
 			auth, err := isAuthenticated(r, queries)
@@ -242,7 +263,7 @@ func requireAuthentication(config *config, queries *db.Queries, h http.Handler, 
 
 			if !auth {
 				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
-				http.Redirect(w, r, config.BaseURL.JoinPath("login").String(), http.StatusSeeOther)
+				http.Redirect(w, r, baseURL.JoinPath("login").String(), http.StatusSeeOther)
 				return
 			}
 		}
@@ -250,13 +271,13 @@ func requireAuthentication(config *config, queries *db.Queries, h http.Handler, 
 	})
 }
 
-func secureCookie(config *config, name, value string, maxAge int) *http.Cookie {
+func secureCookie(baseURL *url.URL, name, value string, maxAge int) *http.Cookie {
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
-		Path:     config.BaseURL.Path,
+		Path:     baseURL.Path,
 		HttpOnly: true,
-		Secure:   config.BaseURL.Scheme == "https",
+		Secure:   baseURL.Scheme == "https",
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   maxAge,
 	}

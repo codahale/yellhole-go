@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -81,7 +82,7 @@ func handleNotePage(queries *db.Queries, templates *templateSet) http.Handler {
 	})
 }
 
-func handleAtomFeed(config *config, queries *db.Queries) http.Handler {
+func handleAtomFeed(queries *db.Queries, author, title, description string, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		notes, err := queries.RecentNotes(r.Context(), 20)
 		if err != nil {
@@ -89,10 +90,10 @@ func handleAtomFeed(config *config, queries *db.Queries) http.Handler {
 		}
 
 		feed := feeds.Feed{
-			Title:       config.Title,
-			Link:        &feeds.Link{Href: config.BaseURL.String()},
-			Description: config.Description,
-			Author:      &feeds.Author{Name: config.Author},
+			Title:       title,
+			Link:        &feeds.Link{Href: baseURL.String()},
+			Description: description,
+			Author:      &feeds.Author{Name: author},
 		}
 
 		if len(notes) > 0 {
@@ -105,7 +106,7 @@ func handleAtomFeed(config *config, queries *db.Queries) http.Handler {
 				panic(err)
 			}
 
-			noteURL := config.BaseURL.JoinPath("note", note.NoteID).String()
+			noteURL := baseURL.JoinPath("note", note.NoteID).String()
 			feed.Items = append(feed.Items, &feeds.Item{
 				Id:      note.NoteID,
 				Title:   note.NoteID,

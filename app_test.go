@@ -25,19 +25,11 @@ func newTestApp(t *testing.T) *testApp {
 	}
 
 	tempDir := t.TempDir()
-	config := &config{
-		Addr:        "localhost:8080",
-		BaseURL:     baseURL,
-		DataDir:     tempDir,
-		Title:       "Test Yell",
-		Description: "Gotta go fast.",
-		requestLog:  false,
-	}
-	queries, err := db.NewWithMigrations(t.Context(), filepath.Join(config.DataDir, "yellhole.db"))
+	queries, err := db.NewWithMigrations(t.Context(), filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	app, err := newApp(t.Context(), config, queries)
+	app, err := newApp(t.Context(), queries, tempDir, "Test Man", "Test Yell", "Gotta go fast.", baseURL, false)
 	if err != nil {
 		t.Fatal(err)
 	}

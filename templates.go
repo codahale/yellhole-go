@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"path"
 	"time"
 
@@ -22,7 +23,7 @@ type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(config *config, assetHashes map[string]string) (*templateSet, error) {
+func newTemplateSet(author, title, description string, baseURL *url.URL, assetHashes map[string]string) (*templateSet, error) {
 	ts := &templateSet{
 		templates: make(map[string]*template.Template),
 	}
@@ -38,16 +39,16 @@ func newTemplateSet(config *config, assetHashes map[string]string) (*templateSet
 
 		},
 		"author": func() string {
-			return config.Author
+			return author
 		},
 		"buildTag": func() string {
 			return buildTag
 		},
 		"description": func() string {
-			return config.Description
+			return description
 		},
 		"host": func() string {
-			return config.BaseURL.Host
+			return baseURL.Host
 		},
 		"markdownHTML":   markdownHTML,
 		"markdownText":   markdownText,
@@ -56,10 +57,10 @@ func newTemplateSet(config *config, assetHashes map[string]string) (*templateSet
 			return time.Now()
 		},
 		"title": func() string {
-			return config.Title
+			return title
 		},
 		"url": func(elem ...string) template.URL {
-			return template.URL(config.BaseURL.JoinPath(elem...).String())
+			return template.URL(baseURL.JoinPath(elem...).String())
 		},
 	}
 

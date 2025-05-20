@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -30,7 +31,7 @@ func handleThumbImage(images *imageStore) http.Handler {
 	return http.FileServerFS(images.thumbRoot.FS())
 }
 
-func handleDownloadImage(config *config, queries *db.Queries, images *imageStore) http.Handler {
+func handleDownloadImage(queries *db.Queries, images *imageStore, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		url := r.FormValue("url")
 
@@ -64,11 +65,11 @@ func handleDownloadImage(config *config, queries *db.Queries, images *imageStore
 			panic(err)
 		}
 
-		http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+		http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 	})
 }
 
-func handleUploadImage(config *config, queries *db.Queries, images *imageStore) http.Handler {
+func handleUploadImage(queries *db.Queries, images *imageStore, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f, h, err := r.FormFile("image")
 		if err != nil {
@@ -89,7 +90,7 @@ func handleUploadImage(config *config, queries *db.Queries, images *imageStore) 
 			panic(err)
 		}
 
-		http.Redirect(w, r, config.BaseURL.JoinPath("admin").String(), http.StatusSeeOther)
+		http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
 	})
 }
 
