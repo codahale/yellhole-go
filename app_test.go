@@ -25,7 +25,7 @@ func newTestApp(t *testing.T) *testApp {
 	}
 
 	tempDir := t.TempDir()
-	queries, err := db.NewWithMigrations(t.Context(), filepath.Join(tempDir, "yellhole.db"))
+	queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}

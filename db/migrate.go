@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"embed"
 	"errors"
@@ -22,7 +21,7 @@ func (q *Queries) Close() error {
 	return q.db.(*sql.DB).Close()
 }
 
-func NewWithMigrations(ctx context.Context, filename string) (*Queries, error) {
+func NewWithMigrations(filename string) (*Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite", filename+"?_time_format=sqlite")
 	if err != nil {

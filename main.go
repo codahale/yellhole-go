@@ -63,7 +63,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	slog.Info("starting", "dataDir", *dataDir, "buildTag", buildTag)
 
 	// Connect to the database.
-	queries, err := db.NewWithMigrations(ctx, filepath.Join(*dataDir, "yellhole.db"))
+	queries, err := db.NewWithMigrations(filepath.Join(*dataDir, "yellhole.db"))
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 func main() {
 	if err := run(os.Args[1:], os.LookupEnv); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
