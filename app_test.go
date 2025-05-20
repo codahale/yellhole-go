@@ -25,10 +25,18 @@ func newTestApp(t *testing.T) *testApp {
 	}
 
 	tempDir := t.TempDir()
+
 	queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Cleanup(func() {
+		if err := queries.Close(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	app, err := newApp(t.Context(), queries, tempDir, "Test Man", "Test Yell", "Gotta go fast.", baseURL, false)
 	if err != nil {
 		t.Fatal(err)
