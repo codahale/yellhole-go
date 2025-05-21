@@ -6,7 +6,7 @@ require (
 	filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/Xuanwo/go-locale v1.1.3
-	github.com/alecthomas/chroma/v2 v2.17.2
+	github.com/alecthomas/chroma/v2 v2.18.0
 	github.com/go-webauthn/webauthn v0.13.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
