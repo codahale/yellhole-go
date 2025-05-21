@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/feeds v1.2.0
 	github.com/samber/slog-http v1.7.0
 	github.com/valyala/bytebufferpool v1.0.0
-	github.com/yuin/goldmark v1.7.11
+	github.com/yuin/goldmark v1.7.12
 	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
 	modernc.org/libc v1.65.7
