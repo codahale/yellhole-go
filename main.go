@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/Xuanwo/go-locale"
 	"log/slog"
 	"net"
 	"net/http"
@@ -44,6 +45,11 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		return s
 	}
 
+	detectedLang, err := locale.Detect()
+	if err != nil {
+		return err
+	}
+
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
 	addr := cmd.String("addr", env("ADDR", "127.0.0.1:3000"), "the address on which to listen")
 	baseURLStr := cmd.String("base_url", env("BASE_URL", "http://localhost:3000"), "the base URL of the server")
@@ -51,6 +57,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	title := cmd.String("title", env("TITLE", "Yellhole"), "the title of the yellhole instance")
 	description := cmd.String("description", env("DESCRIPTION", "Obscurantist filth."), "the description of the yellhole instance")
 	author := cmd.String("author", env("AUTHOR", "Luther Blissett"), "the author of the yellhole instance")
+	lang := cmd.String("lang", detectedLang.String(), "the language of the notes")
 	if err := cmd.Parse(args); err != nil {
 		return err
 	}
@@ -74,7 +81,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, queries, *dataDir, *author, *title, *description, baseURL, true)
+	app, err := newApp(ctx, queries, *dataDir, *author, *title, *description, *lang, baseURL, true)
 	if err != nil {
 		return err
 	}

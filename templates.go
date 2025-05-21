@@ -23,7 +23,7 @@ type templateSet struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateSet(author, title, description string, baseURL *url.URL, assetHashes map[string]string) (*templateSet, error) {
+func newTemplateSet(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*templateSet, error) {
 	templates := make(map[string]*template.Template)
 	funcs := template.FuncMap{
 		"assetHash": func(elem ...string) (string, error) {
@@ -46,6 +46,9 @@ func newTemplateSet(author, title, description string, baseURL *url.URL, assetHa
 		},
 		"host": func() string {
 			return baseURL.Host
+		},
+		"lang": func() string {
+			return lang
 		},
 		"markdownHTML":   markdownHTML,
 		"markdownText":   markdownText,

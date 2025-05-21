@@ -3,7 +3,9 @@ module github.com/codahale/yellhole-go
 go 1.24.1
 
 require (
+	filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
 	github.com/HugoSmits86/nativewebp v1.2.0
+	github.com/Xuanwo/go-locale v1.1.3
 	github.com/alecthomas/chroma/v2 v2.17.2
 	github.com/go-webauthn/webauthn v0.13.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
@@ -17,8 +19,6 @@ require (
 	modernc.org/libc v1.62.1
 	modernc.org/sqlite v1.37.0
 )
-
-require filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
 
 require (
 	cel.dev/expr v0.24.0 // indirect

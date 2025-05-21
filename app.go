@@ -16,7 +16,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, description string, baseURL *url.URL, requestLog bool) (http.Handler, error) {
+func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, description, lang string, baseURL *url.URL, requestLog bool) (http.Handler, error) {
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
 	go purgeOldRows(ctx, queries, purgeTicker)
@@ -34,7 +34,7 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 	}
 
 	// Load the embedded templates and create a new template set.
-	templates, err := newTemplateSet(author, title, description, baseURL, assetHashes)
+	templates, err := newTemplateSet(author, title, description, lang, baseURL, assetHashes)
 	if err != nil {
 		return nil, err
 	}
