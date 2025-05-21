@@ -8,8 +8,9 @@
             <header>
                 <h2>New Note</h2>
             </header>
-            <textarea cols="40" rows="5" id="body" name="body" placeholder="It'sa me, _Mario_."
-                oninput="updatePost()"></textarea>
+            <label for="body">
+                <textarea cols="40" rows="5" id="body" name="body" placeholder="It'sa me, _Mario_." oninput="updatePost()"></textarea>
+            </label>
             <button id="post" type="submit" name="preview" value="false" disabled>Post</button>
             <button id="preview" type="submit" name="preview" value="true" disabled>Preview</button>
             <details id="images" class="dropdown">
