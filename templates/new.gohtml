@@ -2,99 +2,101 @@
 {{define "description"}}Now that's what I call shitposting.{{end}}
 
 {{define "content"}}
-<article>
-    <section>
-        <form action='{{url "admin" "new"}}' method="post">
-            <header>
-                <h2>New Note</h2>
-            </header>
-            <label for="body">
-                <textarea cols="40" rows="5" id="body" name="body" placeholder="It'sa me, _Mario_." oninput="updatePost()"></textarea>
-            </label>
-            <button id="post" type="submit" name="preview" value="false" disabled>Post</button>
-            <button id="preview" type="submit" name="preview" value="true" disabled>Preview</button>
-            <details id="images" class="dropdown">
-                <summary role="button" class="secondary">
-                    Recent Images
-                </summary>
-                <ul>
-                    {{range .}}
-                    <li>
-                        {{$feedImageURL := url "images" "feed" .Filename}}
-                        <a href="#" onclick="insertImage('{{$feedImageURL}}')">
-                            <img src='{{url "images" "thumb" .Filename}}' title="{{.OriginalFilename}} / {{.Format}}" alt="">
-                        </a>
-                    </li>
-                    {{end}}
-                </ul>
-            </details>
-        </form>
-    </section>
-</article>
-<article>
-    <section>
-        <form action='{{url "admin" "images" "upload"}}' enctype="multipart/form-data" method="post">
-            <header>
-                <h2>Upload Images</h2>
-            </header>
-            <label for="image">Images:</label>
-            <input type="file" id="image" name="image"
-                accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/webp,image/jpeg" multiple
-                oninput="updateUpload()">
-            <button id="upload" type="submit" disabled>Upload</button>
-        </form>
-    </section>
-</article>
-<article>
-    <section>
-        <form action='{{url "admin" "images" "download"}}' method="post">
-            <header>
-                <h2>Download Image</h2>
-            </header>
-            <label for="url">URL:</label>
-            <input type="text" id="url" name="url" placeholder="https://trashbat.co.uk/gonkbot.gif" size="40"
-                oninput="updateDownload()">
-            <button id="download" type="submit" disabled>Download</button>
-        </form>
-    </section>
-</article>
+    <article>
+        <section>
+            <form action='{{url "admin" "new"}}' method="post">
+                <header>
+                    <h2>New Note</h2>
+                </header>
+                <label for="body">
+                    <textarea cols="40" rows="5" id="body" name="body" placeholder="It'sa me, _Mario_."
+                              oninput="updatePost()"></textarea>
+                </label>
+                <button id="post" type="submit" name="preview" value="false" disabled>Post</button>
+                <button id="preview" type="submit" name="preview" value="true" disabled>Preview</button>
+                <details id="images" class="dropdown">
+                    <summary role="button" class="secondary">
+                        Recent Images
+                    </summary>
+                    <ul>
+                        {{range .}}
+                            <li>
+                                {{$feedImageURL := url "images" "feed" .Filename}}
+                                <a href="#" onclick="insertImage('{{$feedImageURL}}')">
+                                    <img src='{{url "images" "thumb" .Filename}}'
+                                         title="{{.OriginalFilename}} / {{.Format}}" alt="">
+                                </a>
+                            </li>
+                        {{end}}
+                    </ul>
+                </details>
+            </form>
+        </section>
+    </article>
+    <article>
+        <section>
+            <form action='{{url "admin" "images" "upload"}}' enctype="multipart/form-data" method="post">
+                <header>
+                    <h2>Upload Images</h2>
+                </header>
+                <label for="image">Images:</label>
+                <input type="file" id="image" name="image"
+                       accept=".gif,.png,.jpg,.jpeg,.webp,image/gif,image/png,image/webp,image/jpeg" multiple
+                       oninput="updateUpload()">
+                <button id="upload" type="submit" disabled>Upload</button>
+            </form>
+        </section>
+    </article>
+    <article>
+        <section>
+            <form action='{{url "admin" "images" "download"}}' method="post">
+                <header>
+                    <h2>Download Image</h2>
+                </header>
+                <label for="url">URL:</label>
+                <input type="text" id="url" name="url" placeholder="https://trashbat.co.uk/gonkbot.gif" size="40"
+                       oninput="updateDownload()">
+                <button id="download" type="submit" disabled>Download</button>
+            </form>
+        </section>
+    </article>
 {{end}}
 
 {{define "tail"}}
-<script type="text/javascript">
-    function updatePost() {
-        const el = document.getElementById('body');
-        const btn1 = document.getElementById('post');
-        const btn2 = document.getElementById('preview');
-        btn1.disabled = btn2.disabled = el.value.length === 0;
-    }
+    <script type="text/javascript">
+        function updatePost() {
+            const el = document.getElementById('body');
+            const btn1 = document.getElementById('post');
+            const btn2 = document.getElementById('preview');
+            btn1.disabled = btn2.disabled = el.value.length === 0;
+        }
 
-    function updateUpload() {
-        const el = document.getElementById('image');
-        const btn = document.getElementById('upload');
-        btn.disabled = el.value.length === 0;
-    }
+        function updateUpload() {
+            const el = document.getElementById('image');
+            const btn = document.getElementById('upload');
+            btn.disabled = el.value.length === 0;
+        }
 
-    function updateDownload() {
-        const el = document.getElementById('url');
-        const btn = document.getElementById('download');
-        btn.disabled = el.value.length === 0;
-    }
+        function updateDownload() {
+            const el = document.getElementById('url');
+            const btn = document.getElementById('download');
+            btn.disabled = el.value.length === 0;
+        }
 
-    function insertImage(imageSrc) {
-        const dt = document.getElementById('images');
-        const el = document.getElementById('body');
-        const start = el.selectionStart;
-        const end = el.selectionEnd;
-        const text = el.value;
-        const newText = '![](' + imageSrc + ')';
-        const before = text.substring(0, start);
-        const after = text.substring(end, text.length);
-        el.value = (before + newText + after);
-        el.selectionStart = el.selectionEnd = start + 2;
-        updatePost();
-        dt.open = false;
-        el.focus();
-    }
-</script>
+        function insertImage(imageSrc) {
+            const dt = document.getElementById('images');
+            const el = document.getElementById('body');
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
+            const text = el.value;
+            const newText = '![](' + imageSrc + ')';
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+            el.value = (before + newText + after);
+            el.selectionStart = el.selectionEnd = start + 2;
+            updatePost();
+            dt.open = false;
+            el.focus();
+        }
+    </script>
 {{end}}

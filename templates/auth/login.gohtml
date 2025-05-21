@@ -2,45 +2,45 @@
 {{define "description"}}Speak frenemy and enter.{{end}}
 
 {{define "content"}}
-<section>
-    <h2>Login</h2>
-    <button id="login" data-passkey-only="true" disabled>Log In With Passkey</button>
-    <p id="message"></p>
-</section>
+    <section>
+        <h2>Login</h2>
+        <button id="login" data-passkey-only="true" disabled>Log In With Passkey</button>
+        <p id="message"></p>
+    </section>
 {{end}}
 
 {{define "auth-tail"}}
-<script type="text/javascript">
-    const { startAuthentication } = SimpleWebAuthnBrowser;
-    const btnLogin = document.getElementById('login');
-    const pMessage = document.getElementById('message');
-    btnLogin.addEventListener('click', async () => {
-        pMessage.innerHTML = '';
-        const startResp = await fetch('{{url "login" "start"}}', { method: 'POST' });
-        const startJSON = await startResp.json();
+    <script type="text/javascript">
+        const {startAuthentication} = SimpleWebAuthnBrowser;
+        const btnLogin = document.getElementById('login');
+        const pMessage = document.getElementById('message');
+        btnLogin.addEventListener('click', async () => {
+            pMessage.innerHTML = '';
+            const startResp = await fetch('{{url "login" "start"}}', {method: 'POST'});
+            const startJSON = await startResp.json();
 
-        let finishReq;
-        try {
-            finishReq = await startAuthentication({ optionsJSON: startJSON.publicKey });
-        } catch (error) {
-            pMessage.innerText = error;
-            throw error;
-        }
+            let finishReq;
+            try {
+                finishReq = await startAuthentication({optionsJSON: startJSON.publicKey});
+            } catch (error) {
+                pMessage.innerText = error;
+                throw error;
+            }
 
-        const finishResp = await fetch('{{url "login" "finish"}}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(finishReq),
+            const finishResp = await fetch('{{url "login" "finish"}}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(finishReq),
+            });
+
+            const finishJSON = await finishResp.json();
+
+            if (finishJSON && finishJSON.verified) {
+                window.location.href = '{{url "admin"}}';
+            } else {
+                console.log(finishJSON);
+                window.alert('Error logging in with passkey.')
+            }
         });
-
-        const finishJSON = await finishResp.json();
-
-        if (finishJSON && finishJSON.verified) {
-            window.location.href = '{{url "admin"}}';
-        } else {
-            console.log(finishJSON);
-            window.alert('Error logging in with passkey.')
-        }
-    });
-</script>
+    </script>
 {{end}}

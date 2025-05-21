@@ -1,12 +1,12 @@
 {{define "content"}}
-<article>
-    <div class="content">
-        {{. | markdownHTML}}
-    </div>
-    <footer>
-        <a href="#">
-            <time datetime="{{now.UTC}}">{{now.Local}}</time>
-        </a>
-    </footer>
-</article>
+    <article>
+        <div class="content">
+            {{. | markdownHTML}}
+        </div>
+        <footer>
+            <a href="#">
+                <time datetime="{{now.UTC}}">{{now.Local}}</time>
+            </a>
+        </footer>
+    </article>
 {{end}}
