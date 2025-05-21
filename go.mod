@@ -16,8 +16,8 @@ require (
 	github.com/yuin/goldmark v1.7.11
 	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
-	modernc.org/libc v1.62.1
-	modernc.org/sqlite v1.37.0
+	modernc.org/libc v1.65.7
+	modernc.org/sqlite v1.37.1
 )
 
 require (
@@ -81,7 +81,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.10.0 // indirect
+	modernc.org/memory v1.11.0 // indirect
 )
 
 tool github.com/sqlc-dev/sqlc/cmd/sqlc
