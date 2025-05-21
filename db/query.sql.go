@@ -17,7 +17,7 @@ insert into image (image_id,
                    original_filename,
                    format,
                    created_at)
-values (?, ?, ?, ?, ?)
+values (?1, ?2, ?3, ?4, ?5)
 `
 
 func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, originalFilename string, format string, createdAt time.Time) error {
@@ -33,7 +33,7 @@ func (q *Queries) CreateImage(ctx context.Context, imageID string, filename stri
 
 const createNote = `-- name: CreateNote :exec
 insert into note (note_id, body, created_at)
-values (?, ?, ?)
+values (?1, ?2, ?3)
 `
 
 func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, createdAt time.Time) error {
@@ -43,7 +43,7 @@ func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, cr
 
 const createSession = `-- name: CreateSession :exec
 insert into session (session_id, created_at)
-values (?, ?)
+values (?1, ?2)
 `
 
 func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt time.Time) error {
@@ -53,7 +53,7 @@ func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt
 
 const createWebauthnCredential = `-- name: CreateWebauthnCredential :exec
 insert into webauthn_credential (credential_data, created_at)
-values (?, ?)
+values (?1, ?2)
 `
 
 func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *JSONCredential, createdAt time.Time) error {
@@ -63,7 +63,7 @@ func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *
 
 const createWebauthnSession = `-- name: CreateWebauthnSession :exec
 insert into webauthn_session (webauthn_session_id, session_data, created_at)
-values (?, ?, ?)
+values (?1, ?2, ?3)
 `
 
 func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID string, sessionData *JSONSessionData, createdAt time.Time) error {
@@ -74,13 +74,13 @@ func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID s
 const deleteWebauthnSession = `-- name: DeleteWebauthnSession :one
 delete
 from webauthn_session
-where webauthn_session_id = ?
-  and created_at > ?
+where webauthn_session_id = ?1
+  and created_at > ?2
 returning session_data
 `
 
-func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, createdAt time.Time) (*JSONSessionData, error) {
-	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, webauthnSessionID, createdAt)
+func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, expiry time.Time) (*JSONSessionData, error) {
+	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, webauthnSessionID, expiry)
 	var session_data *JSONSessionData
 	err := row.Scan(&session_data)
 	return session_data, err
@@ -103,7 +103,7 @@ select note_id,
        body,
        created_at
 from note
-where note_id = ?
+where note_id = ?1
 `
 
 func (q *Queries) NoteByID(ctx context.Context, noteID string) (Note, error) {
@@ -149,28 +149,28 @@ func (q *Queries) NotesByDate(ctx context.Context, startDate time.Time, endDate 
 const purgeSessions = `-- name: PurgeSessions :execresult
 delete
 from session
-where created_at < ?
+where created_at < ?1
 `
 
-func (q *Queries) PurgeSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeSessions, createdAt)
+func (q *Queries) PurgeSessions(ctx context.Context, expiry time.Time) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeSessions, expiry)
 }
 
 const purgeWebauthnSessions = `-- name: PurgeWebauthnSessions :execresult
 delete
 from webauthn_session
-where created_at < ?
+where created_at < ?1
 `
 
-func (q *Queries) PurgeWebauthnSessions(ctx context.Context, createdAt time.Time) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeWebauthnSessions, createdAt)
+func (q *Queries) PurgeWebauthnSessions(ctx context.Context, expiry time.Time) (sql.Result, error) {
+	return q.db.ExecContext(ctx, purgeWebauthnSessions, expiry)
 }
 
 const recentImages = `-- name: RecentImages :many
 select image_id, filename, original_filename, format, created_at
 from image
 order by created_at desc
-limit ?
+limit ?1
 `
 
 func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]Image, error) {
@@ -208,7 +208,7 @@ select note_id,
        created_at
 from note
 order by created_at desc
-limit ?
+limit ?1
 `
 
 func (q *Queries) RecentNotes(ctx context.Context, limit int64) ([]Note, error) {
@@ -237,12 +237,12 @@ func (q *Queries) RecentNotes(ctx context.Context, limit int64) ([]Note, error) 
 const sessionExists = `-- name: SessionExists :one
 select count(1) > 0
 from session
-where session_id = ?
-  and created_at > ?
+where session_id = ?1
+  and created_at > ?2
 `
 
-func (q *Queries) SessionExists(ctx context.Context, sessionID string, createdAt time.Time) (bool, error) {
-	row := q.db.QueryRowContext(ctx, sessionExists, sessionID, createdAt)
+func (q *Queries) SessionExists(ctx context.Context, sessionID string, expiry time.Time) (bool, error) {
+	row := q.db.QueryRowContext(ctx, sessionExists, sessionID, expiry)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
