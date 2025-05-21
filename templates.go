@@ -24,10 +24,7 @@ type templateSet struct {
 }
 
 func newTemplateSet(author, title, description string, baseURL *url.URL, assetHashes map[string]string) (*templateSet, error) {
-	ts := &templateSet{
-		templates: make(map[string]*template.Template),
-	}
-
+	templates := make(map[string]*template.Template)
 	funcs := template.FuncMap{
 		"assetHash": func(elem ...string) (string, error) {
 			p := path.Join(elem...)
@@ -69,6 +66,12 @@ func newTemplateSet(author, title, description string, baseURL *url.URL, assetHa
 		return nil, err
 	}
 
+	// Parse the base template.
+	base, err := template.New("base").Funcs(funcs).ParseFS(templatesDir, "base.gohtml")
+	if err != nil {
+		return nil, err
+	}
+
 	if err := fs.WalkDir(templatesDir, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
@@ -76,27 +79,27 @@ func newTemplateSet(author, title, description string, baseURL *url.URL, assetHa
 
 		// Convert templates/a/b/c.gohtml into a template parse pattern of the following:
 		//
-		//   templates/a/b/c.gohtml templates/a/b.gohtml templates/a.gohtml templates/base.gohtml
+		//   templates/a/b/c.gohtml templates/a/b.gohtml templates/a.gohtml
 		parsePath := []string{p}
 		for dir := path.Dir(p); dir != "."; dir = path.Dir(dir) {
 			parsePath = append(parsePath, dir+".gohtml")
 		}
-		parsePath = append(parsePath, "base.gohtml")
 
 		// Parse the template in its inheritance path.
-		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templatesDir, parsePath...)
+		t, err := template.Must(base.Clone()).ParseFS(templatesDir, parsePath...)
 		if err != nil {
 			return err
 		}
 
 		// Add the template using its relative path in the templates directory (e.g. "a/b/c.gohtml").
-		ts.templates[p] = t
+		templates[p] = t
 
 		return nil
 	}); err != nil {
 		return nil, err
 	}
-	return ts, nil
+
+	return &templateSet{templates}, nil
 }
 
 func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
