@@ -46,7 +46,7 @@ func handleRegisterPage(queries *db.Queries, templates *templateSet, baseURL *ur
 		}
 
 		// Respond with the register page.
-		templates.render(w, "auth/register.html", nil)
+		templates.render(w, "auth/register.gohtml", nil)
 	})
 }
 
@@ -145,7 +145,7 @@ func handleLoginPage(queries *db.Queries, templates *templateSet, baseURL *url.U
 		}
 
 		// Respond with the login page.
-		templates.render(w, "auth/login.html", nil)
+		templates.render(w, "auth/login.gohtml", nil)
 	})
 }
 

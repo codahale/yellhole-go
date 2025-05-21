@@ -30,7 +30,7 @@ func handleHomePage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.html", feedPage{false, notes, weeks})
+		templates.render(w, "feed.gohtml", feedPage{false, notes, weeks})
 	})
 }
 
@@ -58,7 +58,7 @@ func handleWeekPage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.html", feedPage{false, notes, weeks})
+		templates.render(w, "feed.gohtml", feedPage{false, notes, weeks})
 	})
 }
 
@@ -78,7 +78,7 @@ func handleNotePage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.html", feedPage{true, []db.Note{note}, weeks})
+		templates.render(w, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
 	})
 }
 

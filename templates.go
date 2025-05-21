@@ -74,14 +74,14 @@ func newTemplateSet(author, title, description string, baseURL *url.URL, assetHa
 			return err
 		}
 
-		// Convert templates/a/b/c.html into a template parse pattern of the following:
+		// Convert templates/a/b/c.gohtml into a template parse pattern of the following:
 		//
-		//   templates/a/b/c.html templates/a/b.html templates/a.html templates/base.html
+		//   templates/a/b/c.gohtml templates/a/b.gohtml templates/a.gohtml templates/base.gohtml
 		parsePath := []string{p}
 		for dir := path.Dir(p); dir != "."; dir = path.Dir(dir) {
-			parsePath = append(parsePath, dir+".html")
+			parsePath = append(parsePath, dir+".gohtml")
 		}
-		parsePath = append(parsePath, "base.html")
+		parsePath = append(parsePath, "base.gohtml")
 
 		// Parse the template in its inheritance path.
 		t, err := template.New(d.Name()).Funcs(funcs).ParseFS(templatesDir, parsePath...)
@@ -89,7 +89,7 @@ func newTemplateSet(author, title, description string, baseURL *url.URL, assetHa
 			return err
 		}
 
-		// Add the template using its relative path in the templates directory (e.g. "a/b/c.html").
+		// Add the template using its relative path in the templates directory (e.g. "a/b/c.gohtml").
 		ts.templates[p] = t
 
 		return nil
@@ -108,7 +108,7 @@ func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 
-	if err := t.ExecuteTemplate(b, "base.html", data); err != nil {
+	if err := t.ExecuteTemplate(b, "base.gohtml", data); err != nil {
 		panic(err)
 	}
 

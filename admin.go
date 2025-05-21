@@ -17,14 +17,14 @@ func handleAdminPage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "new.html", images)
+		templates.render(w, "new.gohtml", images)
 	})
 }
 
 func handleNewNote(queries *db.Queries, templates *templateSet, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("preview") == fmt.Sprint(true) {
-			templates.render(w, "preview.html", r.FormValue("body"))
+			templates.render(w, "preview.gohtml", r.FormValue("body"))
 			return
 		}
 
