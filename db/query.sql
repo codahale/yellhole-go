@@ -18,12 +18,8 @@ order by created_at desc
 limit ?;
 
 -- name: WeeksWithNotes :many
-select cast(
-               date(datetime(created_at, 'weekday 0', '-7 days')) as text
-       ) as start_date,
-       cast(
-               date(datetime(created_at, 'weekday 0', '-1 day')) as text
-       ) as end_date
+select cast(date(datetime(created_at, 'weekday 0', '-7 days')) as text) as start_date,
+       cast(date(datetime(created_at, 'weekday 0', '-1 day')) as text)  as end_date
 from note
 group by 1
 order by 1 desc;
