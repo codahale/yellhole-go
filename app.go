@@ -33,8 +33,8 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 		return nil, err
 	}
 
-	// Load the embedded templates and create a new template set.
-	templates, err := newTemplateSet(author, title, description, lang, baseURL, assetHashes)
+	// Load the embedded templates.
+	templates, err := loadTemplates(author, title, description, lang, baseURL, assetHashes)
 	if err != nil {
 		return nil, err
 	}

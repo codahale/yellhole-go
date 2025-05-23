@@ -19,13 +19,13 @@ var (
 	templatesFS embed.FS
 )
 
-type templateSet struct {
-	templates map[string]*template.Template
-}
+func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
+	templatesDir, err := fs.Sub(templatesFS, "templates")
+	if err != nil {
+		return nil, err
+	}
 
-func newTemplateSet(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*templateSet, error) {
-	templates := make(map[string]*template.Template)
-	funcs := template.FuncMap{
+	return template.New("yellhole").Funcs(template.FuncMap{
 		"assetHash": func(elem ...string) (string, error) {
 			p := path.Join(elem...)
 			hash, ok := assetHashes[p]
@@ -62,59 +62,14 @@ func newTemplateSet(author, title, description, lang string, baseURL *url.URL, a
 		"url": func(elem ...string) template.URL {
 			return template.URL(baseURL.JoinPath(elem...).String())
 		},
-	}
-
-	templatesDir, err := fs.Sub(templatesFS, "templates")
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse the base template.
-	base, err := template.New("base").Funcs(funcs).ParseFS(templatesDir, "base.gohtml")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := fs.WalkDir(templatesDir, ".", func(p string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-
-		// Convert templates/a/b/c.gohtml into a template parse pattern of the following:
-		//
-		//   templates/a/b/c.gohtml templates/a/b.gohtml templates/a.gohtml
-		parsePath := []string{p}
-		for dir := path.Dir(p); dir != "."; dir = path.Dir(dir) {
-			parsePath = append(parsePath, dir+".gohtml")
-		}
-
-		// Parse the template in its inheritance path.
-		t, err := template.Must(base.Clone()).ParseFS(templatesDir, parsePath...)
-		if err != nil {
-			return err
-		}
-
-		// Add the template using its relative path in the templates directory (e.g. "a/b/c.gohtml").
-		templates[p] = t
-
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	return &templateSet{templates}, nil
+	}).ParseFS(templatesDir, "partials/*.gohtml", "*.gohtml")
 }
 
-func (ts *templateSet) render(w http.ResponseWriter, name string, data any) {
-	t, ok := ts.templates[name]
-	if !ok {
-		panic(fmt.Sprintf("unknown template: %q", name))
-	}
-
+func htmlResponse(w http.ResponseWriter, t *template.Template, name string, data any) {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 
-	if err := t.ExecuteTemplate(b, "base.gohtml", data); err != nil {
+	if err := t.ExecuteTemplate(b, name, data); err != nil {
 		panic(err)
 	}
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Yellhole Admin</title>
+    {{template "head"}}
+    {{template "webauthn-head"}}
+</head>
+
+<body>
+<header class="container">
+    <nav>
+        <ul>
+            <li>
+                <hgroup>
+                    <h1>
+                        <a href="{{url}}">Yellhole Admin</a>
+                    </h1>
+                    <h2>Welcome to the hole.</h2>
+                </hgroup>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="container">
+    <section>
+        <h2>Register</h2>
+        <button id="register" data-passkey-only="true" disabled>Register Passkey</button>
+        <p id="message"></p>
+    </section>
+</main>
+<footer class="container">
+</footer>
+
+{{template "webauthn-tail"}}
+    <script type="text/javascript">
+        const {startRegistration} = SimpleWebAuthnBrowser;
+        const btnRegister = document.getElementById('register');
+        const pMessage = document.getElementById('message');
+        btnRegister.addEventListener('click', async () => {
+        pMessage.innerHTML = '';
+        const startResp = await fetch('{{url "register" "start"}}', {method: 'POST'});
+        const startJSON = await startResp.json();
+
+        let finishReq;
+        try {
+        finishReq = await startRegistration({optionsJSON: startJSON.publicKey});
+    } catch (error) {
+        if (error.name === 'InvalidStateError') {
+        pMessage.innerText = 'Error: Authenticator was probably already registered by user';
+    } else {
+        pMessage.innerText = error;
+    }
+
+        throw error;
+    }
+
+        const finishResp = await fetch('{{url "register" "finish"}}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(finishReq),
+    });
+
+        const finishJSON = await finishResp.json();
+
+        if (finishJSON && finishJSON.verified) {
+        window.alert('Passkey successfully registered.')
+        window.location.href = '{{url "login"}}';
+    } else {
+        console.log(finishJSON);
+        window.alert('Error registering passkey.')
+    }
+    });
+</script>
+</body>
+
+</html>

@@ -1,8 +1,10 @@
-{{define "title"}}{{title}}{{end}}
-{{define "description"}}{{description}}{{end}}
+<!DOCTYPE html>
+<html lang="{{lang}}">
 
-{{define "head"}}
-    <link href='{{url "atom.xml"}}' rel="alternate" title="Atom" type="application/atom+xml"/>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    {{template "head"}}
     {{if .Single }}
         {{ range .Notes}}
             {{$desc := .Body | markdownText}}
@@ -32,41 +34,51 @@
 
         {{end}}
     {{end}}
+</head>
 
-
-{{end}}
-
-{{define "nav"}}
-    <ul>
-        <li class="secondary">
-            <details class="dropdown">
-                <summary>
-                    Archives
-                </summary>
-                <ul>
-                    {{range .Weeks}}
-                        <li>
-                            <a href='{{url "notes" .StartDate}}'>
-                                {{.StartDate}} to {{.EndDate}}
-                            </a>
-                        </li>
-                    {{end}}
-                </ul>
-            </details>
-        </li>
-        <li>
-            <a href='{{url "atom.xml"}}'>
-                <svg style="width: 30px; height: 30px" viewBox="0 0 800 800">
-                    <path
-                            d="M493 652H392c0-134-111-244-244-244V307c189 0 345 156 345 345zm71 0c0-228-188-416-416-416V132c285 0 520 235 520 520z"/>
-                    <circle cx="219" cy="581" r="71"/>
-                </svg>
-            </a>
-        </li>
-    </ul>
-{{end}}
-
-{{define "content"}}
+<body>
+<header class="container">
+    <nav>
+        <ul>
+            <li>
+                <hgroup>
+                    <h1>
+                        <a href="{{url}}">{{title}}</a>
+                    </h1>
+                    <h2>{{description}}</h2>
+                </hgroup>
+            </li>
+        </ul>
+        <ul>
+            <li class="secondary">
+                <details class="dropdown">
+                    <summary>
+                        Archives
+                    </summary>
+                    <ul>
+                        {{range .Weeks}}
+                            <li>
+                                <a href='{{url "notes" .StartDate}}'>
+                                    {{.StartDate}} to {{.EndDate}}
+                                </a>
+                            </li>
+                        {{end}}
+                    </ul>
+                </details>
+            </li>
+            <li>
+                <a href='{{url "atom.xml"}}'>
+                    <svg style="width: 30px; height: 30px" viewBox="0 0 800 800">
+                        <path
+                                d="M493 652H392c0-134-111-244-244-244V307c189 0 345 156 345 345zm71 0c0-228-188-416-416-416V132c285 0 520 235 520 520z"/>
+                        <circle cx="219" cy="581" r="71"/>
+                    </svg>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="container">
     {{range .Notes}}
         <article>
             <div class="content">
@@ -83,10 +95,12 @@
             <aside>Nothing here yet.</aside>
         </article>
     {{end}}
-{{end}}
-
-{{define "footer"}}
+</main>
+<footer class="container">
     <p>
         <small>Copyright &copy; {{now.Local.Year}} {{author}}</small>
     </p>
-{{end}}
+</footer>
+</body>
+
+</html>

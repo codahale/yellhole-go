@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
-func handleHomePage(queries *db.Queries, templates *templateSet) http.Handler {
+func handleHomePage(queries *db.Queries, t *template.Template) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 		if err != nil {
@@ -30,11 +31,11 @@ func handleHomePage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.gohtml", feedPage{false, notes, weeks})
+		htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
 	})
 }
 
-func handleWeekPage(queries *db.Queries, templates *templateSet) http.Handler {
+func handleWeekPage(queries *db.Queries, t *template.Template) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 		if err != nil {
@@ -58,11 +59,11 @@ func handleWeekPage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.gohtml", feedPage{false, notes, weeks})
+		htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
 	})
 }
 
-func handleNotePage(queries *db.Queries, templates *templateSet) http.Handler {
+func handleNotePage(queries *db.Queries, t *template.Template) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		note, err := queries.NoteByID(r.Context(), r.PathValue("id"))
 		if err != nil {
@@ -78,7 +79,7 @@ func handleNotePage(queries *db.Queries, templates *templateSet) http.Handler {
 			panic(err)
 		}
 
-		templates.render(w, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
+		htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
 	})
 }
 

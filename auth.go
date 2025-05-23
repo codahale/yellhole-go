@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -23,7 +24,7 @@ func newWebauthn(title string, baseURL *url.URL) (*webauthn.WebAuthn, error) {
 	})
 }
 
-func handleRegisterPage(queries *db.Queries, templates *templateSet, baseURL *url.URL) http.Handler {
+func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Ensure we only register one passkey.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -46,7 +47,7 @@ func handleRegisterPage(queries *db.Queries, templates *templateSet, baseURL *ur
 		}
 
 		// Respond with the register page.
-		templates.render(w, "auth/register.gohtml", nil)
+		htmlResponse(w, t, "register.gohtml", nil)
 	})
 }
 
@@ -121,7 +122,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 	})
 }
 
-func handleLoginPage(queries *db.Queries, templates *templateSet, baseURL *url.URL) http.Handler {
+func handleLoginPage(queries *db.Queries, t *template.Template, baseURL *url.URL) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Redirect to registration if no credentials exist.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -145,7 +146,7 @@ func handleLoginPage(queries *db.Queries, templates *templateSet, baseURL *url.U
 		}
 
 		// Respond with the login page.
-		templates.render(w, "auth/login.gohtml", nil)
+		htmlResponse(w, t, "login.gohtml", nil)
 	})
 }
 

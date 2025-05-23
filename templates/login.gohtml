@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Yellhole Admin</title>
+    {{template "head"}}
+    {{template "webauthn-head"}}
+</head>
+
+<body>
+<header class="container">
+    <nav>
+        <ul>
+            <li>
+                <hgroup>
+                    <h1>
+                        <a href="{{url}}">Yellhole Admin</a>
+                    </h1>
+                    <h2>Speak frenemy and enter.</h2>
+                </hgroup>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="container">
+    <section>
+        <h2>Login</h2>
+        <button id="login" data-passkey-only="true" disabled>Log In With Passkey</button>
+
+        <p id="message"></p>
+    </section>
+</main>
+<footer class="container">
+</footer>
+
+{{template "webauthn-tail"}}
+<script type="text/javascript">
+    const {startAuthentication} = SimpleWebAuthnBrowser;
+    const btnLogin = document.getElementById('login');
+    const pMessage = document.getElementById('message');
+    btnLogin.addEventListener('click', async () => {
+        pMessage.innerHTML = '';
+        const startResp = await fetch('{{url "login" "start"}}', {method: 'POST'});
+        const startJSON = await startResp.json();
+
+        let finishReq;
+        try {
+            finishReq = await startAuthentication({optionsJSON: startJSON.publicKey});
+        } catch (error) {
+            pMessage.innerText = error;
+            throw error;
+        }
+
+        const finishResp = await fetch('{{url "login" "finish"}}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(finishReq),
+        });
+
+        const finishJSON = await finishResp.json();
+
+        if (finishJSON && finishJSON.verified) {
+            window.location.href = '{{url "admin"}}';
+        } else {
+            console.log(finishJSON);
+            window.alert('Error logging in with passkey.')
+        }
+    });
+</script>
+</body>
+
+</html>

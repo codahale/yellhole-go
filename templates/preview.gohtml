@@ -1,4 +1,28 @@
-{{define "content"}}
+<!DOCTYPE html>
+<html lang="{{lang}}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    {{template "head"}}
+</head>
+
+<body>
+<header class="container">
+    <nav>
+        <ul>
+            <li>
+                <hgroup>
+                    <h1>
+                        <a href="{{url}}">{{title}}</a>
+                    </h1>
+                    <h2>{{description}}</h2>
+                </hgroup>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="container">
     <article>
         <div class="content">
             {{. | markdownHTML}}
@@ -9,4 +33,12 @@
             </a>
         </footer>
     </article>
-{{end}}
+</main>
+<footer class="container">
+    <p>
+        <small>Copyright &copy; {{now.Local.Year}} {{author}}</small>
+    </p>
+</footer>
+</body>
+
+</html>

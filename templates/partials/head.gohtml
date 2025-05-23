@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html lang="{{lang}}">
-
-<head>
-    <meta charset="UTF-8">
-    <title>{{block "title" .}}{{end}}</title>
+{{define "head"}}
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta charset='utf-8'>
     <link rel="stylesheet" href='{{url "css" "pico-2.1.1.min.css"}}?{{buildTag}}'
@@ -11,7 +6,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href='{{url "apple-touch-icon.png"}}'>
     <link rel="icon" type="image/png" sizes="32x32" href='{{url "favicon-32x32.png"}}'>
     <link rel="icon" type="image/png" sizes="16x16" href='{{url "favicon-16x16.png"}}'>
-    {{block "head" .}}{{end}}
+    <link href='{{url "atom.xml"}}' rel="alternate" title="Atom" type="application/atom+xml"/>
     <style>
         .content p img {
             display: block;
@@ -40,34 +35,4 @@
             color: var(--pico-muted-color);
         }
     </style>
-</head>
-
-<body>
-<header class="container">
-    <nav>
-        <ul>
-            <li>
-                <hgroup>
-                    <h1>
-                        <a href="{{url}}">{{template "title" .}}</a>
-                    </h1>
-                    <h2>{{block "description" .}}{{end}}</h2>
-                </hgroup>
-            </li>
-        </ul>
-        {{block "nav" .}}{{end}}
-    </nav>
-</header>
-<main class="container">
-    {{block "content" .}}{{end}}
-</main>
-<footer class="container">
-    <small>
-        {{block "footer" .}}{{end}}
-    </small>
-</footer>
-
-{{block "tail" .}}{{end}}
-</body>
-
-</html>
+{{end}}
