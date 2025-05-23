@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -60,6 +61,10 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	lang := cmd.String("lang", detectedLang.String(), "the language of the notes")
 	if err := cmd.Parse(args); err != nil {
 		return err
+	}
+
+	if !strings.HasSuffix(*baseURLStr, "/") {
+		*baseURLStr += "/"
 	}
 
 	baseURL, err := url.Parse(*baseURLStr)

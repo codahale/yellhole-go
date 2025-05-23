@@ -58,7 +58,7 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 	// Serve the root from the base URL path.
 	if baseURL.Path != "/" {
 		nestedPrefix := strings.TrimRight(baseURL.Path, "/")
-		handler = http.StripPrefix(nestedPrefix, mux)
+		handler = http.StripPrefix(nestedPrefix, handler)
 	}
 
 	// Add logging.
