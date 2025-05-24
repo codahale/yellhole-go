@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/codahale/yellhole-go/build"
+	"github.com/codahale/yellhole-go/markdown"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -51,9 +52,9 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 		"lang": func() string {
 			return lang
 		},
-		"markdownHTML":   markdownHTML,
-		"markdownText":   markdownText,
-		"markdownImages": markdownImages,
+		"markdownHTML":   markdown.HTML,
+		"markdownText":   markdown.Text,
+		"markdownImages": markdown.Images,
 		"now": func() time.Time {
 			return time.Now()
 		},

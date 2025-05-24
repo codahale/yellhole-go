@@ -1,20 +1,19 @@
-package main
+package markdown
 
 import (
-	"html/template"
-	"net/url"
-	"strings"
-
 	_ "github.com/alecthomas/chroma/v2"
 	"github.com/valyala/bytebufferpool"
 	"github.com/yuin/goldmark"
-	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	"github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/text"
+	"html/template"
+	"net/url"
+	"strings"
 )
 
-func markdownImages(s string) ([]*url.URL, error) {
+func Images(s string) ([]*url.URL, error) {
 	var images []*url.URL
 	node := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.NewTypographer())).Parser().Parse(text.NewReader([]byte(s)))
 	if err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -31,7 +30,7 @@ func markdownImages(s string) ([]*url.URL, error) {
 	return images, nil
 }
 
-func markdownText(s string) (string, error) {
+func Text(s string) (string, error) {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 
@@ -75,7 +74,7 @@ func markdownText(s string) (string, error) {
 	return strings.TrimSpace(b.String()), nil
 }
 
-func markdownHTML(s string) (template.HTML, error) {
+func HTML(s string) (template.HTML, error) {
 	b := bytebufferpool.Get()
 	defer bytebufferpool.Put(b)
 

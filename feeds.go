@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"github.com/codahale/yellhole-go/markdown"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -102,7 +103,7 @@ func handleAtomFeed(queries *db.Queries, author, title, description string, base
 		}
 
 		for _, note := range notes {
-			html, err := markdownHTML(note.Body)
+			html, err := markdown.HTML(note.Body)
 			if err != nil {
 				panic(err)
 			}
