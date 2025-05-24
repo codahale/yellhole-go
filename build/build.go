@@ -1,4 +1,4 @@
-package main
+package build
 
 import (
 	"crypto/sha256"
@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var buildTag string
+var Tag string
 
 func init() {
 	f, err := os.Open(os.Args[0])
@@ -23,5 +23,5 @@ func init() {
 		panic(err)
 	}
 
-	buildTag = hex.EncodeToString(h.Sum(nil)[:8])
+	Tag = hex.EncodeToString(h.Sum(nil)[:8])
 }

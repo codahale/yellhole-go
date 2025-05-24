@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Xuanwo/go-locale"
+	"github.com/codahale/yellhole-go/build"
 	"log/slog"
 	"net"
 	"net/http"
@@ -61,7 +62,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		return err
 	}
 
-	slog.Info("starting", "dataDir", *dataDir, "buildTag", buildTag)
+	slog.Info("starting", "dataDir", *dataDir, "buildTag", build.Tag)
 
 	// Connect to the database.
 	queries, err := db.NewWithMigrations(filepath.Join(*dataDir, "yellhole.db"))

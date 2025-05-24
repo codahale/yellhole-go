@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/codahale/yellhole-go/build"
 	"html/template"
 	"io/fs"
 	"net/http"
@@ -39,7 +40,7 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 			return author
 		},
 		"buildTag": func() string {
-			return buildTag
+			return build.Tag
 		},
 		"description": func() string {
 			return description
