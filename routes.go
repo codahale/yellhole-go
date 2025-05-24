@@ -8,21 +8,21 @@ import (
 	"github.com/codahale/yellhole-go/db"
 )
 
-func addRoutes(mux *http.ServeMux, author, title, description string, baseURL *url.URL, queries *db.Queries, t2 *template.Template, images *imageStore, assets http.Handler, assetPaths []string) {
-	mux.Handle("GET /{$}", handleHomePage(queries, t2))
+func addRoutes(mux *http.ServeMux, author, title, description string, baseURL *url.URL, queries *db.Queries, t *template.Template, images *imageStore, assets http.Handler, assetPaths []string) {
+	mux.Handle("GET /{$}", handleHomePage(queries, t))
 	mux.Handle("GET /atom.xml", handleAtomFeed(queries, author, title, description, baseURL))
-	mux.Handle("GET /notes/{start}", handleWeekPage(queries, t2))
-	mux.Handle("GET /note/{id}", handleNotePage(queries, t2))
+	mux.Handle("GET /notes/{start}", handleWeekPage(queries, t))
+	mux.Handle("GET /note/{id}", handleNotePage(queries, t))
 
-	mux.Handle("GET /admin", handleAdminPage(queries, t2))
-	mux.Handle("POST /admin/new", handleNewNote(queries, t2, baseURL))
+	mux.Handle("GET /admin", handleAdminPage(queries, t))
+	mux.Handle("POST /admin/new", handleNewNote(queries, t, baseURL))
 	mux.Handle("POST /admin/images/download", handleDownloadImage(queries, images, baseURL))
 	mux.Handle("POST /admin/images/upload", handleUploadImage(queries, images, baseURL))
 
-	mux.Handle("GET /register", handleRegisterPage(queries, t2, baseURL))
+	mux.Handle("GET /register", handleRegisterPage(queries, t, baseURL))
 	mux.Handle("POST /register/start", handleRegisterStart(queries, author, title, baseURL))
 	mux.Handle("POST /register/finish", handleRegisterFinish(queries, author, title, baseURL))
-	mux.Handle("GET /login", handleLoginPage(queries, t2, baseURL))
+	mux.Handle("GET /login", handleLoginPage(queries, t, baseURL))
 	mux.Handle("POST /login/start", handleLoginStart(queries, author, title, baseURL))
 	mux.Handle("POST /login/finish", handleLoginFinish(queries, author, title, baseURL))
 
