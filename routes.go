@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/codahale/yellhole-go/imgstore"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -8,7 +9,7 @@ import (
 	"github.com/codahale/yellhole-go/db"
 )
 
-func addRoutes(mux *http.ServeMux, author, title, description string, baseURL *url.URL, queries *db.Queries, t *template.Template, images *imageStore, assets http.Handler, assetPaths []string) {
+func addRoutes(mux *http.ServeMux, author, title, description string, baseURL *url.URL, queries *db.Queries, t *template.Template, images *imgstore.Store, assets http.Handler, assetPaths []string) {
 	mux.Handle("GET /{$}", handleHomePage(queries, t))
 	mux.Handle("GET /atom.xml", handleAtomFeed(queries, author, title, description, baseURL))
 	mux.Handle("GET /notes/{start}", handleWeekPage(queries, t))

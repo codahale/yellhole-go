@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"filippo.io/csrf"
+	"github.com/codahale/yellhole-go/imgstore"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -50,7 +51,7 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 	}
 
 	// Create an image store.
-	images, err := newImageStore(dataRoot)
+	images, err := imgstore.New(dataRoot)
 	if err != nil {
 		return nil, err
 	}
