@@ -9,10 +9,10 @@ import (
 )
 
 type testApp struct {
-	app     http.Handler
 	queries *db.Queries
 	tempDir string
 	t       *testing.T
+	http.Handler
 }
 
 func newTestApp(t *testing.T) *testApp {
@@ -35,10 +35,5 @@ func newTestApp(t *testing.T) *testApp {
 		t.Fatal(err)
 	}
 
-	return &testApp{app, queries, tempDir, t}
-}
-
-func (e *testApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	e.t.Helper()
-	e.app.ServeHTTP(w, r)
+	return &testApp{queries, tempDir, t, app}
 }
