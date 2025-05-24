@@ -19,7 +19,7 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 		return
 	}
 
-	handler = http.FileServerFS(assetsDir)
+	handler = cacheControl(http.FileServerFS(assetsDir), "max-age=604800")
 	hashes = make(map[string]string)
 	err = fs.WalkDir(assetsDir, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
@@ -37,4 +37,11 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 		return nil
 	})
 	return
+}
+
+func cacheControl(h http.Handler, cacheControl string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("cache-control", cacheControl)
+		h.ServeHTTP(w, r)
+	})
 }

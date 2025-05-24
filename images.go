@@ -24,11 +24,11 @@ import (
 )
 
 func handleFeedImage(images *imageStore) http.Handler {
-	return http.FileServerFS(images.feedRoot.FS())
+	return cacheControl(http.FileServerFS(images.feedRoot.FS()), "max-age=31536000,immutable")
 }
 
 func handleThumbImage(images *imageStore) http.Handler {
-	return http.FileServerFS(images.thumbRoot.FS())
+	return cacheControl(http.FileServerFS(images.thumbRoot.FS()), "max-age=31536000,immutable")
 }
 
 func handleDownloadImage(queries *db.Queries, images *imageStore, baseURL *url.URL) http.Handler {
