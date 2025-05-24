@@ -36,6 +36,9 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 	// Parse the configuration flags and environment variables.
 	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
+	if err != nil {
+		return err
+	}
 
 	// Connect to the database.
 	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
