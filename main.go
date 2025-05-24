@@ -9,12 +9,10 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -53,22 +51,13 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
 	addr := cmd.String("addr", env("ADDR", "127.0.0.1:3000"), "the address on which to listen")
-	baseURLStr := cmd.String("base_url", env("BASE_URL", "http://localhost:3000"), "the base URL of the server")
+	baseURL := cmd.String("base_url", env("BASE_URL", "http://localhost:3000/"), "the base URL of the server")
 	dataDir := cmd.String("data_dir", env("DATA_DIR", "./data"), "the directory in which all persistent data is stored")
 	title := cmd.String("title", env("TITLE", "Yellhole"), "the title of the yellhole instance")
 	description := cmd.String("description", env("DESCRIPTION", "Obscurantist filth."), "the description of the yellhole instance")
 	author := cmd.String("author", env("AUTHOR", "Luther Blissett"), "the author of the yellhole instance")
 	lang := cmd.String("lang", detectedLang.String(), "the language of the notes")
 	if err := cmd.Parse(args); err != nil {
-		return err
-	}
-
-	if !strings.HasSuffix(*baseURLStr, "/") {
-		*baseURLStr += "/"
-	}
-
-	baseURL, err := url.Parse(*baseURLStr)
-	if err != nil {
 		return err
 	}
 
@@ -86,7 +75,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, queries, *dataDir, *author, *title, *description, *lang, baseURL, true)
+	app, err := newApp(ctx, queries, *dataDir, *author, *title, *description, *lang, *baseURL, true)
 	if err != nil {
 		return err
 	}
@@ -106,7 +95,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}
 
 	// Listen for connections in a separate goroutine.
-	slog.Info("listening for connections", "baseURL", baseURL)
+	slog.Info("listening for connections", "baseURL", *baseURL)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("error listening for requests", "err", err)

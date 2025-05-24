@@ -16,7 +16,17 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, description, lang string, baseURL *url.URL, requestLog bool) (http.Handler, error) {
+func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, description, lang string, baseURLStr string, requestLog bool) (http.Handler, error) {
+	baseURL, err := url.Parse(baseURLStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure baseURL always ends in a slash.
+	if !strings.HasSuffix(baseURL.Path, "/") {
+		baseURL.Path += "/"
+	}
+
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
 	go purgeOldRows(ctx, queries, purgeTicker)
@@ -56,10 +66,7 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 	handler = csrf.New().Handler(handler)
 
 	// Serve the root from the base URL path.
-	if baseURL.Path != "/" {
-		nestedPrefix := strings.TrimRight(baseURL.Path, "/")
-		handler = http.StripPrefix(nestedPrefix, handler)
-	}
+	handler = http.StripPrefix(strings.TrimRight(baseURL.Path, "/"), handler)
 
 	// Add logging.
 	loggerHandler := slog.DiscardHandler

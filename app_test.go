@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"testing"
 
@@ -19,13 +18,7 @@ type testApp struct {
 func newTestApp(t *testing.T) *testApp {
 	t.Helper()
 
-	baseURL, err := url.Parse("http://example.com/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	tempDir := t.TempDir()
-
 	queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
@@ -37,7 +30,7 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	app, err := newApp(t.Context(), queries, tempDir, "Test Man", "Test Yell", "Gotta go fast.", "en", baseURL, false)
+	app, err := newApp(t.Context(), queries, tempDir, "Test Man", "Test Yell", "Gotta go fast.", "en", "http://example.com", false)
 	if err != nil {
 		t.Fatal(err)
 	}
