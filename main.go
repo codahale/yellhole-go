@@ -50,7 +50,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, queries, dataDir, author, title, description, lang, baseURL, true)
+	app, err := newApp(ctx, queries, baseURL, dataDir, author, title, description, lang, true)
 	if err != nil {
 		return err
 	}

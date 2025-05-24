@@ -17,15 +17,15 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, description, lang string, baseURLStr string, requestLog bool) (http.Handler, error) {
-	baseURL, err := url.Parse(baseURLStr)
+func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, title, description, lang string, requestLog bool) (http.Handler, error) {
+	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, err
 	}
 
 	// Ensure baseURL always ends in a slash.
-	if !strings.HasSuffix(baseURL.Path, "/") {
-		baseURL.Path += "/"
+	if !strings.HasSuffix(u.Path, "/") {
+		u.Path += "/"
 	}
 
 	// Set up a purgeTicker to purge old sessions every five minutes.
@@ -45,7 +45,7 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 	}
 
 	// Load the embedded templates.
-	templates, err := loadTemplates(author, title, description, lang, baseURL, assetHashes)
+	templates, err := loadTemplates(author, title, description, lang, u, assetHashes)
 	if err != nil {
 		return nil, err
 	}
@@ -58,16 +58,16 @@ func newApp(ctx context.Context, queries *db.Queries, dataDir, author, title, de
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
-	addRoutes(mux, author, title, description, baseURL, queries, templates, images, assets, assetPaths)
+	addRoutes(mux, author, title, description, u, queries, templates, images, assets, assetPaths)
 
 	// Require authentication for all /admin requests.
-	handler := requireAuthentication(queries, mux, baseURL, "/admin")
+	handler := requireAuthentication(queries, mux, u, "/admin")
 
 	// Protect from CSRF attacks.
 	handler = csrf.New().Handler(handler)
 
 	// Serve the root from the base URL path.
-	handler = http.StripPrefix(strings.TrimRight(baseURL.Path, "/"), handler)
+	handler = http.StripPrefix(strings.TrimRight(u.Path, "/"), handler)
 
 	// Add logging.
 	loggerHandler := slog.DiscardHandler

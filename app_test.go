@@ -30,7 +30,7 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	app, err := newApp(t.Context(), queries, tempDir, "Test Man", "Test Yell", "Gotta go fast.", "en", "http://example.com", false)
+	app, err := newApp(t.Context(), queries, "http://example.com", tempDir, "Test Man", "Test Yell", "Gotta go fast.", "en", false)
 	if err != nil {
 		t.Fatal(err)
 	}
