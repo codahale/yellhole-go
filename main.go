@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
-	"github.com/Xuanwo/go-locale"
 	"github.com/codahale/yellhole-go/build"
 	"log/slog"
 	"net"
@@ -37,35 +35,11 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	slog.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
 	// Parse the configuration flags and environment variables.
-	env := func(key, defaultValue string) string {
-		s, ok := lookupEnv(key)
-		if !ok {
-			return defaultValue
-		}
-		return s
-	}
-
-	detectedLang, err := locale.Detect()
-	if err != nil {
-		return err
-	}
-
-	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
-	addr := cmd.String("addr", env("ADDR", "127.0.0.1:3000"), "the address on which to listen")
-	baseURL := cmd.String("base_url", env("BASE_URL", "http://localhost:3000/"), "the base URL of the server")
-	dataDir := cmd.String("data_dir", env("DATA_DIR", "./data"), "the directory in which all persistent data is stored")
-	title := cmd.String("title", env("TITLE", "Yellhole"), "the title of the yellhole instance")
-	description := cmd.String("description", env("DESCRIPTION", "Obscurantist filth."), "the description of the yellhole instance")
-	author := cmd.String("author", env("AUTHOR", "Luther Blissett"), "the author of the yellhole instance")
-	lang := cmd.String("lang", detectedLang.String(), "the language of the notes")
-	if err := cmd.Parse(args); err != nil {
-		return err
-	}
-
-	slog.Info("starting", "dataDir", *dataDir, "buildTag", build.Tag)
+	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
 
 	// Connect to the database.
-	queries, err := db.NewWithMigrations(filepath.Join(*dataDir, "yellhole.db"))
+	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
+	queries, err := db.NewWithMigrations(filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return err
 	}
@@ -76,14 +50,14 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, queries, *dataDir, *author, *title, *description, *lang, *baseURL, true)
+	app, err := newApp(ctx, queries, dataDir, author, title, description, lang, baseURL, true)
 	if err != nil {
 		return err
 	}
 
 	// Configure an HTTP server with good defaults.
 	server := &http.Server{
-		Addr:    *addr,
+		Addr:    addr,
 		Handler: app,
 
 		BaseContext: func(l net.Listener) context.Context {
@@ -96,7 +70,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}
 
 	// Listen for connections in a separate goroutine.
-	slog.Info("listening for connections", "baseURL", *baseURL)
+	slog.Info("listening for connections", "baseURL", baseURL)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("error listening for requests", "err", err)
