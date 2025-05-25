@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net"
@@ -25,6 +26,12 @@ import (
 func run(args []string, lookupEnv func(string) (string, bool)) error {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
 
+	// Parse the configuration flags and environment variables.
+	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
+	if err != nil {
+		return err
+	}
+
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -36,12 +43,6 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		return err
 	}
 	slog.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
-
-	// Parse the configuration flags and environment variables.
-	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
-	if err != nil {
-		return err
-	}
 
 	// Connect to the database.
 	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
