@@ -18,10 +18,12 @@ import (
 )
 
 var (
+	// templatesFS embeds all the templates for the app.
 	//go:embed templates
 	templatesFS embed.FS
 )
 
+// loadTemplates loads and parses all the embedded templates for the app.
 func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
 	templatesDir, err := fs.Sub(templatesFS, "templates")
 	if err != nil {

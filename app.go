@@ -17,6 +17,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// newApp constructs an application handler given the various application inputs.
 func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, title, description, lang string, requestLog bool) (http.Handler, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
@@ -69,13 +70,13 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	// Serve the root from the base URL path.
 	handler = http.StripPrefix(strings.TrimRight(u.Path, "/"), handler)
 
+	// Recover from panics in handlers.
+	handler = sloghttp.Recovery(handler)
+
 	// Add logging.
 	loggerHandler := slog.DiscardHandler
 	if requestLog {
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
 	}
-	logger := slog.New(loggerHandler)
-	handler = sloghttp.Recovery(handler)
-	handler = sloghttp.New(logger)(handler)
-	return handler, nil
+	return sloghttp.New(slog.New(loggerHandler))(handler), nil
 }

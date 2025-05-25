@@ -6,6 +6,7 @@ import (
 	"github.com/Xuanwo/go-locale"
 )
 
+// loadConfig loads the app configuration from the command line arguments and environment variables.
 func loadConfig(args []string, lookupEnv func(string) (string, bool)) (addr, baseURL, dataDir, author, title, description, lang string, err error) {
 	env := func(key, defaultValue string) string {
 		s, ok := lookupEnv(key)
