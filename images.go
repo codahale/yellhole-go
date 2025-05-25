@@ -38,7 +38,7 @@ func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *u
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			slog.Error("unable to download image", "imageURL", imageURL, "statusCode", resp.StatusCode)
+			slog.ErrorContext(r.Context(), "unable to download image", "imageURL", imageURL, "statusCode", resp.StatusCode)
 			http.Error(w, "unable to download image", http.StatusInternalServerError)
 			return
 		}

@@ -104,7 +104,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
 		if err != nil {
 			// If the attestation is invalid, respond with verified=false.
-			slog.Error("unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
+			slog.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
 			jsonResponse(w, map[string]bool{"verified": false})
 			return
 		}
@@ -234,7 +234,7 @@ func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.U
 		_, err = webAuthn.FinishLogin(webauthnUser{author, credentials}, session.Data, r)
 		if err != nil {
 			// Respond with verified=false if the challenge response was invalid.
-			slog.Error("unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
+			slog.ErrorContext(r.Context(), "unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
 			jsonResponse(w, map[string]bool{"verified": false})
 			return
 		}
@@ -263,7 +263,7 @@ func requireAuthentication(queries *db.Queries, h http.Handler, baseURL *url.URL
 			}
 
 			if !auth {
-				slog.Info("unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
+				slog.InfoContext(r.Context(), "unauthenticated request", "uri", r.RequestURI, "id", sloghttp.GetRequestID(r))
 				http.Redirect(w, r, baseURL.JoinPath("login").String(), http.StatusSeeOther)
 				return
 			}
@@ -318,31 +318,31 @@ func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker)
 func purgeOldSessions(ctx context.Context, queries *db.Queries) {
 	res, err := queries.PurgeSessions(ctx, time.Now().AddDate(0, 0, -7))
 	if err != nil {
-		slog.Error("error purging old sessions", "err", err)
+		slog.ErrorContext(ctx, "error purging old sessions", "err", err)
 		return
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("error purging old sessions", "err", err)
+		slog.ErrorContext(ctx, "error purging old sessions", "err", err)
 		return
 	}
-	slog.Info("purged old sessions", "count", n)
+	slog.InfoContext(ctx, "purged old sessions", "count", n)
 }
 
 func purgeOldWebauthnSessions(ctx context.Context, queries *db.Queries) {
 	res, err := queries.PurgeWebauthnSessions(ctx, time.Now().Add(-5*time.Minute))
 	if err != nil {
-		slog.Error("error purging old challenge", "err", err)
+		slog.ErrorContext(ctx, "error purging old challenge", "err", err)
 		return
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("error purging old challenge", "err", err)
+		slog.ErrorContext(ctx, "error purging old challenge", "err", err)
 		return
 	}
-	slog.Info("purged old challenges", "count", n)
+	slog.InfoContext(ctx, "purged old challenges", "count", n)
 }
 
 type webauthnUser struct {
