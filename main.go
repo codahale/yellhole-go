@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/codahale/yellhole-go/build"
 	"log/slog"
 	"net"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"runtime"
 	"syscall"
 	"time"
+
+	"github.com/codahale/yellhole-go/build"
 
 	"github.com/codahale/yellhole-go/db"
 	"go.uber.org/automaxprocs/maxprocs"

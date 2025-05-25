@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/codahale/yellhole-go/imgstore"
 	"html/template"
 	"net/http"
 	"net/url"
+
+	"github.com/codahale/yellhole-go/imgstore"
 
 	"github.com/codahale/yellhole-go/db"
 )

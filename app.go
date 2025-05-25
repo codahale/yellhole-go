@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"filippo.io/csrf"
-	"github.com/codahale/yellhole-go/imgstore"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -11,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"filippo.io/csrf"
 	"github.com/codahale/yellhole-go/db"
+	"github.com/codahale/yellhole-go/imgstore"
 	sloghttp "github.com/samber/slog-http"
 	_ "modernc.org/libc"
 	_ "modernc.org/sqlite"

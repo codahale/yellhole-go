@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/codahale/yellhole-go/imgstore"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/codahale/yellhole-go/imgstore"
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/google/uuid"

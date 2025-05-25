@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/HugoSmits86/nativewebp"
-	"github.com/google/uuid"
-	"golang.org/x/image/draw"
-	"golang.org/x/sync/errgroup"
 	"image"
 	"image/gif"
 	_ "image/jpeg"
@@ -16,6 +12,11 @@ import (
 	"io/fs"
 	"math"
 	"os"
+
+	"github.com/HugoSmits86/nativewebp"
+	"github.com/google/uuid"
+	"golang.org/x/image/draw"
+	"golang.org/x/sync/errgroup"
 )
 
 type Store struct {

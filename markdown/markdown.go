@@ -1,6 +1,10 @@
 package markdown
 
 import (
+	"html/template"
+	"net/url"
+	"strings"
+
 	_ "github.com/alecthomas/chroma/v2"
 	"github.com/valyala/bytebufferpool"
 	"github.com/yuin/goldmark"
@@ -8,9 +12,6 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/text"
-	"html/template"
-	"net/url"
-	"strings"
 )
 
 func Images(s string) ([]*url.URL, error) {

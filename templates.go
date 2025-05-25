@@ -4,14 +4,15 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/codahale/yellhole-go/build"
-	"github.com/codahale/yellhole-go/markdown"
 	"html/template"
 	"io/fs"
 	"net/http"
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/codahale/yellhole-go/build"
+	"github.com/codahale/yellhole-go/markdown"
 
 	"github.com/valyala/bytebufferpool"
 )

@@ -3,12 +3,13 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"github.com/codahale/yellhole-go/markdown"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/codahale/yellhole-go/markdown"
 
 	"github.com/codahale/yellhole-go/db"
 	"github.com/gorilla/feeds"
