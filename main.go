@@ -23,6 +23,8 @@ import (
 //go:generate go tool sqlc generate -f db/sqlc.yaml
 
 func run(args []string, lookupEnv func(string) (string, bool)) error {
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
+
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
