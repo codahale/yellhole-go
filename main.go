@@ -105,7 +105,9 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 func main() {
 	if err := run(os.Args[1:], os.LookupEnv); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+		if !errors.Is(err, flag.ErrHelp) {
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(2)
+		}
 	}
 }
