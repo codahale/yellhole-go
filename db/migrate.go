@@ -18,13 +18,27 @@ var (
 	migrationsFS embed.FS
 )
 
-func (q *Queries) Close() error {
-	return q.db.(*sql.DB).Close()
-}
+const initSQL = `
+	PRAGMA journal_mode = WAL;
+	PRAGMA synchronous = NORMAL;
+	PRAGMA temp_store = MEMORY;
+	PRAGMA mmap_size = 30000000000; -- 30GB
+	PRAGMA busy_timeout = 5000;
+	PRAGMA automatic_index = true;
+	PRAGMA foreign_keys = ON;
+	PRAGMA analysis_limit = 1000;
+	PRAGMA trusted_schema = OFF;
+`
 
 func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite3", filename)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Initialize the database settings.
+	_, err = conn.Exec(initSQL)
 	if err != nil {
 		return nil, nil, err
 	}
