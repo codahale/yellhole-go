@@ -22,17 +22,17 @@ func (q *Queries) Close() error {
 	return q.db.(*sql.DB).Close()
 }
 
-func NewWithMigrations(filename string) (*Queries, error) {
+func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite3", filename)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Load migration files.
 	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Configure a migration driver.
@@ -40,22 +40,22 @@ func NewWithMigrations(filename string) (*Queries, error) {
 		MigrationsTable: "migrations",
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Create a migrator.
 	m, err := migrate.NewWithInstance("iofs", source, "sqlite", driver)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	m.Log = &slogger{}
 
 	// Run all unapplied migrations.
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return New(conn), nil
+	return conn, New(conn), nil
 }
 
 type slogger struct {

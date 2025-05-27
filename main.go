@@ -45,13 +45,16 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 	// Connect to the database.
 	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
-	queries, err := db.NewWithMigrations(filepath.Join(dataDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if err := queries.Close(); err != nil {
-			slog.Error("error closing database", "err", err)
+			slog.Error("error closing queries", "err", err)
+		}
+		if err := conn.Close(); err != nil {
+			slog.Error("error closing queries", "err", err)
 		}
 	}()
 

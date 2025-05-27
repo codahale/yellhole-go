@@ -9,6 +9,7 @@ sql:
         out: "."
         initialisms: [ "id", "spki" ]
         query_parameter_limit: 10
+        emit_prepared_queries: true
         overrides:
           - column: "webauthn_credential.credential_data"
             go_type:

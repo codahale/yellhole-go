@@ -21,7 +21,7 @@ values (?1, ?2, ?3, ?4, ?5)
 `
 
 func (q *Queries) CreateImage(ctx context.Context, imageID string, filename string, originalFilename string, format string, createdAt time.Time) error {
-	_, err := q.db.ExecContext(ctx, createImage,
+	_, err := q.exec(ctx, q.createImageStmt, createImage,
 		imageID,
 		filename,
 		originalFilename,
@@ -37,7 +37,7 @@ values (?1, ?2, ?3)
 `
 
 func (q *Queries) CreateNote(ctx context.Context, noteID string, body string, createdAt time.Time) error {
-	_, err := q.db.ExecContext(ctx, createNote, noteID, body, createdAt)
+	_, err := q.exec(ctx, q.createNoteStmt, createNote, noteID, body, createdAt)
 	return err
 }
 
@@ -47,7 +47,7 @@ values (?1, ?2)
 `
 
 func (q *Queries) CreateSession(ctx context.Context, sessionID string, createdAt time.Time) error {
-	_, err := q.db.ExecContext(ctx, createSession, sessionID, createdAt)
+	_, err := q.exec(ctx, q.createSessionStmt, createSession, sessionID, createdAt)
 	return err
 }
 
@@ -57,7 +57,7 @@ values (?1, ?2)
 `
 
 func (q *Queries) CreateWebauthnCredential(ctx context.Context, credentialData *JSONCredential, createdAt time.Time) error {
-	_, err := q.db.ExecContext(ctx, createWebauthnCredential, credentialData, createdAt)
+	_, err := q.exec(ctx, q.createWebauthnCredentialStmt, createWebauthnCredential, credentialData, createdAt)
 	return err
 }
 
@@ -67,7 +67,7 @@ values (?1, ?2, ?3)
 `
 
 func (q *Queries) CreateWebauthnSession(ctx context.Context, webauthnSessionID string, sessionData *JSONSessionData, createdAt time.Time) error {
-	_, err := q.db.ExecContext(ctx, createWebauthnSession, webauthnSessionID, sessionData, createdAt)
+	_, err := q.exec(ctx, q.createWebauthnSessionStmt, createWebauthnSession, webauthnSessionID, sessionData, createdAt)
 	return err
 }
 
@@ -80,7 +80,7 @@ returning session_data
 `
 
 func (q *Queries) DeleteWebauthnSession(ctx context.Context, webauthnSessionID string, expiry time.Time) (*JSONSessionData, error) {
-	row := q.db.QueryRowContext(ctx, deleteWebauthnSession, webauthnSessionID, expiry)
+	row := q.queryRow(ctx, q.deleteWebauthnSessionStmt, deleteWebauthnSession, webauthnSessionID, expiry)
 	var session_data *JSONSessionData
 	err := row.Scan(&session_data)
 	return session_data, err
@@ -92,7 +92,7 @@ from webauthn_credential
 `
 
 func (q *Queries) HasWebauthnCredential(ctx context.Context) (bool, error) {
-	row := q.db.QueryRowContext(ctx, hasWebauthnCredential)
+	row := q.queryRow(ctx, q.hasWebauthnCredentialStmt, hasWebauthnCredential)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -107,7 +107,7 @@ where note_id = ?1
 `
 
 func (q *Queries) NoteByID(ctx context.Context, noteID string) (Note, error) {
-	row := q.db.QueryRowContext(ctx, noteByID, noteID)
+	row := q.queryRow(ctx, q.noteByIDStmt, noteByID, noteID)
 	var i Note
 	err := row.Scan(&i.NoteID, &i.Body, &i.CreatedAt)
 	return i, err
@@ -124,7 +124,7 @@ order by created_at desc
 `
 
 func (q *Queries) NotesByDate(ctx context.Context, startDate time.Time, endDate time.Time) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, notesByDate, startDate, endDate)
+	rows, err := q.query(ctx, q.notesByDateStmt, notesByDate, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ where created_at < ?1
 `
 
 func (q *Queries) PurgeSessions(ctx context.Context, expiry time.Time) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeSessions, expiry)
+	return q.exec(ctx, q.purgeSessionsStmt, purgeSessions, expiry)
 }
 
 const purgeWebauthnSessions = `-- name: PurgeWebauthnSessions :execresult
@@ -163,7 +163,7 @@ where created_at < ?1
 `
 
 func (q *Queries) PurgeWebauthnSessions(ctx context.Context, expiry time.Time) (sql.Result, error) {
-	return q.db.ExecContext(ctx, purgeWebauthnSessions, expiry)
+	return q.exec(ctx, q.purgeWebauthnSessionsStmt, purgeWebauthnSessions, expiry)
 }
 
 const recentImages = `-- name: RecentImages :many
@@ -174,7 +174,7 @@ limit ?1
 `
 
 func (q *Queries) RecentImages(ctx context.Context, limit int64) ([]Image, error) {
-	rows, err := q.db.QueryContext(ctx, recentImages, limit)
+	rows, err := q.query(ctx, q.recentImagesStmt, recentImages, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ limit ?1
 `
 
 func (q *Queries) RecentNotes(ctx context.Context, limit int64) ([]Note, error) {
-	rows, err := q.db.QueryContext(ctx, recentNotes, limit)
+	rows, err := q.query(ctx, q.recentNotesStmt, recentNotes, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ where session_id = ?1
 `
 
 func (q *Queries) SessionExists(ctx context.Context, sessionID string, expiry time.Time) (bool, error) {
-	row := q.db.QueryRowContext(ctx, sessionExists, sessionID, expiry)
+	row := q.queryRow(ctx, q.sessionExistsStmt, sessionExists, sessionID, expiry)
 	var column_1 bool
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -254,7 +254,7 @@ from webauthn_credential
 `
 
 func (q *Queries) WebauthnCredentials(ctx context.Context) ([]*JSONCredential, error) {
-	rows, err := q.db.QueryContext(ctx, webauthnCredentials)
+	rows, err := q.query(ctx, q.webauthnCredentialsStmt, webauthnCredentials)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ type WeeksWithNotesRow struct {
 }
 
 func (q *Queries) WeeksWithNotes(ctx context.Context) ([]WeeksWithNotesRow, error) {
-	rows, err := q.db.QueryContext(ctx, weeksWithNotes)
+	rows, err := q.query(ctx, q.weeksWithNotesStmt, weeksWithNotes)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -20,12 +21,218 @@ func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
+func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
+	q := Queries{db: db}
+	var err error
+	if q.createImageStmt, err = db.PrepareContext(ctx, createImage); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateImage: %w", err)
+	}
+	if q.createNoteStmt, err = db.PrepareContext(ctx, createNote); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateNote: %w", err)
+	}
+	if q.createSessionStmt, err = db.PrepareContext(ctx, createSession); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSession: %w", err)
+	}
+	if q.createWebauthnCredentialStmt, err = db.PrepareContext(ctx, createWebauthnCredential); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateWebauthnCredential: %w", err)
+	}
+	if q.createWebauthnSessionStmt, err = db.PrepareContext(ctx, createWebauthnSession); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateWebauthnSession: %w", err)
+	}
+	if q.deleteWebauthnSessionStmt, err = db.PrepareContext(ctx, deleteWebauthnSession); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteWebauthnSession: %w", err)
+	}
+	if q.hasWebauthnCredentialStmt, err = db.PrepareContext(ctx, hasWebauthnCredential); err != nil {
+		return nil, fmt.Errorf("error preparing query HasWebauthnCredential: %w", err)
+	}
+	if q.noteByIDStmt, err = db.PrepareContext(ctx, noteByID); err != nil {
+		return nil, fmt.Errorf("error preparing query NoteByID: %w", err)
+	}
+	if q.notesByDateStmt, err = db.PrepareContext(ctx, notesByDate); err != nil {
+		return nil, fmt.Errorf("error preparing query NotesByDate: %w", err)
+	}
+	if q.purgeSessionsStmt, err = db.PrepareContext(ctx, purgeSessions); err != nil {
+		return nil, fmt.Errorf("error preparing query PurgeSessions: %w", err)
+	}
+	if q.purgeWebauthnSessionsStmt, err = db.PrepareContext(ctx, purgeWebauthnSessions); err != nil {
+		return nil, fmt.Errorf("error preparing query PurgeWebauthnSessions: %w", err)
+	}
+	if q.recentImagesStmt, err = db.PrepareContext(ctx, recentImages); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentImages: %w", err)
+	}
+	if q.recentNotesStmt, err = db.PrepareContext(ctx, recentNotes); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentNotes: %w", err)
+	}
+	if q.sessionExistsStmt, err = db.PrepareContext(ctx, sessionExists); err != nil {
+		return nil, fmt.Errorf("error preparing query SessionExists: %w", err)
+	}
+	if q.webauthnCredentialsStmt, err = db.PrepareContext(ctx, webauthnCredentials); err != nil {
+		return nil, fmt.Errorf("error preparing query WebauthnCredentials: %w", err)
+	}
+	if q.weeksWithNotesStmt, err = db.PrepareContext(ctx, weeksWithNotes); err != nil {
+		return nil, fmt.Errorf("error preparing query WeeksWithNotes: %w", err)
+	}
+	return &q, nil
+}
+
+func (q *Queries) Close() error {
+	var err error
+	if q.createImageStmt != nil {
+		if cerr := q.createImageStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createImageStmt: %w", cerr)
+		}
+	}
+	if q.createNoteStmt != nil {
+		if cerr := q.createNoteStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createNoteStmt: %w", cerr)
+		}
+	}
+	if q.createSessionStmt != nil {
+		if cerr := q.createSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSessionStmt: %w", cerr)
+		}
+	}
+	if q.createWebauthnCredentialStmt != nil {
+		if cerr := q.createWebauthnCredentialStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createWebauthnCredentialStmt: %w", cerr)
+		}
+	}
+	if q.createWebauthnSessionStmt != nil {
+		if cerr := q.createWebauthnSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createWebauthnSessionStmt: %w", cerr)
+		}
+	}
+	if q.deleteWebauthnSessionStmt != nil {
+		if cerr := q.deleteWebauthnSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteWebauthnSessionStmt: %w", cerr)
+		}
+	}
+	if q.hasWebauthnCredentialStmt != nil {
+		if cerr := q.hasWebauthnCredentialStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hasWebauthnCredentialStmt: %w", cerr)
+		}
+	}
+	if q.noteByIDStmt != nil {
+		if cerr := q.noteByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing noteByIDStmt: %w", cerr)
+		}
+	}
+	if q.notesByDateStmt != nil {
+		if cerr := q.notesByDateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing notesByDateStmt: %w", cerr)
+		}
+	}
+	if q.purgeSessionsStmt != nil {
+		if cerr := q.purgeSessionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing purgeSessionsStmt: %w", cerr)
+		}
+	}
+	if q.purgeWebauthnSessionsStmt != nil {
+		if cerr := q.purgeWebauthnSessionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing purgeWebauthnSessionsStmt: %w", cerr)
+		}
+	}
+	if q.recentImagesStmt != nil {
+		if cerr := q.recentImagesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentImagesStmt: %w", cerr)
+		}
+	}
+	if q.recentNotesStmt != nil {
+		if cerr := q.recentNotesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentNotesStmt: %w", cerr)
+		}
+	}
+	if q.sessionExistsStmt != nil {
+		if cerr := q.sessionExistsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing sessionExistsStmt: %w", cerr)
+		}
+	}
+	if q.webauthnCredentialsStmt != nil {
+		if cerr := q.webauthnCredentialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing webauthnCredentialsStmt: %w", cerr)
+		}
+	}
+	if q.weeksWithNotesStmt != nil {
+		if cerr := q.weeksWithNotesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing weeksWithNotesStmt: %w", cerr)
+		}
+	}
+	return err
+}
+
+func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
+	case stmt != nil:
+		return stmt.ExecContext(ctx, args...)
+	default:
+		return q.db.ExecContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryContext(ctx, args...)
+	default:
+		return q.db.QueryContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryRowContext(ctx, args...)
+	default:
+		return q.db.QueryRowContext(ctx, query, args...)
+	}
+}
+
 type Queries struct {
-	db DBTX
+	db                           DBTX
+	tx                           *sql.Tx
+	createImageStmt              *sql.Stmt
+	createNoteStmt               *sql.Stmt
+	createSessionStmt            *sql.Stmt
+	createWebauthnCredentialStmt *sql.Stmt
+	createWebauthnSessionStmt    *sql.Stmt
+	deleteWebauthnSessionStmt    *sql.Stmt
+	hasWebauthnCredentialStmt    *sql.Stmt
+	noteByIDStmt                 *sql.Stmt
+	notesByDateStmt              *sql.Stmt
+	purgeSessionsStmt            *sql.Stmt
+	purgeWebauthnSessionsStmt    *sql.Stmt
+	recentImagesStmt             *sql.Stmt
+	recentNotesStmt              *sql.Stmt
+	sessionExistsStmt            *sql.Stmt
+	webauthnCredentialsStmt      *sql.Stmt
+	weeksWithNotesStmt           *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db: tx,
+		db:                           tx,
+		tx:                           tx,
+		createImageStmt:              q.createImageStmt,
+		createNoteStmt:               q.createNoteStmt,
+		createSessionStmt:            q.createSessionStmt,
+		createWebauthnCredentialStmt: q.createWebauthnCredentialStmt,
+		createWebauthnSessionStmt:    q.createWebauthnSessionStmt,
+		deleteWebauthnSessionStmt:    q.deleteWebauthnSessionStmt,
+		hasWebauthnCredentialStmt:    q.hasWebauthnCredentialStmt,
+		noteByIDStmt:                 q.noteByIDStmt,
+		notesByDateStmt:              q.notesByDateStmt,
+		purgeSessionsStmt:            q.purgeSessionsStmt,
+		purgeWebauthnSessionsStmt:    q.purgeWebauthnSessionsStmt,
+		recentImagesStmt:             q.recentImagesStmt,
+		recentNotesStmt:              q.recentNotesStmt,
+		sessionExistsStmt:            q.sessionExistsStmt,
+		webauthnCredentialsStmt:      q.webauthnCredentialsStmt,
+		weeksWithNotesStmt:           q.weeksWithNotesStmt,
 	}
 }

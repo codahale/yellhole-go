@@ -19,13 +19,17 @@ func newTestApp(t *testing.T) *testApp {
 	t.Helper()
 
 	tempDir := t.TempDir()
-	queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Cleanup(func() {
 		if err := queries.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := conn.Close(); err != nil {
 			t.Fatal(err)
 		}
 	})
