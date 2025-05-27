@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	db2 "github.com/codahale/yellhole-go/internal/db"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codahale/yellhole-go/db"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
 	sloghttp "github.com/samber/slog-http"
@@ -25,7 +25,7 @@ func newWebauthn(title string, baseURL *url.URL) (*webauthn.WebAuthn, error) {
 	})
 }
 
-func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.URL) appHandler {
+func handleRegisterPage(queries *db2.Queries, t *template.Template, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Ensure we only register one passkey.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -52,7 +52,7 @@ func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.
 	}
 }
 
-func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleRegisterStart(queries *db2.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn, err := newWebauthn(title, baseURL)
 	if err != nil {
 		panic(err)
@@ -61,7 +61,7 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Create a new webauthn attestation challenge.
 		creation, session, err := webAuthn.BeginRegistration(
-			webauthnUser{author, []*db.JSONCredential{}},
+			webauthnUser{author, []*db2.JSONCredential{}},
 			webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
 		)
 		if err != nil {
@@ -70,7 +70,7 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 
 		// Store the webauthn session data in the DB.
 		regSessionID := uuid.NewString()
-		if err := queries.CreateWebauthnSession(r.Context(), regSessionID, db.JSON(*session), time.Now()); err != nil {
+		if err := queries.CreateWebauthnSession(r.Context(), regSessionID, db2.JSON(*session), time.Now()); err != nil {
 			return err
 		}
 
@@ -82,7 +82,7 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 	}
 }
 
-func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleRegisterFinish(queries *db2.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn, err := newWebauthn(title, baseURL)
 	if err != nil {
 		panic(err)
@@ -102,7 +102,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		}
 
 		// Validate the attestation response.
-		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
+		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db2.JSONCredential{}}, session.Data, r)
 		if err != nil {
 			// If the attestation is invalid, respond with verified=false.
 			slog.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
@@ -110,7 +110,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		}
 
 		// Store the new credential in the database.
-		if err := queries.CreateWebauthnCredential(r.Context(), db.JSON(cred), time.Now()); err != nil {
+		if err := queries.CreateWebauthnCredential(r.Context(), db2.JSON(cred), time.Now()); err != nil {
 			return err
 		}
 
@@ -122,7 +122,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 	}
 }
 
-func handleLoginPage(queries *db.Queries, t *template.Template, baseURL *url.URL) appHandler {
+func handleLoginPage(queries *db2.Queries, t *template.Template, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Redirect to registration if no credentials exist.
 		registered, err := queries.HasWebauthnCredential(r.Context())
@@ -150,7 +150,7 @@ func handleLoginPage(queries *db.Queries, t *template.Template, baseURL *url.URL
 	}
 }
 
-func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleLoginStart(queries *db2.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn, err := newWebauthn(title, baseURL)
 	if err != nil {
 		panic(err)
@@ -182,7 +182,7 @@ func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.UR
 
 		// Store the challenge in the database.
 		loginSessionID := uuid.NewString()
-		if err := queries.CreateWebauthnSession(r.Context(), loginSessionID, db.JSON(*session), time.Now()); err != nil {
+		if err := queries.CreateWebauthnSession(r.Context(), loginSessionID, db2.JSON(*session), time.Now()); err != nil {
 			return err
 		}
 
@@ -194,7 +194,7 @@ func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.UR
 	}
 }
 
-func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleLoginFinish(queries *db2.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn, err := newWebauthn(title, baseURL)
 	if err != nil {
 		panic(err)
@@ -253,7 +253,7 @@ func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.U
 	}
 }
 
-func requireAuthentication(queries *db.Queries, h http.Handler, baseURL *url.URL, prefix string) http.Handler {
+func requireAuthentication(queries *db2.Queries, h http.Handler, baseURL *url.URL, prefix string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, prefix) {
 			auth, err := isAuthenticated(r, queries)
@@ -285,7 +285,7 @@ func secureCookie(baseURL *url.URL, name, value string, maxAge int) *http.Cookie
 	}
 }
 
-func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
+func isAuthenticated(r *http.Request, queries *db2.Queries) (bool, error) {
 	cookie, err := r.Cookie("sessionID")
 	if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		return false, err
@@ -298,7 +298,7 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	return queries.SessionExists(r.Context(), cookie.Value, time.Now().AddDate(0, 0, -7))
 }
 
-func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker) {
+func purgeOldRows(ctx context.Context, queries *db2.Queries, ticker *time.Ticker) {
 	purge := func(ctx context.Context, name string, expiry time.Time, f func(context.Context, time.Time) (sql.Result, error)) {
 		res, err := f(ctx, expiry)
 		if err != nil {
@@ -328,7 +328,7 @@ func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker)
 
 type webauthnUser struct {
 	name        string
-	credentials []*db.JSONCredential
+	credentials []*db2.JSONCredential
 }
 
 func (w webauthnUser) WebAuthnCredentials() []webauthn.Credential {

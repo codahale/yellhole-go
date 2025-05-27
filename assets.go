@@ -12,7 +12,7 @@ import (
 
 var (
 	// assetsFS embeds all the static assets used by the app.
-	//go:embed assets
+	//go:embed internal/assets
 	assetsFS embed.FS
 )
 
@@ -20,7 +20,7 @@ var (
 // serving assets, or an error.
 func loadAssets() (paths []string, hashes map[string]string, handler http.Handler, err error) {
 	// Step into the ./assets directory of the embedded files.
-	assetsDir, err := fs.Sub(assetsFS, "assets")
+	assetsDir, err := fs.Sub(assetsFS, "internal/assets")
 	if err != nil {
 		return
 	}

@@ -3,25 +3,25 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/codahale/yellhole-go/internal/markdown"
 	"html/template"
 	"io/fs"
 	"net/url"
 	"path"
 	"time"
 
-	"github.com/codahale/yellhole-go/build"
-	"github.com/codahale/yellhole-go/markdown"
+	"github.com/codahale/yellhole-go/internal/build"
 )
 
 var (
 	// templatesFS embeds all the templates for the app.
-	//go:embed templates
+	//go:embed internal/templates
 	templatesFS embed.FS
 )
 
 // loadTemplates loads and parses all the embedded templates for the app.
 func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
-	templatesDir, err := fs.Sub(templatesFS, "templates")
+	templatesDir, err := fs.Sub(templatesFS, "internal/templates")
 	if err != nil {
 		return nil, err
 	}

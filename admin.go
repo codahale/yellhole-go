@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/codahale/yellhole-go/internal/db"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/codahale/yellhole-go/db"
 	"github.com/google/uuid"
 )
 

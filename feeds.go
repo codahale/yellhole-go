@@ -3,19 +3,19 @@ package main
 import (
 	"database/sql"
 	"errors"
+	db2 "github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/markdown"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/markdown"
 	"github.com/gorilla/feeds"
 	"github.com/valyala/bytebufferpool"
 )
 
-func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
+func handleHomePage(queries *db2.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 		if err != nil {
@@ -36,7 +36,7 @@ func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
 	}
 }
 
-func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
+func handleWeekPage(queries *db2.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 		if err != nil {
@@ -64,7 +64,7 @@ func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
 	}
 }
 
-func handleNotePage(queries *db.Queries, t *template.Template) appHandler {
+func handleNotePage(queries *db2.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		note, err := queries.NoteByID(r.Context(), r.PathValue("id"))
 		if err != nil {
@@ -80,11 +80,11 @@ func handleNotePage(queries *db.Queries, t *template.Template) appHandler {
 			return err
 		}
 
-		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
+		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db2.Note{note}, weeks})
 	}
 }
 
-func handleAtomFeed(queries *db.Queries, author, title, description string, baseURL *url.URL) appHandler {
+func handleAtomFeed(queries *db2.Queries, author, title, description string, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		notes, err := queries.RecentNotes(r.Context(), 20)
 		if err != nil {
@@ -133,6 +133,6 @@ func handleAtomFeed(queries *db.Queries, author, title, description string, base
 
 type feedPage struct {
 	Single bool
-	Notes  []db.Note
-	Weeks  []db.WeeksWithNotesRow
+	Notes  []db2.Note
+	Weeks  []db2.WeeksWithNotesRow
 }

@@ -1,12 +1,11 @@
 package main
 
 import (
+	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	"html/template"
 	"net/http"
 	"net/url"
-
-	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/imgstore"
 )
 
 func addRoutes(mux *http.ServeMux, author, title, description string, baseURL *url.URL, queries *db.Queries, t *template.Template, images *imgstore.Store, assets http.Handler, assetPaths []string) {

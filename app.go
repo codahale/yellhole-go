@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	"github.com/valyala/bytebufferpool"
 	"html/template"
 	"log/slog"
@@ -13,8 +15,6 @@ import (
 	"time"
 
 	"filippo.io/csrf"
-	"github.com/codahale/yellhole-go/db"
-	"github.com/codahale/yellhole-go/imgstore"
 	sloghttp "github.com/samber/slog-http"
 )
 
