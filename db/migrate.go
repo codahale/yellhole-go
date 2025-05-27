@@ -8,8 +8,9 @@ import (
 	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -23,7 +24,7 @@ func (q *Queries) Close() error {
 
 func NewWithMigrations(filename string) (*Queries, error) {
 	// Connect to the database.
-	conn, err := sql.Open("sqlite", filename+"?_time_format=sqlite")
+	conn, err := sql.Open("sqlite3", filename)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +36,7 @@ func NewWithMigrations(filename string) (*Queries, error) {
 	}
 
 	// Configure a migration driver.
-	driver, err := sqlite.WithInstance(conn, &sqlite.Config{
+	driver, err := sqlite3.WithInstance(conn, &sqlite3.Config{
 		MigrationsTable: "migrations",
 	})
 	if err != nil {

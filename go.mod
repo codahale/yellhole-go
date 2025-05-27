@@ -11,6 +11,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
+	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/samber/slog-http v1.7.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/yuin/goldmark v1.7.12
@@ -18,8 +19,6 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
-	modernc.org/libc v1.65.7
-	modernc.org/sqlite v1.37.1
 )
 
 require (
@@ -80,8 +79,10 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	modernc.org/libc v1.65.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
+	modernc.org/sqlite v1.37.1 // indirect
 )
 
 tool github.com/sqlc-dev/sqlc/cmd/sqlc

@@ -13,8 +13,6 @@ import (
 	"github.com/codahale/yellhole-go/db"
 	"github.com/codahale/yellhole-go/imgstore"
 	sloghttp "github.com/samber/slog-http"
-	_ "modernc.org/libc"
-	_ "modernc.org/sqlite"
 )
 
 // newApp constructs an application handler given the various application inputs.

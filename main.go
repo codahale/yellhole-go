@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/codahale/yellhole-go/build"
-
 	"github.com/codahale/yellhole-go/db"
 	"go.uber.org/automaxprocs/maxprocs"
 )
