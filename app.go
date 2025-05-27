@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/valyala/bytebufferpool"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -77,4 +80,41 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
 	}
 	return sloghttp.New(slog.New(loggerHandler))(handler), nil
+}
+
+type appHandler = func(http.ResponseWriter, *http.Request) error
+
+func handleErrors(handler appHandler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := handler(w, r); err != nil {
+			slog.ErrorContext(r.Context(), "error handling request", "err", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	})
+}
+
+func htmlResponse(w http.ResponseWriter, t *template.Template, name string, data any) error {
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	if err := t.ExecuteTemplate(b, name, data); err != nil {
+		return err
+	}
+
+	w.Header().Set("content-type", "text/html")
+	_, err := w.Write(b.B)
+	return err
+}
+
+func jsonResponse(w http.ResponseWriter, v any) error {
+	b := bytebufferpool.Get()
+	defer bytebufferpool.Put(b)
+
+	if err := json.NewEncoder(b).Encode(v); err != nil {
+		return err
+	}
+
+	w.Header().Set("content-type", "application/json")
+	_, err := w.Write(b.B)
+	return err
 }

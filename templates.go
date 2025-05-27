@@ -2,19 +2,15 @@ package main
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
-	"net/http"
 	"net/url"
 	"path"
 	"time"
 
 	"github.com/codahale/yellhole-go/build"
 	"github.com/codahale/yellhole-go/markdown"
-
-	"github.com/valyala/bytebufferpool"
 )
 
 var (
@@ -68,32 +64,4 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 			return template.URL(baseURL.JoinPath(elem...).String())
 		},
 	}).ParseFS(templatesDir, "partials/*.gohtml", "*.gohtml")
-}
-
-func htmlResponse(w http.ResponseWriter, t *template.Template, name string, data any) {
-	b := bytebufferpool.Get()
-	defer bytebufferpool.Put(b)
-
-	if err := t.ExecuteTemplate(b, name, data); err != nil {
-		panic(err)
-	}
-
-	w.Header().Set("content-type", "text/html")
-	if _, err := w.Write(b.B); err != nil {
-		panic(err)
-	}
-}
-
-func jsonResponse(w http.ResponseWriter, v any) {
-	b := bytebufferpool.Get()
-	defer bytebufferpool.Put(b)
-
-	if err := json.NewEncoder(b).Encode(v); err != nil {
-		panic(err)
-	}
-
-	w.Header().Set("content-type", "application/json")
-	if _, err := w.Write(b.B); err != nil {
-		panic(err)
-	}
 }

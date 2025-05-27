@@ -16,8 +16,8 @@ import (
 	"github.com/valyala/bytebufferpool"
 )
 
-func handleHomePage(queries *db.Queries, t *template.Template) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 		if err != nil {
 			n = 10
@@ -25,71 +25,71 @@ func handleHomePage(queries *db.Queries, t *template.Template) http.Handler {
 
 		notes, err := queries.RecentNotes(r.Context(), n)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
-	})
+		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
+	}
 }
 
-func handleWeekPage(queries *db.Queries, t *template.Template) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 		if err != nil {
 			http.NotFound(w, r)
-			return
+			return nil
 		}
 		end := start.AddDate(0, 0, 7)
 
 		notes, err := queries.NotesByDate(r.Context(), start, end)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if len(notes) == 0 {
 			http.NotFound(w, r)
-			return
+			return nil
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
-	})
+		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
+	}
 }
 
-func handleNotePage(queries *db.Queries, t *template.Template) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleNotePage(queries *db.Queries, t *template.Template) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		note, err := queries.NoteByID(r.Context(), r.PathValue("id"))
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				http.NotFound(w, r)
-				return
+				return nil
 			}
-			panic(err)
+			return err
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
-	})
+		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
+	}
 }
 
-func handleAtomFeed(queries *db.Queries, author, title, description string, baseURL *url.URL) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func handleAtomFeed(queries *db.Queries, author, title, description string, baseURL *url.URL) appHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		notes, err := queries.RecentNotes(r.Context(), 20)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		feed := feeds.Feed{
@@ -106,7 +106,7 @@ func handleAtomFeed(queries *db.Queries, author, title, description string, base
 		for _, note := range notes {
 			html, err := markdown.HTML(note.Body)
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			noteURL := baseURL.JoinPath("note", note.NoteID).String()
@@ -123,14 +123,13 @@ func handleAtomFeed(queries *db.Queries, author, title, description string, base
 		defer bytebufferpool.Put(b)
 
 		if err := feeds.WriteXML(&feeds.Atom{Feed: &feed}, b); err != nil {
-			panic(err)
+			return err
 		}
 
 		w.Header().Set("content-type", "application/atom+xml")
-		if _, err := w.Write(b.B); err != nil {
-			panic(err)
-		}
-	})
+		_, err = w.Write(b.B)
+		return err
+	}
 }
 
 type feedPage struct {
