@@ -14,6 +14,8 @@ require (
 	github.com/samber/slog-http v1.7.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/yuin/goldmark v1.7.12
+	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
 	modernc.org/libc v1.65.7
@@ -62,11 +64,9 @@ require (
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20250123031827-cd30c44769bb // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.opentelemetry.io/otel v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
