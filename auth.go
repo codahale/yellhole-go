@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"html/template"
 	"log/slog"
@@ -36,7 +37,7 @@ func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.
 			return
 		}
 
-		// Ensure session isn't authenticated.
+		// Ensure the session isn't authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
 			panic(err)
@@ -134,7 +135,7 @@ func handleLoginPage(queries *db.Queries, t *template.Template, baseURL *url.URL
 			return
 		}
 
-		// Ensure session isn't authenticated.
+		// Ensure the session isn't authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
 			panic(err)
@@ -157,7 +158,7 @@ func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.UR
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Ensure request isn't already authenticated.
+		// Ensure the request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
 			panic(err)
@@ -201,7 +202,7 @@ func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.U
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Ensure request isn't already authenticated.
+		// Ensure the request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
 			panic(err)
@@ -303,46 +304,31 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 }
 
 func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker) {
+	purge := func(ctx context.Context, name string, expiry time.Time, f func(context.Context, time.Time) (sql.Result, error)) {
+		res, err := f(ctx, expiry)
+		if err != nil {
+			slog.ErrorContext(ctx, "error purging old "+name, "err", err)
+			return
+		}
+
+		n, err := res.RowsAffected()
+		if err != nil {
+			slog.ErrorContext(ctx, "error purging old "+name, "err", err)
+			return
+		}
+		slog.InfoContext(ctx, "purged old "+name, "count", n)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			purgeOldSessions(ctx, queries)
-			purgeOldWebauthnSessions(ctx, queries)
+			purge(ctx, "sessions", time.Now().AddDate(0, 0, -7), queries.PurgeSessions)
+			purge(ctx, "challenges", time.Now().Add(-5*time.Minute), queries.PurgeWebauthnSessions)
 		}
 	}
-}
-
-func purgeOldSessions(ctx context.Context, queries *db.Queries) {
-	res, err := queries.PurgeSessions(ctx, time.Now().AddDate(0, 0, -7))
-	if err != nil {
-		slog.ErrorContext(ctx, "error purging old sessions", "err", err)
-		return
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		slog.ErrorContext(ctx, "error purging old sessions", "err", err)
-		return
-	}
-	slog.InfoContext(ctx, "purged old sessions", "count", n)
-}
-
-func purgeOldWebauthnSessions(ctx context.Context, queries *db.Queries) {
-	res, err := queries.PurgeWebauthnSessions(ctx, time.Now().Add(-5*time.Minute))
-	if err != nil {
-		slog.ErrorContext(ctx, "error purging old challenge", "err", err)
-		return
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		slog.ErrorContext(ctx, "error purging old challenge", "err", err)
-		return
-	}
-	slog.InfoContext(ctx, "purged old challenges", "count", n)
 }
 
 type webauthnUser struct {
