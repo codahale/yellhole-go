@@ -23,7 +23,7 @@ func TestStore_Add_Static(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f, err := os.Open("../yellhole.webp")
+	f, err := os.Open("../../yellhole.webp")
 	if err != nil {
 		t.Fatal(err)
 	}
