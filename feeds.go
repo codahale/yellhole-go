@@ -9,9 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/codahale/yellhole-go/markdown"
-
 	"github.com/codahale/yellhole-go/db"
+	"github.com/codahale/yellhole-go/markdown"
 	"github.com/gorilla/feeds"
 	"github.com/valyala/bytebufferpool"
 )

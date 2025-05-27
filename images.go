@@ -6,9 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/codahale/yellhole-go/imgstore"
-
 	"github.com/codahale/yellhole-go/db"
+	"github.com/codahale/yellhole-go/imgstore"
 	"github.com/google/uuid"
 )
 
