@@ -1,8 +1,8 @@
 name: govulncheck
 on:
-    workflow_dispatch: 
-    schedule:
-        - cron: "0 0 * * 0" 
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
 jobs:
   govulncheck:
     runs-on: ubuntu-latest
