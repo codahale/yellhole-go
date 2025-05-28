@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// Tag is the SHA-256 hash of the binary.
 var Tag string
 
 func init() {
