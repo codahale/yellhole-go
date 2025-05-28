@@ -32,7 +32,7 @@ func handleNewNote(queries *db.Queries, t *template.Template, baseURL *url.URL) 
 		body := r.FormValue("body")
 
 		// If ?preview=true, render the note as it would appear if created.
-		if preview, _ := strconv.ParseBool(r.FormValue("preview")); preview {
+		if preview, err := strconv.ParseBool(r.FormValue("preview")); preview && err == nil {
 			return htmlResponse(w, t, "preview.gohtml", body)
 		}
 
