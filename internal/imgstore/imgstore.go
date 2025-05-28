@@ -85,7 +85,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 
 	filename = id.String() + ".webp"
 
-	// If the image is a GIF, decode it as such. Animated GIFs need to be special-cased.
+	// If the image is a GIF, decode it as such. Animated GIFs need to be handled separately.
 	if format == "gif" {
 		err = s.processAnim(ctx, r, filename)
 		return

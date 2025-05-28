@@ -89,7 +89,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	// Listen for the interrupt signal.
 	<-ctx.Done()
 
-	// Restore default behavior on the interrupt signal and notify user of shutdown.
+	// Restore default behavior on the interrupt signal and notify the user of shutdown.
 	stop()
 	slog.Info("shutting down gracefully, press Ctrl+C again to force")
 

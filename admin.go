@@ -42,6 +42,7 @@ func handleNewNote(queries *db.Queries, t *template.Template, baseURL *url.URL) 
 			return fmt.Errorf("failed to create new note: %w", err)
 		}
 
+		// Redirect to the new note.
 		http.Redirect(w, r, baseURL.JoinPath("note", id).String(), http.StatusSeeOther)
 		return nil
 	}

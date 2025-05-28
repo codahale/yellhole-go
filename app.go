@@ -26,7 +26,7 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 		return nil, fmt.Errorf("failed to parse base URL %q: %w", baseURL, err)
 	}
 
-	// Ensure baseURL always ends in a slash.
+	// Ensure the base URL always ends in a slash.
 	if !strings.HasSuffix(u.Path, "/") {
 		u.Path += "/"
 	}
