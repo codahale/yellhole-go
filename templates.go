@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io/fs"
 	"net/url"
 	"path"
 	"time"
@@ -21,11 +20,6 @@ var (
 
 // loadTemplates loads and parses all the embedded templates for the app.
 func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
-	templatesDir, err := fs.Sub(templatesFS, "internal/templates")
-	if err != nil {
-		return nil, fmt.Errorf("failed to access internal/templates: %w", err)
-	}
-
 	return template.New("yellhole").Funcs(template.FuncMap{
 		"assetHash": func(elem ...string) (string, error) {
 			p := path.Join(elem...)
@@ -63,5 +57,5 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 		"url": func(elem ...string) template.URL {
 			return template.URL(baseURL.JoinPath(elem...).String())
 		},
-	}).ParseFS(templatesDir, "partials/*.gohtml", "*.gohtml")
+	}).ParseFS(templatesFS, "internal/templates/partials/*.gohtml", "internal/templates/*.gohtml")
 }
