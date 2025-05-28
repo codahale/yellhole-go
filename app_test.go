@@ -1,14 +1,15 @@
 package main
 
 import (
-	db2 "github.com/codahale/yellhole-go/internal/db"
 	"net/http"
 	"path/filepath"
 	"testing"
+
+	"github.com/codahale/yellhole-go/internal/db"
 )
 
 type testApp struct {
-	queries *db2.Queries
+	queries *db.Queries
 	tempDir string
 	t       *testing.T
 	http.Handler
@@ -18,7 +19,7 @@ func newTestApp(t *testing.T) *testApp {
 	t.Helper()
 
 	tempDir := t.TempDir()
-	conn, queries, err := db2.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}

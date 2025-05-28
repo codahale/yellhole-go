@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/codahale/yellhole-go/internal/markdown"
 	"html/template"
 	"io/fs"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/codahale/yellhole-go/internal/build"
+	"github.com/codahale/yellhole-go/internal/markdown"
 )
 
 var (
