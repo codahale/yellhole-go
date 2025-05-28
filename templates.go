@@ -23,7 +23,7 @@ var (
 func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
 	templatesDir, err := fs.Sub(templatesFS, "internal/templates")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to access internal/templates: %w", err)
 	}
 
 	return template.New("yellhole").Funcs(template.FuncMap{

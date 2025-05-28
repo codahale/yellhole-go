@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	db2 "github.com/codahale/yellhole-go/internal/db"
 	"html/template"
 	"log/slog"
@@ -30,7 +31,7 @@ func handleRegisterPage(queries *db2.Queries, t *template.Template, baseURL *url
 		// Ensure we only register one passkey.
 		registered, err := queries.HasWebauthnCredential(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check for existing webauthn credential: %w", err)
 		}
 		if registered {
 			http.Redirect(w, r, baseURL.JoinPath("login").String(), http.StatusSeeOther)
@@ -40,7 +41,7 @@ func handleRegisterPage(queries *db2.Queries, t *template.Template, baseURL *url
 		// Ensure the session isn't authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check authentication status in register page: %w", err)
 		}
 		if auth {
 			http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
@@ -65,13 +66,13 @@ func handleRegisterStart(queries *db2.Queries, author, title string, baseURL *ur
 			webauthn.WithCredentialParameters(webauthn.CredentialParametersRecommendedL3()),
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to begin webauthn registration: %w", err)
 		}
 
 		// Store the webauthn session data in the DB.
 		regSessionID := uuid.NewString()
 		if err := queries.CreateWebauthnSession(r.Context(), regSessionID, db2.JSON(*session), time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create webauthn session: %w", err)
 		}
 
 		// Set a registration session ID cookie.
@@ -92,13 +93,13 @@ func handleRegisterFinish(queries *db2.Queries, author, title string, baseURL *u
 		// Find the webauthn session ID.
 		regSessionID, err := r.Cookie("registrationSessionID")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get registration session cookie: %w", err)
 		}
 
 		// Read, delete, and decode the webauthn session data.
 		session, err := queries.DeleteWebauthnSession(r.Context(), regSessionID.Value, time.Now().Add(-1*time.Minute))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve and delete webauthn session: %w", err)
 		}
 
 		// Validate the attestation response.
@@ -111,7 +112,7 @@ func handleRegisterFinish(queries *db2.Queries, author, title string, baseURL *u
 
 		// Store the new credential in the database.
 		if err := queries.CreateWebauthnCredential(r.Context(), db2.JSON(cred), time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create webauthn credential: %w", err)
 		}
 
 		// Delete the registration session ID cookie.
@@ -127,7 +128,7 @@ func handleLoginPage(queries *db2.Queries, t *template.Template, baseURL *url.UR
 		// Redirect to registration if no credentials exist.
 		registered, err := queries.HasWebauthnCredential(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check for existing webauthn credential in login page: %w", err)
 		}
 		if !registered {
 			http.Redirect(w, r, baseURL.JoinPath("register").String(), http.StatusSeeOther)
@@ -137,7 +138,7 @@ func handleLoginPage(queries *db2.Queries, t *template.Template, baseURL *url.UR
 		// Ensure the session isn't authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check authentication status in login page: %w", err)
 		}
 
 		if auth {
@@ -160,7 +161,7 @@ func handleLoginStart(queries *db2.Queries, author, title string, baseURL *url.U
 		// Ensure the request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check authentication status in login start: %w", err)
 		}
 
 		if auth {
@@ -171,19 +172,19 @@ func handleLoginStart(queries *db2.Queries, author, title string, baseURL *url.U
 		// Fetch all credentials from the database.
 		credentials, err := queries.WebauthnCredentials(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve webauthn credentials: %w", err)
 		}
 
 		// Create a webauthn login challenge.
 		assertion, session, err := webAuthn.BeginLogin(webauthnUser{author, credentials})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to begin webauthn login: %w", err)
 		}
 
 		// Store the challenge in the database.
 		loginSessionID := uuid.NewString()
 		if err := queries.CreateWebauthnSession(r.Context(), loginSessionID, db2.JSON(*session), time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create webauthn login session: %w", err)
 		}
 
 		// Assign a login session ID cookie.
@@ -204,7 +205,7 @@ func handleLoginFinish(queries *db2.Queries, author, title string, baseURL *url.
 		// Ensure the request isn't already authenticated.
 		auth, err := isAuthenticated(r, queries)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to check authentication status in login finish: %w", err)
 		}
 
 		if auth {
@@ -215,19 +216,19 @@ func handleLoginFinish(queries *db2.Queries, author, title string, baseURL *url.
 		// Fetch all credentials from the database.
 		credentials, err := queries.WebauthnCredentials(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve webauthn credentials in login finish: %w", err)
 		}
 
 		// Get the ID of the login session.
 		loginSessionID, err := r.Cookie("loginSessionID")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get login session cookie: %w", err)
 		}
 
 		// Find and delete it from the database.
 		session, err := queries.DeleteWebauthnSession(r.Context(), loginSessionID.Value, time.Now().Add(-1*time.Minute))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve and delete webauthn login session: %w", err)
 		}
 
 		// Validate the webauthn challenge.
@@ -241,7 +242,7 @@ func handleLoginFinish(queries *db2.Queries, author, title string, baseURL *url.
 		// Create a new web session and assign a session cookie.
 		sessionID := uuid.NewString()
 		if err := queries.CreateSession(r.Context(), sessionID, time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create session: %w", err)
 		}
 		http.SetCookie(w, secureCookie(baseURL, "sessionID", sessionID, 60*60*24*7))
 
@@ -288,7 +289,7 @@ func secureCookie(baseURL *url.URL, name, value string, maxAge int) *http.Cookie
 func isAuthenticated(r *http.Request, queries *db2.Queries) (bool, error) {
 	cookie, err := r.Cookie("sessionID")
 	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		return false, err
+		return false, fmt.Errorf("failed to get session cookie: %w", err)
 	}
 
 	if cookie == nil {

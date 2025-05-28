@@ -34,19 +34,19 @@ func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite3", filename)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to open SQLite database %s: %w", filename, err)
 	}
 
 	// Initialize the database settings.
 	_, err = conn.Exec(initSQL)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to initialize database settings: %w", err)
 	}
 
 	// Load migration files.
 	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to load migration files: %w", err)
 	}
 
 	// Configure a migration driver.
@@ -54,19 +54,19 @@ func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 		MigrationsTable: "migrations",
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to configure migration driver: %w", err)
 	}
 
 	// Create a migrator.
 	m, err := migrate.NewWithInstance("iofs", source, "sqlite", driver)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to create migrator: %w", err)
 	}
 	m.Log = &slogger{}
 
 	// Run all unapplied migrations.
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
 	return conn, New(conn), nil

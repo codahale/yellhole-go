@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/codahale/yellhole-go/internal/db"
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/codahale/yellhole-go/internal/db"
 	"github.com/google/uuid"
 )
 
@@ -17,7 +18,7 @@ func handleAdminPage(queries *db.Queries, t *template.Template) appHandler {
 		// Look up the most recent 10 images, if any.
 		images, err := queries.RecentImages(r.Context(), 10)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve recent images: %w", err)
 		}
 
 		// Render the admin page.
@@ -38,7 +39,7 @@ func handleNewNote(queries *db.Queries, t *template.Template, baseURL *url.URL) 
 		// Otherwise, create the new note and redirect to it.
 		id := uuid.New().String()
 		if err := queries.CreateNote(r.Context(), id, body, time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create new note: %w", err)
 		}
 
 		http.Redirect(w, r, baseURL.JoinPath("note", id).String(), http.StatusSeeOther)

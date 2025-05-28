@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/codahale/yellhole-go/internal/db"
-	"github.com/codahale/yellhole-go/internal/imgstore"
-	"github.com/valyala/bytebufferpool"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -15,14 +13,17 @@ import (
 	"time"
 
 	"filippo.io/csrf"
+	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	sloghttp "github.com/samber/slog-http"
+	"github.com/valyala/bytebufferpool"
 )
 
 // newApp constructs an application handler given the various application inputs.
 func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, title, description, lang string, requestLog bool) (http.Handler, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse base URL %q: %w", baseURL, err)
 	}
 
 	// Ensure baseURL always ends in a slash.
@@ -37,25 +38,25 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	// Open the data directory as a file system root.
 	dataRoot, err := os.OpenRoot(dataDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open data directory %q: %w", dataDir, err)
 	}
 
 	// Load the embedded public assets.
 	assetPaths, assetHashes, assets, err := loadAssets()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load assets: %w", err)
 	}
 
 	// Load the embedded templates.
 	templates, err := loadTemplates(author, title, description, lang, u, assetHashes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
 
 	// Create an image store.
 	images, err := imgstore.New(dataRoot)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create image store: %w", err)
 	}
 
 	// Construct a route map of handlers.
@@ -98,12 +99,14 @@ func htmlResponse(w http.ResponseWriter, t *template.Template, name string, data
 	defer bytebufferpool.Put(b)
 
 	if err := t.ExecuteTemplate(b, name, data); err != nil {
-		return err
+		return fmt.Errorf("failed to execute template %q: %w", name, err)
 	}
 
 	w.Header().Set("content-type", "text/html")
-	_, err := w.Write(b.B)
-	return err
+	if _, err := w.Write(b.B); err != nil {
+		return fmt.Errorf("failed to write HTML response: %w", err)
+	}
+	return nil
 }
 
 func jsonResponse(w http.ResponseWriter, v any) error {
@@ -111,10 +114,12 @@ func jsonResponse(w http.ResponseWriter, v any) error {
 	defer bytebufferpool.Put(b)
 
 	if err := json.NewEncoder(b).Encode(v); err != nil {
-		return err
+		return fmt.Errorf("failed to encode JSON response: %w", err)
 	}
 
 	w.Header().Set("content-type", "application/json")
-	_, err := w.Write(b.B)
-	return err
+	if _, err := w.Write(b.B); err != nil {
+		return fmt.Errorf("failed to write JSON response: %w", err)
+	}
+	return nil
 }

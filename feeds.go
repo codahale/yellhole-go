@@ -3,19 +3,20 @@ package main
 import (
 	"database/sql"
 	"errors"
-	db2 "github.com/codahale/yellhole-go/internal/db"
-	"github.com/codahale/yellhole-go/internal/markdown"
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/markdown"
 	"github.com/gorilla/feeds"
 	"github.com/valyala/bytebufferpool"
 )
 
-func handleHomePage(queries *db2.Queries, t *template.Template) appHandler {
+func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 		if err != nil {
@@ -24,19 +25,19 @@ func handleHomePage(queries *db2.Queries, t *template.Template) appHandler {
 
 		notes, err := queries.RecentNotes(r.Context(), n)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve recent notes: %w", err)
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve weeks with notes: %w", err)
 		}
 
 		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
 	}
 }
 
-func handleWeekPage(queries *db2.Queries, t *template.Template) appHandler {
+func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 		if err != nil {
@@ -47,7 +48,7 @@ func handleWeekPage(queries *db2.Queries, t *template.Template) appHandler {
 
 		notes, err := queries.NotesByDate(r.Context(), start, end)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve notes by date: %w", err)
 		}
 
 		if len(notes) == 0 {
@@ -57,14 +58,14 @@ func handleWeekPage(queries *db2.Queries, t *template.Template) appHandler {
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve weeks with notes for week page: %w", err)
 		}
 
 		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
 	}
 }
 
-func handleNotePage(queries *db2.Queries, t *template.Template) appHandler {
+func handleNotePage(queries *db.Queries, t *template.Template) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		note, err := queries.NoteByID(r.Context(), r.PathValue("id"))
 		if err != nil {
@@ -72,23 +73,23 @@ func handleNotePage(queries *db2.Queries, t *template.Template) appHandler {
 				http.NotFound(w, r)
 				return nil
 			}
-			return err
+			return fmt.Errorf("failed to retrieve note by ID: %w", err)
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve weeks with notes for note page: %w", err)
 		}
 
-		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db2.Note{note}, weeks})
+		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
 	}
 }
 
-func handleAtomFeed(queries *db2.Queries, author, title, description string, baseURL *url.URL) appHandler {
+func handleAtomFeed(queries *db.Queries, author, title, description string, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		notes, err := queries.RecentNotes(r.Context(), 20)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve recent notes for atom feed: %w", err)
 		}
 
 		feed := feeds.Feed{
@@ -105,7 +106,7 @@ func handleAtomFeed(queries *db2.Queries, author, title, description string, bas
 		for _, note := range notes {
 			html, err := markdown.HTML(note.Body)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to convert markdown to HTML for note %s: %w", note.NoteID, err)
 			}
 
 			noteURL := baseURL.JoinPath("note", note.NoteID).String()
@@ -122,17 +123,20 @@ func handleAtomFeed(queries *db2.Queries, author, title, description string, bas
 		defer bytebufferpool.Put(b)
 
 		if err := feeds.WriteXML(&feeds.Atom{Feed: &feed}, b); err != nil {
-			return err
+			return fmt.Errorf("failed to write XML for atom feed: %w", err)
 		}
 
 		w.Header().Set("content-type", "application/atom+xml")
 		_, err = w.Write(b.B)
-		return err
+		if err != nil {
+			return fmt.Errorf("failed to write atom feed response: %w", err)
+		}
+		return nil
 	}
 }
 
 type feedPage struct {
 	Single bool
-	Notes  []db2.Note
-	Weeks  []db2.WeeksWithNotesRow
+	Notes  []db.Note
+	Weeks  []db.WeeksWithNotesRow
 }

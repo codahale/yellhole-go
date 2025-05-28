@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"fmt"
 	"html/template"
 	"net/url"
 	"strings"
@@ -26,7 +27,7 @@ func Images(s string) ([]*url.URL, error) {
 		}
 		return ast.WalkContinue, nil
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to walk markdown AST for images: %w", err)
 	}
 	return images, nil
 }
@@ -70,7 +71,7 @@ func Text(s string) (string, error) {
 		}
 		return ast.WalkContinue, nil
 	}); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to walk markdown AST for text extraction: %w", err)
 	}
 	return strings.TrimSpace(b.String()), nil
 }
@@ -85,7 +86,7 @@ func HTML(s string) (template.HTML, error) {
 		extension.NewTypographer()),
 	)
 	if err := md.Convert([]byte(s), b); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to convert markdown to HTML: %w", err)
 	}
 	return template.HTML(b.String()), nil
 }

@@ -22,7 +22,7 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 	// Step into the ./assets directory of the embedded files.
 	assetsDir, err := fs.Sub(assetsFS, "internal/assets")
 	if err != nil {
-		return
+		return nil, nil, nil, fmt.Errorf("failed to access internal/assets: %w", err)
 	}
 
 	// Create an HTTP handler for the assets with a max-age of one week.
@@ -30,20 +30,22 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 
 	// Create map of asset paths to subresource integrity hashes.
 	hashes = make(map[string]string)
-	err = fs.WalkDir(assetsDir, ".", func(p string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(assetsDir, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
 
 		b, err := fs.ReadFile(assetsDir, p)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read asset %s: %w", p, err)
 		}
 
 		hashes[p] = fmt.Sprintf("sha256:%x", sha256.Sum256(b))
 
 		return nil
-	})
+	}); err != nil {
+		return nil, nil, nil, err
+	}
 
 	// Create a slice of asset paths.
 	paths = slices.Collect(maps.Keys(hashes))

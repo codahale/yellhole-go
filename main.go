@@ -28,7 +28,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	// Parse the configuration flags and environment variables.
 	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Create context that listens for the interrupt signal from the OS.
@@ -39,7 +39,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	undo, err := maxprocs.Set()
 	defer undo()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set GOMAXPROCS: %w", err)
 	}
 	slog.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
@@ -47,21 +47,21 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
 	conn, queries, err := db.NewWithMigrations(filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	defer func() {
 		if err := queries.Close(); err != nil {
 			slog.Error("error closing queries", "err", err)
 		}
 		if err := conn.Close(); err != nil {
-			slog.Error("error closing queries", "err", err)
+			slog.Error("error closing database", "err", err)
 		}
 	}()
 
 	// Create a new app.
 	app, err := newApp(ctx, queries, baseURL, dataDir, author, title, description, lang, true)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create application: %w", err)
 	}
 
 	// Configure an HTTP server with good defaults.

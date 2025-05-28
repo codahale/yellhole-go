@@ -1,16 +1,18 @@
-package markdown
+package markdown_test
 
 import (
 	"fmt"
 	"html/template"
 	"net/url"
 	"testing"
+
+	"github.com/codahale/yellhole-go/internal/markdown"
 )
 
 func TestMarkdownHTML(t *testing.T) {
 	t.Parallel()
 
-	html, err := HTML("It's ~~not~~ _electric_!")
+	html, err := markdown.HTML("It's ~~not~~ _electric_!")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +25,7 @@ func TestMarkdownHTML(t *testing.T) {
 func TestMarkdownText(t *testing.T) {
 	t.Parallel()
 
-	text, err := Text("It's _electric_!\n\nBoogie woogie woogie.")
+	text, err := markdown.Text("It's _electric_!\n\nBoogie woogie woogie.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +41,7 @@ func TestMarkdownImages(t *testing.T) {
 	a, _ := url.Parse("/doink.png")
 	b, _ := url.Parse("http://example.com/cool.bmp")
 
-	images, err := Images(fmt.Sprintf("Hello!\n\n![](%s)\n\n![](%s)", a, b))
+	images, err := markdown.Images(fmt.Sprintf("Hello!\n\n![](%s)\n\n![](%s)", a, b))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/codahale/yellhole-go/internal/db"
-	"github.com/codahale/yellhole-go/internal/imgstore"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	"github.com/google/uuid"
 )
 
@@ -25,12 +26,12 @@ func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *u
 
 		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, imageURL, nil)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create request for image download from %q: %w", imageURL, err)
 		}
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to download image from %q: %w", imageURL, err)
 		}
 		defer func() {
 			_ = resp.Body.Close()
@@ -46,11 +47,11 @@ func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *u
 
 		filename, format, err := images.Add(r.Context(), id, resp.Body)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to add downloaded image to store: %w", err)
 		}
 
 		if err := queries.CreateImage(r.Context(), id.String(), filename, imageURL, format, time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create image record in database: %w", err)
 		}
 
 		http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
@@ -62,7 +63,7 @@ func handleUploadImage(queries *db.Queries, images *imgstore.Store, baseURL *url
 	return func(w http.ResponseWriter, r *http.Request) error {
 		f, h, err := r.FormFile("image")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get uploaded image file: %w", err)
 		}
 		defer func() {
 			_ = f.Close()
@@ -72,11 +73,11 @@ func handleUploadImage(queries *db.Queries, images *imgstore.Store, baseURL *url
 
 		filename, format, err := images.Add(r.Context(), id, f)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to add uploaded image to store: %w", err)
 		}
 
 		if err := queries.CreateImage(r.Context(), id.String(), filename, h.Filename, format, time.Now()); err != nil {
-			return err
+			return fmt.Errorf("failed to create image record in database: %w", err)
 		}
 
 		http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)

@@ -30,25 +30,25 @@ func New(root *os.Root) (*Store, error) {
 	_ = root.Mkdir("images", 0755)
 	images, err := root.OpenRoot("images")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open images directory: %w", err)
 	}
 
 	_ = images.Mkdir("feed", 0755)
 	feedRoot, err := images.OpenRoot("feed")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open feed images directory: %w", err)
 	}
 
 	_ = images.Mkdir("original", 0755)
 	origRoot, err := images.OpenRoot("original")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open original images directory: %w", err)
 	}
 
 	_ = images.Mkdir("thumb", 0755)
 	thumbRoot, err := images.OpenRoot("thumb")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open thumbnail images directory: %w", err)
 	}
 
 	return &Store{images, feedRoot, origRoot, thumbRoot}, nil
@@ -67,7 +67,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	buf := new(bytes.Buffer)
 	_, format, err = image.DecodeConfig(io.TeeReader(r, buf))
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to decode image configuration: %w", err)
 	}
 
 	// Reassemble the image reader using the buffer.
@@ -76,7 +76,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	// Copy the original image data to disk as it's decoded.
 	orig, err := s.origRoot.Create(fmt.Sprintf("%s.%s", id, format))
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to create original image file: %w", err)
 	}
 	defer func() {
 		_ = orig.Close()
@@ -94,7 +94,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	// Fully decode the image.
 	origImg, _, err := image.Decode(r)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to decode image: %w", err)
 	}
 
 	// Generate thumbnails.
@@ -106,7 +106,7 @@ func (s *Store) processAnim(ctx context.Context, r io.Reader, filename string) e
 	// Decode all frames.
 	img, err := gif.DecodeAll(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to decode animated GIF: %w", err)
 	}
 
 	// If there's only one frame, treat it as a static image.
@@ -123,7 +123,7 @@ func (s *Store) processAnim(ctx context.Context, r io.Reader, filename string) e
 		return resizeAnim(s.thumbRoot, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
-		return err
+		return fmt.Errorf("failed to resize animated image: %w", err)
 	}
 
 	return nil
@@ -138,13 +138,16 @@ func (s *Store) processStatic(ctx context.Context, img image.Image, filename str
 	eg.Go(func() error {
 		return resizeStatic(s.thumbRoot, img, filename, 100)
 	})
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return fmt.Errorf("failed to resize static image: %w", err)
+	}
+	return nil
 }
 
 func resizeStatic(root *os.Root, src image.Image, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create resized static image file %s: %w", filename, err)
 	}
 	defer func() {
 		_ = f.Close()
@@ -162,7 +165,7 @@ func resizeStatic(root *os.Root, src image.Image, filename string, maxWidth int)
 func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) error {
 	f, err := root.Create(filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create resized animated image file %s: %w", filename, err)
 	}
 	defer func() {
 		_ = f.Close()

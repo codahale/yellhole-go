@@ -1,10 +1,10 @@
 package imgstore_test
 
 import (
-	"github.com/codahale/yellhole-go/internal/imgstore"
 	"os"
 	"testing"
 
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	"github.com/google/uuid"
 	"golang.org/x/image/webp"
 )
