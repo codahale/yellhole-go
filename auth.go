@@ -18,14 +18,6 @@ import (
 	sloghttp "github.com/samber/slog-http"
 )
 
-func newWebauthn(title string, baseURL *url.URL) (*webauthn.WebAuthn, error) {
-	return webauthn.New(&webauthn.Config{
-		RPID:          baseURL.Hostname(),
-		RPDisplayName: title,
-		RPOrigins:     []string{strings.TrimRight(baseURL.String(), "/")},
-	})
-}
-
 func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Ensure we only register one passkey.
@@ -54,10 +46,7 @@ func handleRegisterPage(queries *db.Queries, t *template.Template, baseURL *url.
 }
 
 func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
-	webAuthn, err := newWebauthn(title, baseURL)
-	if err != nil {
-		panic(err)
-	}
+	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Create a new webauthn attestation challenge.
@@ -84,10 +73,7 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 }
 
 func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
-	webAuthn, err := newWebauthn(title, baseURL)
-	if err != nil {
-		panic(err)
-	}
+	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Find the webauthn session ID.
@@ -152,10 +138,7 @@ func handleLoginPage(queries *db.Queries, t *template.Template, baseURL *url.URL
 }
 
 func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
-	webAuthn, err := newWebauthn(title, baseURL)
-	if err != nil {
-		panic(err)
-	}
+	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Ensure the request isn't already authenticated.
@@ -196,10 +179,7 @@ func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.UR
 }
 
 func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
-	webAuthn, err := newWebauthn(title, baseURL)
-	if err != nil {
-		panic(err)
-	}
+	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
 		// Ensure the request isn't already authenticated.
@@ -325,6 +305,19 @@ func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker)
 			purge(ctx, "challenges", time.Now().Add(-5*time.Minute), queries.PurgeWebauthnSessions)
 		}
 	}
+}
+
+func newWebauthn(title string, baseURL *url.URL) *webauthn.WebAuthn {
+	webAuthn, err := webauthn.New(&webauthn.Config{
+		RPID:          baseURL.Hostname(),
+		RPDisplayName: title,
+		RPOrigins:     []string{strings.TrimRight(baseURL.String(), "/")},
+	})
+	if err != nil {
+		// If the configuration is invalid, panic. This will always be a programming error, not a runtime error.
+		panic(err)
+	}
+	return webAuthn
 }
 
 type webauthnUser struct {
