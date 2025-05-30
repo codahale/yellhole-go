@@ -78,7 +78,7 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	// Add logging.
 	loggerHandler := slog.DiscardHandler
 	if requestLog {
-		loggerHandler = slog.NewJSONHandler(os.Stdout, nil)
+		loggerHandler = slog.NewTextHandler(os.Stdout, nil)
 	}
 	return sloghttp.New(slog.New(loggerHandler))(handler), nil
 }
