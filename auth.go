@@ -49,6 +49,16 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
+		// Ensure we only register one passkey.
+		registered, err := queries.HasWebauthnCredential(r.Context())
+		if err != nil {
+			return fmt.Errorf("failed to check for existing webauthn credential: %w", err)
+		}
+		if registered {
+			http.Error(w, "You already have a passkey registered.", http.StatusBadRequest)
+			return nil
+		}
+
 		// Create a new webauthn attestation challenge.
 		creation, session, err := webAuthn.BeginRegistration(
 			webauthnUser{author, []*db.JSONCredential{}},
@@ -76,6 +86,16 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
+		// Ensure we only register one passkey.
+		registered, err := queries.HasWebauthnCredential(r.Context())
+		if err != nil {
+			return fmt.Errorf("failed to check for existing webauthn credential: %w", err)
+		}
+		if registered {
+			http.Error(w, "You already have a passkey registered.", http.StatusBadRequest)
+			return nil
+		}
+
 		// Find the webauthn session ID.
 		regSessionID, err := r.Cookie("registrationSessionID")
 		if err != nil {
@@ -91,6 +111,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		// Validate the attestation response.
 		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
 		if err != nil {
+			fmt.Printf("%s %#v\n", err, err)
 			// If the attestation is invalid, respond with verified=false.
 			slog.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
 			return jsonResponse(w, map[string]bool{"verified": false})

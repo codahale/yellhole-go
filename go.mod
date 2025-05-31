@@ -7,8 +7,10 @@ require (
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/Xuanwo/go-locale v1.1.3
 	github.com/alecthomas/chroma/v2 v2.18.0
+	github.com/descope/virtualwebauthn v1.0.3
 	github.com/go-webauthn/webauthn v0.13.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/feeds v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.28
