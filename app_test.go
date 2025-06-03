@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"testing"
@@ -17,10 +18,11 @@ type testApp struct {
 }
 
 func newTestApp(t *testing.T) *testApp {
+	logger := slog.New(slog.DiscardHandler)
 	t.Helper()
 
 	tempDir := t.TempDir()
-	conn, queries, err := db.NewWithMigrations(filepath.Join(tempDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(logger, filepath.Join(tempDir, "yellhole.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +47,7 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	app, err := newApp(t.Context(), queries, images, "http://example.com", "Test Man", "Test Yell", "Gotta go fast.", "en", false)
+	app, err := newApp(t.Context(), logger, queries, images, "http://example.com", "Test Man", "Test Yell", "Gotta go fast.", "en", false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -24,7 +24,7 @@ import (
 //go:generate sqlc generate -f internal/db/sqlc.yaml
 
 func run(args []string, lookupEnv func(string) (string, bool)) error {
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	// Parse the configuration flags and environment variables.
 	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
@@ -42,11 +42,11 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	if err != nil {
 		return fmt.Errorf("failed to set GOMAXPROCS: %w", err)
 	}
-	slog.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
+	logger.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
 	// Connect to the database.
-	slog.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
-	conn, queries, err := db.NewWithMigrations(filepath.Join(dataDir, "yellhole.db"))
+	logger.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
+	conn, queries, err := db.NewWithMigrations(logger, filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
@@ -71,7 +71,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, queries, images, baseURL, author, title, description, lang, true)
+	app, err := newApp(ctx, logger, queries, images, baseURL, author, title, description, lang, true)
 	if err != nil {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
@@ -91,7 +91,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}
 
 	// Listen for connections in a separate goroutine.
-	slog.Info("listening for connections", "baseURL", baseURL)
+	logger.Info("listening for connections", "baseURL", baseURL)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("error listening for requests", "err", err)
@@ -103,17 +103,17 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 	// Restore default behavior on the interrupt signal and notify the user of shutdown.
 	stop()
-	slog.Info("shutting down gracefully, press Ctrl+C again to force")
+	logger.Info("shutting down gracefully, press Ctrl+C again to force")
 
 	// The context is used to inform the server it has 5 seconds to finish the requests it is
 	// currently handling.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		slog.Error("error shutting down", "err", err)
+		logger.Error("error shutting down", "err", err)
 	}
 
-	slog.Info("exiting")
+	logger.Info("exiting")
 
 	return nil
 }

@@ -30,7 +30,7 @@ const initSQL = `
 	PRAGMA trusted_schema = OFF;
 `
 
-func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
+func NewWithMigrations(logger *slog.Logger, filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite3", filename)
 	if err != nil {
@@ -62,7 +62,7 @@ func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create migrator: %w", err)
 	}
-	m.Log = &slogger{}
+	m.Log = &slogger{logger}
 
 	// Run all unapplied migrations.
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
@@ -73,10 +73,11 @@ func NewWithMigrations(filename string) (*sql.DB, *Queries, error) {
 }
 
 type slogger struct {
+	logger *slog.Logger
 }
 
 func (s *slogger) Printf(format string, v ...any) {
-	slog.Info("running migration", "msg", fmt.Sprintf(format, v...))
+	s.logger.Info("running migration", "msg", fmt.Sprintf(format, v...))
 }
 
 func (s *slogger) Verbose() bool {

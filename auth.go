@@ -82,7 +82,7 @@ func handleRegisterStart(queries *db.Queries, author, title string, baseURL *url
 	}
 }
 
-func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleRegisterFinish(logger *slog.Logger, queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
@@ -112,7 +112,7 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
 		if err != nil {
 			// If the attestation is invalid, respond with verified=false.
-			slog.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
+			logger.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
 			return jsonResponse(w, map[string]bool{"verified": false})
 		}
 
@@ -198,7 +198,7 @@ func handleLoginStart(queries *db.Queries, author, title string, baseURL *url.UR
 	}
 }
 
-func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
+func handleLoginFinish(logger *slog.Logger, queries *db.Queries, author, title string, baseURL *url.URL) appHandler {
 	webAuthn := newWebauthn(title, baseURL)
 
 	return func(w http.ResponseWriter, r *http.Request) error {
@@ -235,7 +235,7 @@ func handleLoginFinish(queries *db.Queries, author, title string, baseURL *url.U
 		_, err = webAuthn.FinishLogin(webauthnUser{author, credentials}, session.Data, r)
 		if err != nil {
 			// Respond with verified=false if the challenge response was invalid.
-			slog.ErrorContext(r.Context(), "unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
+			logger.ErrorContext(r.Context(), "unable to finish passkey login", "err", err, "id", sloghttp.GetRequestID(r))
 			return jsonResponse(w, map[string]bool{"verified": false})
 		}
 
@@ -299,20 +299,20 @@ func isAuthenticated(r *http.Request, queries *db.Queries) (bool, error) {
 	return queries.SessionExists(r.Context(), cookie.Value, time.Now().AddDate(0, 0, -7))
 }
 
-func purgeOldRows(ctx context.Context, queries *db.Queries, ticker *time.Ticker) {
+func purgeOldRows(ctx context.Context, logger *slog.Logger, queries *db.Queries, ticker *time.Ticker) {
 	purge := func(ctx context.Context, name string, expiry time.Time, f func(context.Context, time.Time) (sql.Result, error)) {
 		res, err := f(ctx, expiry)
 		if err != nil {
-			slog.ErrorContext(ctx, "error purging old "+name, "err", err)
+			logger.ErrorContext(ctx, "error purging old "+name, "err", err)
 			return
 		}
 
 		n, err := res.RowsAffected()
 		if err != nil {
-			slog.ErrorContext(ctx, "error purging old "+name, "err", err)
+			logger.ErrorContext(ctx, "error purging old "+name, "err", err)
 			return
 		}
-		slog.InfoContext(ctx, "purged old "+name, "count", n)
+		logger.InfoContext(ctx, "purged old "+name, "count", n)
 	}
 
 	for {

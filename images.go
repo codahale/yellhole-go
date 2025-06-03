@@ -45,7 +45,7 @@ var (
 	}
 )
 
-func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
+func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageURL := r.FormValue("url")
 
@@ -63,7 +63,7 @@ func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *u
 		}()
 
 		if resp.StatusCode != http.StatusOK {
-			slog.ErrorContext(r.Context(), "unable to download image", "imageURL", imageURL, "statusCode", resp.StatusCode)
+			logger.ErrorContext(r.Context(), "unable to download image", "imageURL", imageURL, "statusCode", resp.StatusCode)
 			http.Error(w, "unable to download image", http.StatusInternalServerError)
 			return nil
 		}

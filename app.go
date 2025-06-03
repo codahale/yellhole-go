@@ -21,7 +21,7 @@ import (
 )
 
 // newApp constructs an application handler given the various application inputs.
-func newApp(ctx context.Context, queries *db.Queries, images *imgstore.Store, baseURL, author, title, description, lang string, requestLog bool) (http.Handler, error) {
+func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL, author, title, description, lang string, requestLog bool) (http.Handler, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse base URL %q: %w", baseURL, err)
@@ -34,7 +34,7 @@ func newApp(ctx context.Context, queries *db.Queries, images *imgstore.Store, ba
 
 	// Set up a purgeTicker to purge old sessions every five minutes.
 	purgeTicker := time.NewTicker(5 * time.Minute)
-	go purgeOldRows(ctx, queries, purgeTicker)
+	go purgeOldRows(ctx, logger, queries, purgeTicker)
 
 	// Load the embedded public assets.
 	assetPaths, assetHashes, assets, err := loadAssets()
@@ -50,7 +50,7 @@ func newApp(ctx context.Context, queries *db.Queries, images *imgstore.Store, ba
 
 	// Construct a route map of handlers.
 	mux := http.NewServeMux()
-	addRoutes(mux, author, title, description, u, queries, templates, images, assets, assetPaths)
+	addRoutes(mux, author, title, description, u, logger, queries, templates, images, assets, assetPaths)
 
 	// Require authentication for all /admin requests.
 	handler := requireAuthentication(queries, mux, u, "/admin")
