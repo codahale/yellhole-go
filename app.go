@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"filippo.io/csrf"
+	"github.com/CAFxX/httpcompression"
 	"github.com/codahale/yellhole-go/internal/db"
 	"github.com/codahale/yellhole-go/internal/imgstore"
 	sloghttp "github.com/samber/slog-http"
@@ -56,6 +57,13 @@ func newApp(ctx context.Context, queries *db.Queries, images *imgstore.Store, ba
 
 	// Protect from CSRF attacks.
 	handler = csrf.New().Handler(handler)
+
+	// Add compression for responses.
+	compress, err := httpcompression.DefaultAdapter(httpcompression.ContentTypes([]string{"text/html", "text/css", "text/javascript"}, false))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create compression adapter: %w", err)
+	}
+	handler = compress(handler)
 
 	// Serve the root from the base URL path.
 	handler = http.StripPrefix(strings.TrimRight(u.Path, "/"), handler)

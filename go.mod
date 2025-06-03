@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	filippo.io/csrf v0.0.0-20250517103426-cfb6fbb0fbe3
+	github.com/CAFxX/httpcompression v0.0.9
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/Xuanwo/go-locale v1.1.3
 	github.com/alecthomas/chroma/v2 v2.18.0
@@ -26,6 +27,7 @@ require (
 require (
 	cel.dev/expr v0.24.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cubicdaiya/gonp v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -46,6 +48,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
