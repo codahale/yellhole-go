@@ -21,7 +21,7 @@ import (
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
-//go:generate go tool sqlc generate -f internal/db/sqlc.yaml
+//go:generate sqlc generate -f internal/db/sqlc.yaml
 
 func run(args []string, lookupEnv func(string) (string, bool)) error {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
