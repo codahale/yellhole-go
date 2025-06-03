@@ -64,7 +64,7 @@ func New(dataDir string) (store *Store, err error) {
 		return nil, fmt.Errorf("failed to open thumbnail images directory: %w", err)
 	}
 
-	return
+	return store, nil
 }
 
 func (s *Store) Close() error {
@@ -120,8 +120,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 
 	// If the image is a GIF, decode it as such. Animated GIFs need to be handled separately.
 	if format == "gif" {
-		err = s.processAnim(ctx, r, filename)
-		return
+		return filename, format, s.processAnim(ctx, r, filename)
 	}
 
 	// Fully decode the image.
@@ -131,8 +130,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	}
 
 	// Generate thumbnails.
-	err = s.processStatic(ctx, origImg, filename)
-	return
+	return filename, format, s.processStatic(ctx, origImg, filename)
 }
 
 func (s *Store) processAnim(ctx context.Context, r io.Reader, filename string) error {

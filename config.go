@@ -18,7 +18,7 @@ func loadConfig(args []string, lookupEnv func(string) (string, bool)) (addr, bas
 
 	detectedLang, err := locale.Detect()
 	if err != nil {
-		return
+		return "", "", "", "", "", "", "", err
 	}
 
 	cmd := flag.NewFlagSet("yellhole", flag.ContinueOnError)
@@ -30,6 +30,9 @@ func loadConfig(args []string, lookupEnv func(string) (string, bool)) (addr, bas
 	cmd.StringVar(&description, "description", env("DESCRIPTION", "Obscurantist filth."), "the description of the yellhole instance")
 	cmd.StringVar(&lang, "lang", detectedLang.String(), "the language of the notes")
 
-	err = cmd.Parse(args)
-	return
+	if err := cmd.Parse(args); err != nil {
+		return "", "", "", "", "", "", "", err
+	}
+
+	return addr, baseURL, dataDir, author, title, description, lang, nil
 }

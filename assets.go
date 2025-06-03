@@ -50,7 +50,7 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 	// Create a slice of asset paths.
 	paths = slices.Collect(maps.Keys(hashes))
 
-	return
+	return paths, hashes, handler, nil
 }
 
 // cacheControl returns a wrapper handler which sets the specified Cache-Control header in the response.
