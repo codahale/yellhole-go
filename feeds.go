@@ -42,7 +42,7 @@ func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
 		start, err := time.ParseInLocation("2006-01-02", r.PathValue("start"), time.Local)
 		if err != nil {
 			http.NotFound(w, r)
-			return nil
+			return nil //nolint:nilerr // the error is handled here
 		}
 		end := start.AddDate(0, 0, 7)
 

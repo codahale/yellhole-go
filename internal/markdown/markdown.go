@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	_ "github.com/alecthomas/chroma/v2"
+	_ "github.com/alecthomas/chroma/v2" // include chroma as a direct dependency
 	"github.com/valyala/bytebufferpool"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark-highlighting/v2"
@@ -88,5 +88,5 @@ func HTML(s string) (template.HTML, error) {
 	if err := md.Convert([]byte(s), b); err != nil {
 		return "", fmt.Errorf("failed to convert markdown to HTML: %w", err)
 	}
-	return template.HTML(b.String()), nil
+	return template.HTML(b.String()), nil //nolint:gosec // goldmark produces escaped HTML
 }

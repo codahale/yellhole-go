@@ -10,7 +10,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // this only supports SQLite
 )
 
 var (

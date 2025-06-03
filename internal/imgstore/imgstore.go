@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"image"
 	"image/gif"
-	_ "image/jpeg"
-	_ "image/png"
+	_ "image/jpeg" // support JPEG images
+	_ "image/png"  // support PNG images
 	"io"
 	"io/fs"
 	"math"
@@ -208,7 +208,7 @@ func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) erro
 		Disposals: make([]uint, len(src.Disposal)),
 		Durations: make([]uint, len(src.Delay)),
 		Images:    make([]image.Image, len(src.Image)),
-		LoopCount: uint16(src.LoopCount),
+		LoopCount: uint16(src.LoopCount), //nolint:gosec // inconsequential
 	}
 
 	for i, d := range src.Disposal {
@@ -221,7 +221,7 @@ func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) erro
 	}
 
 	for i, v := range src.Delay {
-		thumbnail.Durations[i] = uint(v)
+		thumbnail.Durations[i] = uint(v) //nolint:gosec // inconsequential
 	}
 
 	// Create a new RGBA image to hold the incremental frames.

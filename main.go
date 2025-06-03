@@ -81,7 +81,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		Addr:    addr,
 		Handler: app,
 
-		BaseContext: func(l net.Listener) context.Context {
+		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
 		},
 		IdleTimeout:       120 * time.Second,

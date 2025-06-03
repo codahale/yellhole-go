@@ -52,7 +52,7 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 			return title
 		},
 		"url": func(elem ...string) template.URL {
-			return template.URL(baseURL.JoinPath(elem...).String())
+			return template.URL(baseURL.JoinPath(elem...).String()) //nolint:gosec // input is trusted
 		},
 	}).ParseFS(templatesFS, "internal/templates/partials/*.gohtml", "internal/templates/*.gohtml")
 }

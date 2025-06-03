@@ -9,7 +9,6 @@ issues:
 
 formatters:
   enable:
-    - goimports # checks if the code and import statements are formatted according to the 'goimports' command
     - gofmt # checks if the code is formatted according to 'gofmt' command
 
   # All settings can be found here https://github.com/golangci/golangci-lint/blob/HEAD/.golangci.reference.yml
@@ -48,8 +47,6 @@ linters:
     - funcorder # checks the order of functions, methods, and constructors
     - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
-    - gochecknoglobals # checks that no global variables exist
-    - gochecknoinits # checks that no init functions are present in Go code
     - gochecksumtype # checks exhaustiveness on Go "sum types"
     - gocognit # computes and checks the cognitive complexity of functions
     - goconst # finds repeated strings that could be replaced by a constant
