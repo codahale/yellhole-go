@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -22,6 +23,28 @@ func handleThumbImage(images *imgstore.Store) http.Handler {
 	return cacheControl(http.FileServerFS(images.ThumbImages()), cacheControlImmutable)
 }
 
+var (
+	// imageClient is the HTTP client used to download images with additional timeouts and resource limits.
+	imageClient = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			MaxIdleConnsPerHost:   10,
+			MaxConnsPerHost:       20,
+			DisableCompression:    false,
+		},
+		Timeout: 60 * time.Second,
+	}
+)
+
 func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageURL := r.FormValue("url")
@@ -31,7 +54,7 @@ func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *u
 			return fmt.Errorf("failed to create request for image download from %q: %w", imageURL, err)
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := imageClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("failed to download image from %q: %w", imageURL, err)
 		}
