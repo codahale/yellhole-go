@@ -28,7 +28,6 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 				return "", fmt.Errorf("unknown asset: %q", p)
 			}
 			return hash, nil
-
 		},
 		"author": func() string {
 			return author

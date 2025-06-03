@@ -230,5 +230,4 @@ func TestRegistrationAndLoginFlow(t *testing.T) {
 	if !loggedIn {
 		t.Errorf("loggedIn = false, want = true")
 	}
-
 }

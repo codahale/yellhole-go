@@ -250,7 +250,6 @@ func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) erro
 	}
 
 	return nil
-
 }
 
 func resize(img image.Image, maxWidth int) image.Image {
