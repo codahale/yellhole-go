@@ -48,9 +48,7 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 		"markdownHTML":   markdown.HTML,
 		"markdownText":   markdown.Text,
 		"markdownImages": markdown.Images,
-		"now": func() time.Time {
-			return time.Now()
-		},
+		"now":            time.Now,
 		"title": func() string {
 			return title
 		},
