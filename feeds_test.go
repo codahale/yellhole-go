@@ -17,7 +17,7 @@ func TestFeedsHomePageEmpty(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest("GET", "http://example.com/", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -37,7 +37,7 @@ func TestFeedsHomePageNote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -69,7 +69,7 @@ func TestFeedsWeeksPage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/notes/2025-03-09", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -94,7 +94,7 @@ func TestFeedsWeeksPage404(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest("GET", "http://example.com/notes/2025-03-09", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/notes/2025-03-09", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -115,7 +115,7 @@ func TestFeedsNotePage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/note/"+noteID, nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -138,7 +138,7 @@ func TestFeedsNotePage404(t *testing.T) {
 
 	noteID := uuid.NewString()
 
-	req := httptest.NewRequest("GET", "http://example.com/note/"+noteID, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/note/"+noteID, nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -158,7 +158,7 @@ func TestFeedsAtomFeed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/atom.xml", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/atom.xml", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 

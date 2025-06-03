@@ -21,7 +21,7 @@ func TestRegisterPage(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest("GET", "http://example.com/register", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/register", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -42,7 +42,7 @@ func TestRegisterPageWithCredential(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/register", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/register", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -67,7 +67,7 @@ func TestRegistrationFlowWithCredential(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("POST", "http://example.com/register/start", nil)
+	req := httptest.NewRequest(http.MethodPost, "http://example.com/register/start", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -88,7 +88,7 @@ func TestLoginPage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/login", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/login", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -104,7 +104,7 @@ func TestLoginPageWithoutCredential(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest("GET", "http://example.com/login", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/login", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -125,7 +125,7 @@ func TestRegistrationAndLoginFlow(t *testing.T) {
 	app := newTestApp(t)
 
 	// Request a registration challenge.
-	startReq := httptest.NewRequest("POST", "http://example.com/register/start", nil)
+	startReq := httptest.NewRequest(http.MethodPost, "http://example.com/register/start", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, startReq)
 	startResp := w.Result()
@@ -156,7 +156,7 @@ func TestRegistrationAndLoginFlow(t *testing.T) {
 	attestationResponse := virtualwebauthn.CreateAttestationResponse(rp, authenticator, credential, *attestationOptions)
 
 	// Register the passkey.
-	finishReq := httptest.NewRequest("POST", "http://example.com/register/finish", nil)
+	finishReq := httptest.NewRequest(http.MethodPost, "http://example.com/register/finish", nil)
 	finishReq.AddCookie(startResp.Cookies()[0])
 	finishReq.Header.Set("Content-Type", "application/json")
 	finishReq.Body = io.NopCloser(strings.NewReader(attestationResponse))
@@ -179,7 +179,7 @@ func TestRegistrationAndLoginFlow(t *testing.T) {
 	}
 
 	// Request a login challenge.
-	startReq = httptest.NewRequest("POST", "http://example.com/login/start", nil)
+	startReq = httptest.NewRequest(http.MethodPost, "http://example.com/login/start", nil)
 	w = httptest.NewRecorder()
 	app.ServeHTTP(w, startReq)
 	startResp = w.Result()
@@ -203,7 +203,7 @@ func TestRegistrationAndLoginFlow(t *testing.T) {
 	assertionResponse := virtualwebauthn.CreateAssertionResponse(rp, authenticator, credential, *assertionOptions)
 
 	// Login with the passkey.
-	finishReq = httptest.NewRequest("POST", "http://example.com/login/finish", nil)
+	finishReq = httptest.NewRequest(http.MethodPost, "http://example.com/login/finish", nil)
 	finishReq.AddCookie(startResp.Cookies()[0])
 	finishReq.Header.Set("Content-Type", "application/json")
 	finishReq.Body = io.NopCloser(strings.NewReader(assertionResponse))

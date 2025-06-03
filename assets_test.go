@@ -12,7 +12,7 @@ func TestAssetsPublic(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest("GET", "http://example.com/favicon.ico", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/favicon.ico", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 

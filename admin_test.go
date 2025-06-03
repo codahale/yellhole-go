@@ -23,7 +23,7 @@ func TestAdminPage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/admin", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/admin", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  "sessionID",
 		Value: sessionID,
@@ -60,7 +60,7 @@ func TestAdminNotePreview(t *testing.T) {
 	_, _ = preview.Write([]byte("true"))
 	_ = mw.Close()
 
-	req := httptest.NewRequest("POST", "http://example.com/admin/new", &b)
+	req := httptest.NewRequest(http.MethodPost, "http://example.com/admin/new", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	// req.Header.Set("sec-fetch-site", "none")
 	req.AddCookie(&http.Cookie{
@@ -100,7 +100,7 @@ func TestAdminNoteCreate(t *testing.T) {
 	_, _ = body.Write([]byte("This is _interesting_."))
 	_ = mw.Close()
 
-	req := httptest.NewRequest("POST", "http://example.com/admin/new", &b)
+	req := httptest.NewRequest(http.MethodPost, "http://example.com/admin/new", &b)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	req.Header.Set("Sec-Fetch-Site", "none")
 	req.AddCookie(&http.Cookie{

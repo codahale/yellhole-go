@@ -20,7 +20,7 @@ func TestServeFeedImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/images/feed/"+imageFilename, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/images/feed/"+imageFilename, nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
@@ -47,7 +47,7 @@ func TestServeThumbImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("GET", "http://example.com/images/thumb/"+imageFilename, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/images/thumb/"+imageFilename, nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 
