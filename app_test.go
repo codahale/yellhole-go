@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 )
 
 type testApp struct {
@@ -34,7 +35,17 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	app, err := newApp(t.Context(), queries, "http://example.com", tempDir, "Test Man", "Test Yell", "Gotta go fast.", "en", false)
+	images, err := imgstore.New(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := images.Close(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	app, err := newApp(t.Context(), queries, images, "http://example.com", "Test Man", "Test Yell", "Gotta go fast.", "en", false)
 	if err != nil {
 		t.Fatal(err)
 	}

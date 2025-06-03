@@ -20,7 +20,7 @@ import (
 )
 
 // newApp constructs an application handler given the various application inputs.
-func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, title, description, lang string, requestLog bool) (http.Handler, error) {
+func newApp(ctx context.Context, queries *db.Queries, images *imgstore.Store, baseURL, author, title, description, lang string, requestLog bool) (http.Handler, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse base URL %q: %w", baseURL, err)
@@ -45,12 +45,6 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	templates, err := loadTemplates(author, title, description, lang, u, assetHashes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load templates: %w", err)
-	}
-
-	// Create an image store.
-	images, err := imgstore.New(dataDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create image store: %w", err)
 	}
 
 	// Construct a route map of handlers.

@@ -17,6 +17,7 @@ import (
 
 	"github.com/codahale/yellhole-go/internal/build"
 	"github.com/codahale/yellhole-go/internal/db"
+	"github.com/codahale/yellhole-go/internal/imgstore"
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
@@ -58,8 +59,19 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		}
 	}()
 
+	// Create an image store.
+	images, err := imgstore.New(dataDir)
+	if err != nil {
+		return fmt.Errorf("failed to create image store: %w", err)
+	}
+	defer func() {
+		if err := images.Close(); err != nil {
+			slog.Error("error closing image store", "err", err)
+		}
+	}()
+
 	// Create a new app.
-	app, err := newApp(ctx, queries, baseURL, dataDir, author, title, description, lang, true)
+	app, err := newApp(ctx, queries, images, baseURL, author, title, description, lang, true)
 	if err != nil {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
