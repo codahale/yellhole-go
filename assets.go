@@ -26,7 +26,7 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 	}
 
 	// Create an HTTP handler for the assets with a max-age of one week.
-	handler = cacheControl(http.FileServerFS(assetsDir), "max-age=604800")
+	handler = cacheControl(http.FileServerFS(assetsDir), "public,max-age=604800")
 
 	// Create a map of asset paths to subresource integrity hashes.
 	hashes = make(map[string]string)

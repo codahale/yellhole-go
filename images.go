@@ -12,12 +12,14 @@ import (
 	"github.com/google/uuid"
 )
 
+const cacheControlImmutable = "public,immutable,max-age=31536000"
+
 func handleFeedImage(images *imgstore.Store) http.Handler {
-	return cacheControl(http.FileServerFS(images.FeedImages()), "max-age=31536000,immutable")
+	return cacheControl(http.FileServerFS(images.FeedImages()), cacheControlImmutable)
 }
 
 func handleThumbImage(images *imgstore.Store) http.Handler {
-	return cacheControl(http.FileServerFS(images.ThumbImages()), "max-age=31536000,immutable")
+	return cacheControl(http.FileServerFS(images.ThumbImages()), cacheControlImmutable)
 }
 
 func handleDownloadImage(queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
