@@ -10,18 +10,17 @@ import (
 )
 
 func TestStore_Add_Static(t *testing.T) {
-	root, err := os.OpenRoot(t.TempDir())
+	t.Parallel()
+
+	store, err := imgstore.New(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_ = root.Close()
+		if err := store.Close(); err != nil {
+			t.Fatal(err)
+		}
 	})
-
-	store, err := imgstore.New(root)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	f, err := os.Open("../../yellhole.webp")
 	if err != nil {
@@ -85,18 +84,17 @@ func TestStore_Add_Static(t *testing.T) {
 }
 
 func TestStore_Add_Animated(t *testing.T) {
-	root, err := os.OpenRoot(t.TempDir())
+	t.Parallel()
+
+	store, err := imgstore.New(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_ = root.Close()
+		if err := store.Close(); err != nil {
+			t.Fatal(err)
+		}
 	})
-
-	store, err := imgstore.New(root)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	f, err := os.Open("banana.gif")
 	if err != nil {

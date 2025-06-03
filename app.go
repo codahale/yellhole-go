@@ -35,12 +35,6 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	purgeTicker := time.NewTicker(5 * time.Minute)
 	go purgeOldRows(ctx, queries, purgeTicker)
 
-	// Open the data directory as a file system root.
-	dataRoot, err := os.OpenRoot(dataDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open data directory %q: %w", dataDir, err)
-	}
-
 	// Load the embedded public assets.
 	assetPaths, assetHashes, assets, err := loadAssets()
 	if err != nil {
@@ -54,7 +48,7 @@ func newApp(ctx context.Context, queries *db.Queries, baseURL, dataDir, author, 
 	}
 
 	// Create an image store.
-	images, err := imgstore.New(dataRoot)
+	images, err := imgstore.New(dataDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image store: %w", err)
 	}

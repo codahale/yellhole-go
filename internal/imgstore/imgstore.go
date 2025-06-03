@@ -3,6 +3,7 @@ package imgstore
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/gif"
@@ -20,46 +21,78 @@ import (
 )
 
 type Store struct {
-	root      *os.Root
-	feedRoot  *os.Root
-	origRoot  *os.Root
-	thumbRoot *os.Root
+	root   *os.Root
+	images *os.Root
+	feed   *os.Root
+	orig   *os.Root
+	thumb  *os.Root
 }
 
-func New(root *os.Root) (*Store, error) {
-	_ = root.Mkdir("images", 0755)
-	images, err := root.OpenRoot("images")
+func New(dataDir string) (store *Store, err error) {
+	store = new(Store)
+
+	store.root, err = os.OpenRoot(dataDir)
 	if err != nil {
+		return nil, fmt.Errorf("failed to open data directory: %w", err)
+	}
+
+	_ = store.root.Mkdir("images", 0755)
+	store.images, err = store.root.OpenRoot("images")
+	if err != nil {
+		_ = store.root.Close()
 		return nil, fmt.Errorf("failed to open images directory: %w", err)
 	}
 
-	_ = images.Mkdir("feed", 0755)
-	feedRoot, err := images.OpenRoot("feed")
+	_ = store.images.Mkdir("feed", 0755)
+	store.feed, err = store.images.OpenRoot("feed")
 	if err != nil {
+		_ = store.root.Close()
 		return nil, fmt.Errorf("failed to open feed images directory: %w", err)
 	}
 
-	_ = images.Mkdir("original", 0755)
-	origRoot, err := images.OpenRoot("original")
+	_ = store.images.Mkdir("original", 0755)
+	store.orig, err = store.images.OpenRoot("original")
 	if err != nil {
+		_ = store.root.Close()
 		return nil, fmt.Errorf("failed to open original images directory: %w", err)
 	}
 
-	_ = images.Mkdir("thumb", 0755)
-	thumbRoot, err := images.OpenRoot("thumb")
+	_ = store.images.Mkdir("thumb", 0755)
+	store.thumb, err = store.images.OpenRoot("thumb")
 	if err != nil {
+		_ = store.root.Close()
 		return nil, fmt.Errorf("failed to open thumbnail images directory: %w", err)
 	}
 
-	return &Store{images, feedRoot, origRoot, thumbRoot}, nil
+	return
+}
+
+func (s *Store) Close() error {
+	var errs []error
+	if s.thumb != nil {
+		errs = append(errs, s.thumb.Close())
+	}
+	if s.orig != nil {
+		errs = append(errs, s.orig.Close())
+	}
+	if s.feed != nil {
+		errs = append(errs, s.feed.Close())
+	}
+	if s.images != nil {
+		errs = append(errs, s.images.Close())
+	}
+	if s.root != nil {
+		errs = append(errs, s.root.Close())
+	}
+	return errors.Join(errs...)
 }
 
 func (s *Store) FeedImages() fs.FS {
-	return s.feedRoot.FS()
+	return s.feed.FS()
 }
 
 func (s *Store) ThumbImages() fs.FS {
-	return s.thumbRoot.FS()
+	return s.thumb.FS()
 }
 
 func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename string, format string, err error) {
@@ -74,7 +107,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	r = io.MultiReader(bytes.NewReader(buf.Bytes()), r)
 
 	// Copy the original image data to disk as it's decoded.
-	orig, err := s.origRoot.Create(fmt.Sprintf("%s.%s", id, format))
+	orig, err := s.orig.Create(fmt.Sprintf("%s.%s", id, format))
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create original image file: %w", err)
 	}
@@ -117,10 +150,10 @@ func (s *Store) processAnim(ctx context.Context, r io.Reader, filename string) e
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return resizeAnim(s.feedRoot, img, filename, 600)
+		return resizeAnim(s.feed, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return resizeAnim(s.thumbRoot, img, filename, 100)
+		return resizeAnim(s.thumb, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
 		return fmt.Errorf("failed to resize animated image: %w", err)
@@ -133,10 +166,10 @@ func (s *Store) processStatic(ctx context.Context, img image.Image, filename str
 	// Generate thumbnails in parallel.
 	eg, _ := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return resizeStatic(s.feedRoot, img, filename, 600)
+		return resizeStatic(s.feed, img, filename, 600)
 	})
 	eg.Go(func() error {
-		return resizeStatic(s.thumbRoot, img, filename, 100)
+		return resizeStatic(s.thumb, img, filename, 100)
 	})
 	if err := eg.Wait(); err != nil {
 		return fmt.Errorf("failed to resize static image: %w", err)
