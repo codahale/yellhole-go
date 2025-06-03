@@ -111,7 +111,6 @@ func handleRegisterFinish(queries *db.Queries, author, title string, baseURL *ur
 		// Validate the attestation response.
 		cred, err := webAuthn.FinishRegistration(webauthnUser{author, []*db.JSONCredential{}}, session.Data, r)
 		if err != nil {
-			fmt.Printf("%s %#v\n", err, err)
 			// If the attestation is invalid, respond with verified=false.
 			slog.ErrorContext(r.Context(), "unable to finish passkey registration", "err", err, "id", sloghttp.GetRequestID(r))
 			return jsonResponse(w, map[string]bool{"verified": false})
