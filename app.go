@@ -98,7 +98,7 @@ func htmlResponse(w http.ResponseWriter, t *template.Template, name string, data
 		return fmt.Errorf("failed to execute template %q: %w", name, err)
 	}
 
-	w.Header().Set("content-type", "text/html")
+	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write(b.B); err != nil {
 		return fmt.Errorf("failed to write HTML response: %w", err)
 	}
@@ -113,7 +113,7 @@ func jsonResponse(w http.ResponseWriter, v any) error {
 		return fmt.Errorf("failed to encode JSON response: %w", err)
 	}
 
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(b.B); err != nil {
 		return fmt.Errorf("failed to write JSON response: %w", err)
 	}

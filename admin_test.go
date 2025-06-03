@@ -61,7 +61,7 @@ func TestAdminNotePreview(t *testing.T) {
 	_ = mw.Close()
 
 	req := httptest.NewRequest("POST", "http://example.com/admin/new", &b)
-	req.Header.Set("content-type", mw.FormDataContentType())
+	req.Header.Set("Content-Type", mw.FormDataContentType())
 	// req.Header.Set("sec-fetch-site", "none")
 	req.AddCookie(&http.Cookie{
 		Name:  "sessionID",
@@ -101,8 +101,8 @@ func TestAdminNoteCreate(t *testing.T) {
 	_ = mw.Close()
 
 	req := httptest.NewRequest("POST", "http://example.com/admin/new", &b)
-	req.Header.Set("content-type", mw.FormDataContentType())
-	req.Header.Set("sec-fetch-site", "none")
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Sec-Fetch-Site", "none")
 	req.AddCookie(&http.Cookie{
 		Name:  "sessionID",
 		Value: sessionID,
@@ -130,7 +130,7 @@ func TestAdminNoteCreate(t *testing.T) {
 		t.Errorf(`notes[0].Body = %v, want = %v`, got, want)
 	}
 
-	if got, want := resp.Header.Get("location"), "http://example.com/note/"+notes[0].NoteID; got != want {
+	if got, want := resp.Header.Get("Location"), "http://example.com/note/"+notes[0].NoteID; got != want {
 		t.Errorf(`resp.Header.Get("location") = %v, want = %v`, got, want)
 	}
 }

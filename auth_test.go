@@ -52,7 +52,7 @@ func TestRegisterPageWithCredential(t *testing.T) {
 		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
-	if got, want := resp.Header.Get("location"), "http://example.com/login"; got != want {
+	if got, want := resp.Header.Get("Location"), "http://example.com/login"; got != want {
 		t.Errorf("resp.Header.Get(\"location\") = %q, want = %q", got, want)
 	}
 }
@@ -114,7 +114,7 @@ func TestLoginPageWithoutCredential(t *testing.T) {
 		t.Errorf("resp.StatusCode = %d, want = %d", got, want)
 	}
 
-	if got, want := resp.Header.Get("location"), "http://example.com/register"; got != want {
+	if got, want := resp.Header.Get("Location"), "http://example.com/register"; got != want {
 		t.Errorf("resp.Header.Get(\"location\") = %q, want = %q", got, want)
 	}
 }

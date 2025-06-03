@@ -1,2 +1,13 @@
 version: "2"
-# running bone stock for now
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose # Checks whether HTTP response body is closed successfully.
+    - canonicalheader # Canonicalheader checks whether net/http.Header uses canonical header. [auto-fix]
+    - containedctx # Containedctx is a linter that detects struct contained context.Context field.
+    - contextcheck # Check whether the function uses a non-inherited context.

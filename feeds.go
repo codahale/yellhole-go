@@ -126,7 +126,7 @@ func handleAtomFeed(queries *db.Queries, author, title, description string, base
 			return fmt.Errorf("failed to write XML for atom feed: %w", err)
 		}
 
-		w.Header().Set("content-type", "application/atom+xml")
+		w.Header().Set("Content-Type", "application/atom+xml")
 		_, err = w.Write(b.B)
 		if err != nil {
 			return fmt.Errorf("failed to write atom feed response: %w", err)

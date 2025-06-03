@@ -56,7 +56,7 @@ func loadAssets() (paths []string, hashes map[string]string, handler http.Handle
 // cacheControl returns a wrapper handler which sets the specified Cache-Control header in the response.
 func cacheControl(h http.Handler, cacheControl string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("cache-control", cacheControl)
+		w.Header().Set("Cache-Control", cacheControl)
 		h.ServeHTTP(w, r)
 	})
 }
