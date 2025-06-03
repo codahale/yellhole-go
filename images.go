@@ -23,9 +23,8 @@ func handleThumbImage(images *imgstore.Store) http.Handler {
 	return cacheControl(http.FileServerFS(images.ThumbImages()), cacheControlImmutable)
 }
 
-var (
-	// imageClient is the HTTP client used to download images with additional timeouts and resource limits.
-	imageClient = &http.Client{
+func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
+	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{
@@ -43,9 +42,7 @@ var (
 		},
 		Timeout: 60 * time.Second,
 	}
-)
 
-func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		imageURL := r.FormValue("url")
 
@@ -54,7 +51,7 @@ func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgst
 			return fmt.Errorf("failed to create request for image download from %q: %w", imageURL, err)
 		}
 
-		resp, err := imageClient.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			return fmt.Errorf("failed to download image from %q: %w", imageURL, err)
 		}
