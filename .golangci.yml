@@ -9,6 +9,10 @@ issues:
 
 formatters:
   enable:
+#    - goimports # checks if the code and import statements are formatted according to the 'goimports' command
+
+    ## you may want to enable
+    - gci # checks if code and import statements are formatted, with additional rules
     - gofmt # checks if the code is formatted according to 'gofmt' command
 
   # All settings can be found here https://github.com/golangci/golangci-lint/blob/HEAD/.golangci.reference.yml
@@ -47,6 +51,8 @@ linters:
     - funcorder # checks the order of functions, methods, and constructors
     - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
+    - gochecknoglobals # checks that no global variables exist
+    - gochecknoinits # checks that no init functions are present in Go code
     - gochecksumtype # checks exhaustiveness on Go "sum types"
     - gocognit # computes and checks the cognitive complexity of functions
     - goconst # finds repeated strings that could be replaced by a constant
@@ -64,6 +70,7 @@ linters:
     - makezero # finds slice declarations with non-zero initial length
     - mirror # reports wrong mirror patterns of bytes/strings usage
     - musttag # enforces field tags in (un)marshaled structs
+    - nakedret # finds naked returns in functions greater than a specified function length
     - nestif # reports deeply nested if statements
     - nilerr # finds the code that returns nil even if it checks that the error is not nil
     - nilnesserr # reports that it checks for err != nil, but it returns a different nil value error (powered by nilness and nilerr)
@@ -125,6 +132,8 @@ linters:
     #- lll # [replaced by golines] reports long lines
     #- maintidx # measures the maintainability index of each function
     #- misspell # [useless] finds commonly misspelled English words in comments
+    #- mnd # detects magic numbers
+    #- nonamedreturns # reports all named returns
     #- nlreturn # [too strict and mostly code is not more readable] checks for a new line before return and branch statements to increase code clarity
     #- paralleltest # [too many false positives] detects missing usage of t.Parallel() method in your Go test
     #- tagliatelle # checks the struct tags
@@ -280,7 +289,12 @@ linters:
       # Default: []
       disable:
         - fieldalignment # too strict
-        - shadow # I don't care
+      # Settings per analyzer.
+      settings:
+        shadow:
+          # Whether to be strict about shadowing; can be noisy.
+          # Default: false
+          strict: false
 
     inamedparam:
       # Skips check for interface methods with only a single parameter.
@@ -403,6 +417,8 @@ linters:
       - text: 'comment on exported \S+ \S+ should be of the form ".+"'
         source: '// ?(nolint|TODO)'
         linters: [ revive, staticcheck ]
+      - text: 'declaration of "err" shadows declaration'
+        linters: [ govet ]
       - path: '_test\.go'
         linters:
           - bodyclose
