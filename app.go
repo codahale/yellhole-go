@@ -21,7 +21,7 @@ import (
 )
 
 // newApp constructs an application handler given the various application inputs.
-func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL, author, title, description, lang string, requestLog bool) (http.Handler, error) {
+func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, images *imgstore.Store, baseURL, author, title, description, lang, buildTag string, requestLog bool) (http.Handler, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse base URL %q: %w", baseURL, err)
@@ -43,7 +43,7 @@ func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, image
 	}
 
 	// Load the embedded templates.
-	templates, err := loadTemplates(author, title, description, lang, u, assetHashes)
+	templates, err := loadTemplates(author, title, description, lang, buildTag, u, assetHashes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}

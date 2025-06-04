@@ -47,7 +47,7 @@ func newTestApp(t *testing.T) *testApp {
 		}
 	})
 
-	app, err := newApp(t.Context(), logger, queries, images, "http://example.com", "Test Man", "Test Yell", "Gotta go fast.", "en", false)
+	app, err := newApp(t.Context(), logger, queries, images, "http://example.com", "Test Man", "Test Yell", "Gotta go fast.", "en", "00000000", false)
 	if err != nil {
 		t.Fatal(err)
 	}

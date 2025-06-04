@@ -8,7 +8,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/codahale/yellhole-go/internal/build"
 	"github.com/codahale/yellhole-go/internal/markdown"
 )
 
@@ -19,7 +18,7 @@ var (
 )
 
 // loadTemplates loads and parses all the embedded templates for the app.
-func loadTemplates(author, title, description, lang string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
+func loadTemplates(author, title, description, lang, buildTag string, baseURL *url.URL, assetHashes map[string]string) (*template.Template, error) {
 	return template.New("yellhole").Funcs(template.FuncMap{
 		"assetHash": func(elem ...string) (string, error) {
 			p := path.Join(elem...)
@@ -33,7 +32,7 @@ func loadTemplates(author, title, description, lang string, baseURL *url.URL, as
 			return author
 		},
 		"buildTag": func() string {
-			return build.Tag
+			return buildTag
 		},
 		"description": func() string {
 			return description

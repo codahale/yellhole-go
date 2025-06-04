@@ -3,17 +3,16 @@ package build
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 )
 
-// Tag is the SHA-256 hash of the binary.
-var Tag string
-
-func init() {
+// Tag returns the truncated SHA-256 hash of the current executable.
+func Tag() (string, error) {
 	f, err := os.Open(os.Args[0])
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("failed to open the current executable: %w", err)
 	}
 	defer func() {
 		_ = f.Close()
@@ -21,8 +20,8 @@ func init() {
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		panic(err)
+		return "", fmt.Errorf("failed to read the current executable: %w", err)
 	}
 
-	Tag = hex.EncodeToString(h.Sum(nil)[:8])
+	return hex.EncodeToString(h.Sum(nil)[:8]), nil
 }

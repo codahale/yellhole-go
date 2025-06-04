@@ -26,6 +26,12 @@ import (
 func run(args []string, lookupEnv func(string) (string, bool)) error {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
+	// Generate the build tag.
+	buildTag, err := build.Tag()
+	if err != nil {
+		return fmt.Errorf("failed to generate build tag: %w", err)
+	}
+
 	// Parse the configuration flags and environment variables.
 	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
 	if err != nil {
@@ -45,7 +51,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	logger.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
 	// Connect to the database.
-	logger.Info("starting", "dataDir", dataDir, "buildTag", build.Tag)
+	logger.Info("starting", "dataDir", dataDir, "buildTag", buildTag)
 	conn, queries, err := db.NewWithMigrations(logger, filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
@@ -71,7 +77,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, logger, queries, images, baseURL, author, title, description, lang, true)
+	app, err := newApp(ctx, logger, queries, images, baseURL, author, title, description, lang, buildTag, true)
 	if err != nil {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
