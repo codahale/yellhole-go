@@ -131,6 +131,6 @@ func TestAdminNoteCreate(t *testing.T) {
 	}
 
 	if got, want := resp.Header.Get("Location"), "http://example.com/note/"+notes[0].NoteID; got != want {
-		t.Errorf(`resp.Header.Get("location") = %v, want = %v`, got, want)
+		t.Errorf(`resp.Header.Get("Location") = %v, want = %v`, got, want)
 	}
 }

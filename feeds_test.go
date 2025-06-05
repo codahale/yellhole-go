@@ -174,6 +174,6 @@ func TestFeedsAtomFeed(t *testing.T) {
 	}
 
 	if got, want := resp.Header.Get("Content-Type"), "application/atom+xml"; got != want {
-		t.Errorf("resp.Header.Get(\"content-type\") = %q, want = %q", got, want)
+		t.Errorf("resp.Header.Get(\"Content-Type\") = %q, want = %q", got, want)
 	}
 }

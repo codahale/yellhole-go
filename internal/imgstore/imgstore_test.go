@@ -1,10 +1,12 @@
 package imgstore_test
 
 import (
+	"image"
 	"os"
 	"testing"
 
 	"github.com/codahale/yellhole-go/internal/imgstore"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"golang.org/x/image/webp"
 )
@@ -53,12 +55,8 @@ func TestStore_Add_Static(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got, want := feedImg.Bounds().Dx(), 400; got != want {
-		t.Errorf("Dx = %d, want %d", got, want)
-	}
-
-	if got, want := feedImg.Bounds().Dy(), 400; got != want {
-		t.Errorf("Dy = %d, want %d", got, want)
+	if got, want := feedImg.Bounds(), image.Rect(0, 0, 400, 400); !cmp.Equal(got, want) {
+		t.Errorf("Bounds = %d, want %d", got, want)
 	}
 
 	thumb, err := store.ThumbImages().Open(filename)
@@ -74,12 +72,8 @@ func TestStore_Add_Static(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got, want := thumbImg.Bounds().Dx(), 100; got != want {
-		t.Errorf("Dx = %d, want %d", got, want)
-	}
-
-	if got, want := thumbImg.Bounds().Dy(), 100; got != want {
-		t.Errorf("Dy = %d, want %d", got, want)
+	if got, want := thumbImg.Bounds(), image.Rect(0, 0, 100, 100); !cmp.Equal(got, want) {
+		t.Errorf("Bounds = %d, want %d", got, want)
 	}
 }
 
@@ -104,7 +98,7 @@ func TestStore_Add_Animated(t *testing.T) {
 		_ = f.Close()
 	})
 
-	id := uuid.New()
+	id := uuid.UUID{185, 46, 26, 0, 209, 35, 64, 140, 159, 160, 25, 139, 189, 33, 99, 102}
 	filename, format, err := store.Add(t.Context(), id, f)
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +108,7 @@ func TestStore_Add_Animated(t *testing.T) {
 		t.Errorf("format = %q, want %q", got, want)
 	}
 
-	if got, want := filename, id.String()+".webp"; got != want {
+	if got, want := filename, "b92e1a00-d123-408c-9fa0-198bbd216366.webp"; got != want {
 		t.Errorf("filename = %q, want %q", got, want)
 	}
 
