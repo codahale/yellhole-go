@@ -38,7 +38,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Create context that listens for the interrupt signal from the OS.
+	// Create a context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

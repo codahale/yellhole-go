@@ -36,7 +36,7 @@ func handleNewNote(queries *db.Queries, t *template.Template, baseURL *url.URL) 
 			return htmlResponse(w, t, "preview.gohtml", body)
 		}
 
-		// Otherwise, create the new note and redirect to it.
+		// Otherwise, create a new note and redirect to it.
 		id := uuid.New().String()
 		if err := queries.CreateNote(r.Context(), id, body, time.Now()); err != nil {
 			return fmt.Errorf("failed to create new note: %w", err)

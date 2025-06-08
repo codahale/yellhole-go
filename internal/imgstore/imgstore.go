@@ -106,7 +106,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 	// Reassemble the image reader using the buffer.
 	r = io.MultiReader(bytes.NewReader(buf.Bytes()), r)
 
-	// Copy the original image data to disk as it's decoded.
+	// Copy the original image data to the disk as it's decoded.
 	orig, err := s.orig.Create(fmt.Sprintf("%s.%s", id, format))
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create original image file: %w", err)
