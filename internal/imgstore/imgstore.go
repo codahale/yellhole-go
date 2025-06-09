@@ -36,55 +36,58 @@ func New(dataDir string) (store *Store, err error) {
 		return nil, fmt.Errorf("failed to open data directory: %w", err)
 	}
 
-	_ = store.root.Mkdir("images", 0755)
+	if err = store.root.Mkdir("images", 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to create directory: %w", err))
+	}
 	store.images, err = store.root.OpenRoot("images")
 	if err != nil {
-		_ = store.root.Close()
-		return nil, fmt.Errorf("failed to open images directory: %w", err)
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to open images directory: %w", err))
 	}
 
-	_ = store.images.Mkdir("feed", 0755)
+	if err = store.images.Mkdir("feed", 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to create directory: %w", err))
+	}
 	store.feed, err = store.images.OpenRoot("feed")
 	if err != nil {
-		_ = store.root.Close()
-		return nil, fmt.Errorf("failed to open feed images directory: %w", err)
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to open feed images directory: %w", err))
 	}
 
-	_ = store.images.Mkdir("original", 0755)
+	if err = store.images.Mkdir("original", 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to create directory: %w", err))
+	}
 	store.orig, err = store.images.OpenRoot("original")
 	if err != nil {
-		_ = store.root.Close()
-		return nil, fmt.Errorf("failed to open original images directory: %w", err)
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to open original images directory: %w", err))
 	}
 
-	_ = store.images.Mkdir("thumb", 0755)
+	if err = store.images.Mkdir("thumb", 0755); err != nil && !errors.Is(err, fs.ErrExist) {
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to create directory: %w", err))
+	}
 	store.thumb, err = store.images.OpenRoot("thumb")
 	if err != nil {
-		_ = store.root.Close()
-		return nil, fmt.Errorf("failed to open thumbnail images directory: %w", err)
+		return nil, errors.Join(store.Close(), fmt.Errorf("failed to open thumbnail images directory: %w", err))
 	}
 
 	return store, nil
 }
 
-func (s *Store) Close() error {
-	var errs []error
+func (s *Store) Close() (err error) {
 	if s.thumb != nil {
-		errs = append(errs, s.thumb.Close())
+		err = errors.Join(err, s.thumb.Close())
 	}
 	if s.orig != nil {
-		errs = append(errs, s.orig.Close())
+		err = errors.Join(err, s.orig.Close())
 	}
 	if s.feed != nil {
-		errs = append(errs, s.feed.Close())
+		err = errors.Join(err, s.feed.Close())
 	}
 	if s.images != nil {
-		errs = append(errs, s.images.Close())
+		err = errors.Join(err, s.images.Close())
 	}
 	if s.root != nil {
-		errs = append(errs, s.root.Close())
+		err = errors.Join(err, s.root.Close())
 	}
-	return errors.Join(errs...)
+	return err
 }
 
 func (s *Store) FeedImages() fs.FS {
@@ -112,7 +115,7 @@ func (s *Store) Add(ctx context.Context, id uuid.UUID, r io.Reader) (filename st
 		return "", "", fmt.Errorf("failed to create original image file: %w", err)
 	}
 	defer func() {
-		_ = orig.Close()
+		err = errors.Join(err, orig.Close())
 	}()
 	r = io.TeeReader(r, orig)
 
@@ -175,31 +178,31 @@ func (s *Store) processStatic(ctx context.Context, img image.Image, filename str
 	return nil
 }
 
-func resizeStatic(root *os.Root, src image.Image, filename string, maxWidth int) error {
+func resizeStatic(root *os.Root, src image.Image, filename string, maxWidth int) (err error) {
 	f, err := root.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create resized static image file %s: %w", filename, err)
 	}
 	defer func() {
-		_ = f.Close()
+		err = errors.Join(err, f.Close())
 	}()
 
 	thumbnail := resize(src, maxWidth)
 
 	if err := nativewebp.Encode(f, thumbnail, nil); err != nil {
-		return fmt.Errorf("error encoding image %s: %w", filename, err)
+		return fmt.Errorf("failed to encode static image %s: %w", filename, err)
 	}
 
 	return nil
 }
 
-func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) error {
+func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) (err error) {
 	f, err := root.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create resized animated image file %s: %w", filename, err)
 	}
 	defer func() {
-		_ = f.Close()
+		err = errors.Join(err, f.Close())
 	}()
 
 	thumbnail := nativewebp.Animation{
@@ -244,7 +247,7 @@ func resizeAnim(root *os.Root, src *gif.GIF, filename string, maxWidth int) erro
 	}
 
 	if err := nativewebp.EncodeAll(f, &thumbnail, nil); err != nil {
-		return fmt.Errorf("error encoding image %s: %w", filename, err)
+		return fmt.Errorf("failed to encode animated image %s: %w", filename, err)
 	}
 
 	return nil
