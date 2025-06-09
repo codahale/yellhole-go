@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -43,7 +44,7 @@ func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgst
 		Timeout: 60 * time.Second,
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (err error) {
 		imageURL := r.FormValue("url")
 
 		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, imageURL, nil)
@@ -56,7 +57,7 @@ func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgst
 			return fmt.Errorf("failed to download image from %q: %w", imageURL, err)
 		}
 		defer func() {
-			_ = resp.Body.Close()
+			err = errors.Join(err, resp.Body.Close())
 		}()
 
 		if resp.StatusCode != http.StatusOK {
@@ -77,18 +78,18 @@ func handleDownloadImage(logger *slog.Logger, queries *db.Queries, images *imgst
 		}
 
 		http.Redirect(w, r, baseURL.JoinPath("admin").String(), http.StatusSeeOther)
-		return nil
+		return err
 	}
 }
 
 func handleUploadImage(queries *db.Queries, images *imgstore.Store, baseURL *url.URL) appHandler {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (err error) {
 		f, h, err := r.FormFile("image")
 		if err != nil {
 			return fmt.Errorf("failed to get uploaded image file: %w", err)
 		}
 		defer func() {
-			_ = f.Close()
+			err = errors.Join(err, f.Close())
 		}()
 
 		id := uuid.New()
