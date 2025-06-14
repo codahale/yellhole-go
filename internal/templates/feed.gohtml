@@ -95,6 +95,13 @@
             <aside>Nothing here yet.</aside>
         </article>
     {{end}}
+    {{if (not (and .Notes .Single))}}
+        <div class="container" style="text-align: right">
+            <a href='?id={{(.LastNoteID)}}'>
+                Older
+            </a>
+        </div>
+    {{end}}
 </main>
 <footer class="container">
     <p>

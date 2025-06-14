@@ -23,9 +23,18 @@ func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
 			n = 10
 		}
 
-		notes, err := queries.RecentNotes(r.Context(), n)
-		if err != nil {
-			return fmt.Errorf("failed to retrieve recent notes: %w", err)
+		var notes []db.Note
+		noteID := r.FormValue("id")
+		if noteID == "" {
+			notes, err = queries.RecentNotes(r.Context(), n)
+			if err != nil {
+				return fmt.Errorf("failed to retrieve recent notes: %w", err)
+			}
+		} else {
+			notes, err = queries.RecentNotesOlderThan(r.Context(), noteID, n)
+			if err != nil {
+				return fmt.Errorf("failed to retrieve recent notes older than note %q: %w", noteID, err)
+			}
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
@@ -33,7 +42,7 @@ func handleHomePage(queries *db.Queries, t *template.Template) appHandler {
 			return fmt.Errorf("failed to retrieve weeks with notes: %w", err)
 		}
 
-		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
+		return htmlResponse(w, t, "feed.gohtml", &feedPage{false, notes, weeks})
 	}
 }
 
@@ -46,14 +55,23 @@ func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
 		}
 		end := start.AddDate(0, 0, 7)
 
-		notes, err := queries.NotesByDate(r.Context(), start, end)
+		n, err := strconv.ParseInt(r.FormValue("n"), 10, 8)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve notes by date: %w", err)
+			n = 10
 		}
 
-		if len(notes) == 0 {
-			http.NotFound(w, r)
-			return nil
+		var notes []db.Note
+		noteID := r.FormValue("id")
+		if noteID == "" {
+			notes, err = queries.NotesByDate(r.Context(), start, end, n)
+			if err != nil {
+				return fmt.Errorf("failed to retrieve notes by date: %w", err)
+			}
+		} else {
+			notes, err = queries.NotesByDateOlderThan(r.Context(), start, end, noteID, n)
+			if err != nil {
+				return fmt.Errorf("failed to retrieve notes by date older than note %q: %w", noteID, err)
+			}
 		}
 
 		weeks, err := queries.WeeksWithNotes(r.Context())
@@ -61,7 +79,7 @@ func handleWeekPage(queries *db.Queries, t *template.Template) appHandler {
 			return fmt.Errorf("failed to retrieve weeks with notes for week page: %w", err)
 		}
 
-		return htmlResponse(w, t, "feed.gohtml", feedPage{false, notes, weeks})
+		return htmlResponse(w, t, "feed.gohtml", &feedPage{false, notes, weeks})
 	}
 }
 
@@ -81,7 +99,7 @@ func handleNotePage(queries *db.Queries, t *template.Template) appHandler {
 			return fmt.Errorf("failed to retrieve weeks with notes for note page: %w", err)
 		}
 
-		return htmlResponse(w, t, "feed.gohtml", feedPage{true, []db.Note{note}, weeks})
+		return htmlResponse(w, t, "feed.gohtml", &feedPage{true, []db.Note{note}, weeks})
 	}
 }
 
@@ -139,4 +157,11 @@ type feedPage struct {
 	Single bool
 	Notes  []db.Note
 	Weeks  []db.WeeksWithNotesRow
+}
+
+func (p *feedPage) LastNoteID() string {
+	if len(p.Notes) == 0 {
+		return ""
+	}
+	return p.Notes[len(p.Notes)-1].NoteID
 }

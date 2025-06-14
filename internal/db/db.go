@@ -51,6 +51,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.notesByDateStmt, err = db.PrepareContext(ctx, notesByDate); err != nil {
 		return nil, fmt.Errorf("error preparing query NotesByDate: %w", err)
 	}
+	if q.notesByDateOlderThanStmt, err = db.PrepareContext(ctx, notesByDateOlderThan); err != nil {
+		return nil, fmt.Errorf("error preparing query NotesByDateOlderThan: %w", err)
+	}
 	if q.purgeSessionsStmt, err = db.PrepareContext(ctx, purgeSessions); err != nil {
 		return nil, fmt.Errorf("error preparing query PurgeSessions: %w", err)
 	}
@@ -62,6 +65,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.recentNotesStmt, err = db.PrepareContext(ctx, recentNotes); err != nil {
 		return nil, fmt.Errorf("error preparing query RecentNotes: %w", err)
+	}
+	if q.recentNotesOlderThanStmt, err = db.PrepareContext(ctx, recentNotesOlderThan); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentNotesOlderThan: %w", err)
 	}
 	if q.sessionExistsStmt, err = db.PrepareContext(ctx, sessionExists); err != nil {
 		return nil, fmt.Errorf("error preparing query SessionExists: %w", err)
@@ -122,6 +128,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing notesByDateStmt: %w", cerr)
 		}
 	}
+	if q.notesByDateOlderThanStmt != nil {
+		if cerr := q.notesByDateOlderThanStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing notesByDateOlderThanStmt: %w", cerr)
+		}
+	}
 	if q.purgeSessionsStmt != nil {
 		if cerr := q.purgeSessionsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing purgeSessionsStmt: %w", cerr)
@@ -140,6 +151,11 @@ func (q *Queries) Close() error {
 	if q.recentNotesStmt != nil {
 		if cerr := q.recentNotesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing recentNotesStmt: %w", cerr)
+		}
+	}
+	if q.recentNotesOlderThanStmt != nil {
+		if cerr := q.recentNotesOlderThanStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentNotesOlderThanStmt: %w", cerr)
 		}
 	}
 	if q.sessionExistsStmt != nil {
@@ -205,10 +221,12 @@ type Queries struct {
 	hasWebauthnCredentialStmt    *sql.Stmt
 	noteByIDStmt                 *sql.Stmt
 	notesByDateStmt              *sql.Stmt
+	notesByDateOlderThanStmt     *sql.Stmt
 	purgeSessionsStmt            *sql.Stmt
 	purgeWebauthnSessionsStmt    *sql.Stmt
 	recentImagesStmt             *sql.Stmt
 	recentNotesStmt              *sql.Stmt
+	recentNotesOlderThanStmt     *sql.Stmt
 	sessionExistsStmt            *sql.Stmt
 	webauthnCredentialsStmt      *sql.Stmt
 	weeksWithNotesStmt           *sql.Stmt
@@ -227,10 +245,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hasWebauthnCredentialStmt:    q.hasWebauthnCredentialStmt,
 		noteByIDStmt:                 q.noteByIDStmt,
 		notesByDateStmt:              q.notesByDateStmt,
+		notesByDateOlderThanStmt:     q.notesByDateOlderThanStmt,
 		purgeSessionsStmt:            q.purgeSessionsStmt,
 		purgeWebauthnSessionsStmt:    q.purgeWebauthnSessionsStmt,
 		recentImagesStmt:             q.recentImagesStmt,
 		recentNotesStmt:              q.recentNotesStmt,
+		recentNotesOlderThanStmt:     q.recentNotesOlderThanStmt,
 		sessionExistsStmt:            q.sessionExistsStmt,
 		webauthnCredentialsStmt:      q.webauthnCredentialsStmt,
 		weeksWithNotesStmt:           q.weeksWithNotesStmt,

@@ -94,7 +94,7 @@ func TestFeedsWeeksPage404(t *testing.T) {
 
 	app := newTestApp(t)
 
-	req := httptest.NewRequest(http.MethodGet, "http://example.com/notes/2025-03-09", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/notes/2025-03-99", nil)
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
 

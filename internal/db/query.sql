@@ -17,6 +17,15 @@ from note
 order by created_at desc
 limit :limit;
 
+-- name: RecentNotesOlderThan :many
+select note_id,
+       body,
+       created_at
+from note
+where created_at < (select n.created_at from note n where n.note_id = :note_id)
+order by created_at desc
+limit :limit;
+
 -- name: WeeksWithNotes :many
 select cast(date(datetime(created_at, 'weekday 0', '-7 days')) as text) as start_date,
        cast(date(datetime(created_at, 'weekday 0', '-1 day')) as text)  as end_date
@@ -31,7 +40,19 @@ select note_id,
 from note
 where :start_date <= created_at
   and created_at < :end_date
-order by created_at desc;
+order by created_at desc
+limit :limit;
+
+-- name: NotesByDateOlderThan :many
+select n.note_id,
+       n.body,
+       n.created_at
+from note n
+where :start_date <= n.created_at
+  and n.created_at < :end_date
+  and n.created_at < (select n2.created_at from note n2 where n2.note_id = :note_id)
+order by n.created_at desc
+limit :limit;
 
 -- name: RecentImages :many
 select *

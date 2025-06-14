@@ -121,10 +121,51 @@ from note
 where ?1 <= created_at
   and created_at < ?2
 order by created_at desc
+limit ?3
 `
 
-func (q *Queries) NotesByDate(ctx context.Context, startDate time.Time, endDate time.Time) ([]Note, error) {
-	rows, err := q.query(ctx, q.notesByDateStmt, notesByDate, startDate, endDate)
+func (q *Queries) NotesByDate(ctx context.Context, startDate time.Time, endDate time.Time, limit int64) ([]Note, error) {
+	rows, err := q.query(ctx, q.notesByDateStmt, notesByDate, startDate, endDate, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(&i.NoteID, &i.Body, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const notesByDateOlderThan = `-- name: NotesByDateOlderThan :many
+select n.note_id,
+       n.body,
+       n.created_at
+from note n
+where ?1 <= n.created_at
+  and n.created_at < ?2
+  and n.created_at < (select n2.created_at from note n2 where n2.note_id = ?3)
+order by n.created_at desc
+limit ?4
+`
+
+func (q *Queries) NotesByDateOlderThan(ctx context.Context, startDate time.Time, endDate time.Time, noteID string, limit int64) ([]Note, error) {
+	rows, err := q.query(ctx, q.notesByDateOlderThanStmt, notesByDateOlderThan,
+		startDate,
+		endDate,
+		noteID,
+		limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +254,39 @@ limit ?1
 
 func (q *Queries) RecentNotes(ctx context.Context, limit int64) ([]Note, error) {
 	rows, err := q.query(ctx, q.recentNotesStmt, recentNotes, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Note
+	for rows.Next() {
+		var i Note
+		if err := rows.Scan(&i.NoteID, &i.Body, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const recentNotesOlderThan = `-- name: RecentNotesOlderThan :many
+select note_id,
+       body,
+       created_at
+from note
+where created_at < (select n.created_at from note n where n.note_id = ?1)
+order by created_at desc
+limit ?2
+`
+
+func (q *Queries) RecentNotesOlderThan(ctx context.Context, noteID string, limit int64) ([]Note, error) {
+	rows, err := q.query(ctx, q.recentNotesOlderThanStmt, recentNotesOlderThan, noteID, limit)
 	if err != nil {
 		return nil, err
 	}
