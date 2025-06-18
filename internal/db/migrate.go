@@ -8,9 +8,9 @@ import (
 	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	_ "github.com/mattn/go-sqlite3" // this only supports SQLite
+	_ "modernc.org/sqlite" // this only supports SQLite
 )
 
 var (
@@ -32,7 +32,7 @@ const initSQL = `
 
 func NewWithMigrations(logger *slog.Logger, filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
-	conn, err := sql.Open("sqlite3", filename)
+	conn, err := sql.Open("sqlite", filename+"?_time_format=sqlite")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open SQLite database %s: %w", filename, err)
 	}
@@ -50,7 +50,7 @@ func NewWithMigrations(logger *slog.Logger, filename string) (*sql.DB, *Queries,
 	}
 
 	// Configure a migration driver.
-	driver, err := sqlite3.WithInstance(conn, &sqlite3.Config{
+	driver, err := sqlite.WithInstance(conn, &sqlite.Config{
 		MigrationsTable: "migrations",
 	})
 	if err != nil {
