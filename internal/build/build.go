@@ -1,28 +1,40 @@
 package build
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"errors"
 	"fmt"
-	"io"
-	"os"
+	"runtime/debug"
+	"strconv"
+	"time"
 )
 
-// Tag returns the truncated SHA-256 hash of the current executable.
-func Tag() (tag string, err error) {
-	f, err := os.Open(os.Args[0])
-	if err != nil {
-		return "", fmt.Errorf("failed to open the current executable: %w", err)
-	}
-	defer func() {
-		err = errors.Join(err, f.Close())
-	}()
+// Tag returns the truncated git commit used to create the current binary or, if the git workspace was modified (e.g. in
+// development) or debug info has been stripped, returns the Unix timestamp.
+func Tag() string {
+	var (
+		revision string
+		modified bool
+	)
 
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("failed to read the current executable: %w", err)
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		goto timestamp
 	}
 
-	return hex.EncodeToString(h.Sum(nil)[:8]), nil
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			revision = setting.Value
+		case "vcs.modified":
+			modified, _ = strconv.ParseBool(setting.Value)
+		}
+	}
+
+	if modified {
+		goto timestamp
+	}
+
+	return revision[:8]
+
+timestamp:
+	return fmt.Sprintf("%x", time.Now().Unix())
 }

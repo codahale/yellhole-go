@@ -27,10 +27,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	// Generate the build tag.
-	buildTag, err := build.Tag()
-	if err != nil {
-		return fmt.Errorf("failed to generate build tag: %w", err)
-	}
+	buildTag := build.Tag()
 
 	// Parse the configuration flags and environment variables.
 	addr, baseURL, dataDir, author, title, description, lang, err := loadConfig(args, lookupEnv)
