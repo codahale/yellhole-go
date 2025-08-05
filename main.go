@@ -49,7 +49,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 
 	// Connect to the database.
 	logger.Info("starting", "dataDir", dataDir, "buildTag", buildTag)
-	conn, queries, err := db.NewWithMigrations(logger, filepath.Join(dataDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(ctx, logger, filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}

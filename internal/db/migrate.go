@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"errors"
@@ -30,7 +31,7 @@ const initSQL = `
 	PRAGMA trusted_schema = OFF;
 `
 
-func NewWithMigrations(logger *slog.Logger, filename string) (*sql.DB, *Queries, error) {
+func NewWithMigrations(ctx context.Context, logger *slog.Logger, filename string) (*sql.DB, *Queries, error) {
 	// Connect to the database.
 	conn, err := sql.Open("sqlite", filename+"?_time_format=sqlite")
 	if err != nil {
@@ -38,7 +39,7 @@ func NewWithMigrations(logger *slog.Logger, filename string) (*sql.DB, *Queries,
 	}
 
 	// Initialize the database settings.
-	_, err = conn.Exec(initSQL)
+	_, err = conn.ExecContext(ctx, initSQL)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize database settings: %w", err)
 	}
