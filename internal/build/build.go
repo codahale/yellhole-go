@@ -29,7 +29,7 @@ func Tag() string {
 		}
 	}
 
-	if modified {
+	if modified || revision == "" {
 		goto timestamp
 	}
 
