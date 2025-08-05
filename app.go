@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -82,10 +83,21 @@ func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, image
 type appHandler = func(http.ResponseWriter, *http.Request) error
 
 func handleErrors(handler appHandler) http.Handler {
+	errToStatus := func(err error, r *http.Request) (string, int) {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			if r.Context().Err() != nil {
+				return "Client closed request", 499
+			}
+			return "Request timeout", http.StatusRequestTimeout
+		}
+		return "Internal server error", http.StatusInternalServerError
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
 			slog.ErrorContext(r.Context(), "error handling request", "err", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			status, code := errToStatus(err, r)
+			http.Error(w, status, code)
 		}
 	})
 }
