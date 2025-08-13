@@ -1,9 +1,8 @@
 module github.com/codahale/yellhole-go
 
-go 1.24.1
+go 1.25
 
 require (
-	filippo.io/csrf v0.2.1
 	github.com/CAFxX/httpcompression v0.0.9
 	github.com/HugoSmits86/nativewebp v1.2.0
 	github.com/Xuanwo/go-locale v1.1.3

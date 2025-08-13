@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"filippo.io/csrf"
 	"github.com/CAFxX/httpcompression"
 	"github.com/codahale/yellhole-go/internal/db"
 	"github.com/codahale/yellhole-go/internal/imgstore"
@@ -57,7 +56,7 @@ func newApp(ctx context.Context, logger *slog.Logger, queries *db.Queries, image
 	handler := requireAuthentication(queries, mux, u, "/admin")
 
 	// Protect from CSRF attacks.
-	handler = csrf.New().Handler(handler)
+	handler = http.NewCrossOriginProtection().Handler(handler)
 
 	// Add compression for responses.
 	compress, err := httpcompression.DefaultAdapter(httpcompression.ContentTypes([]string{"text/html", "text/css", "text/javascript"}, false))
