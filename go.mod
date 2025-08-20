@@ -17,7 +17,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
-	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/image v0.30.0
 	golang.org/x/sync v0.16.0
 	modernc.org/sqlite v1.38.2

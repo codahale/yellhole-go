@@ -11,14 +11,12 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"syscall"
 	"time"
 
 	"github.com/codahale/yellhole-go/internal/build"
 	"github.com/codahale/yellhole-go/internal/db"
 	"github.com/codahale/yellhole-go/internal/imgstore"
-	"go.uber.org/automaxprocs/maxprocs"
 )
 
 //go:generate sqlc generate -f internal/db/sqlc.yaml
@@ -38,14 +36,6 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	// Create a context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-
-	// Automatically set GOMAXPROCS.
-	undo, err := maxprocs.Set()
-	defer undo()
-	if err != nil {
-		return fmt.Errorf("failed to set GOMAXPROCS: %w", err)
-	}
-	logger.Info("setting runtime CPU count", "GOMAXPROCS", runtime.GOMAXPROCS(-1))
 
 	// Connect to the database.
 	logger.Info("starting", "dataDir", dataDir, "buildTag", buildTag)
