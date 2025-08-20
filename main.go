@@ -72,7 +72,7 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	// Configure an HTTP server with good defaults.
 	server := &http.Server{
 		Addr:    addr,
-		Handler: app,
+		Handler: http.TimeoutHandler(app, 60*time.Second, "request timeout"),
 
 		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
