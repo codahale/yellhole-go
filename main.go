@@ -34,12 +34,12 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}
 
 	// Create a context that listens for the interrupt signal from the OS.
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
+	signalCtx, signalStop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	defer signalStop()
 
 	// Connect to the database.
 	logger.Info("starting", "dataDir", dataDir, "buildTag", buildTag)
-	conn, queries, err := db.NewWithMigrations(ctx, logger, filepath.Join(dataDir, "yellhole.db"))
+	conn, queries, err := db.NewWithMigrations(signalCtx, logger, filepath.Join(dataDir, "yellhole.db"))
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
@@ -64,18 +64,19 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Create a new app.
-	app, err := newApp(ctx, logger, queries, images, baseURL, author, title, description, lang, buildTag, true)
+	app, err := newApp(signalCtx, logger, queries, images, baseURL, author, title, description, lang, buildTag, true)
 	if err != nil {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
 
 	// Configure an HTTP server with good defaults.
+	baseCtx, baseCtxStop := context.WithCancel(signalCtx)
 	server := &http.Server{
 		Addr:    addr,
 		Handler: http.TimeoutHandler(app, 60*time.Second, "request timeout"),
 
 		BaseContext: func(_ net.Listener) context.Context {
-			return ctx
+			return baseCtx
 		},
 		IdleTimeout:       120 * time.Second,
 		ReadTimeout:       5 * time.Second,
@@ -92,19 +93,23 @@ func run(args []string, lookupEnv func(string) (string, bool)) error {
 	}()
 
 	// Listen for the interrupt signal.
-	<-ctx.Done()
+	<-signalCtx.Done()
 
 	// Restore default behavior on the interrupt signal and notify the user of shutdown.
-	stop()
 	logger.Info("shutting down gracefully, press Ctrl+C again to force")
 
 	// The context is used to inform the server it has 5 seconds to finish the requests it is
 	// currently handling.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
+	shutdownCtx, shutdownStop := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownStop()
+
+	// Stop the server.
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		logger.Error("error shutting down", "err", err)
 	}
+
+	// Stop the base context for requests.
+	baseCtxStop()
 
 	logger.Info("exiting")
 
